@@ -3,8 +3,9 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 import { checkLicense } from "./licenses.js";
 import { searchRegistry } from "./registry.js";
+import { getProvider, listProviders } from "./providers/index.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.1.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.2.0" });
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -13,7 +14,7 @@ function text(data: unknown) {
 async function githubJson(path: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "game-dev-resource-mcp/0.1.0"
+    "User-Agent": "game-dev-resource-mcp/0.2.0"
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 
@@ -39,6 +40,40 @@ server.registerTool(
     if (commercialOnly) results = results.filter(item => item.commercialUse === true);
     return text({ count: results.length, results });
   }
+);
+
+server.registerTool(
+  "search_live_assets",
+  {
+    description: "Search a supported live asset provider. Provider results preserve source and license provenance. Live-API service terms can require attribution even when the underlying asset license does not.",
+    inputSchema: z.object({
+      provider: z.enum(["polyhaven"]).default("polyhaven"),
+      query: z.string().default(""),
+      categories: z.array(z.string()).default([]),
+      limit: z.number().int().min(1).max(100).default(20)
+    })
+  },
+  async ({ provider, query, categories, limit }) => {
+    const adapter = getProvider(provider);
+    const results = await adapter.search({ query, categories, limit });
+    return text({
+      provider: adapter.name,
+      count: results.length,
+      serviceNotice: provider === "polyhaven"
+        ? "Poly Haven assets are CC0, but use of the live API requires clear Poly Haven credit and a unique User-Agent."
+        : undefined,
+      results
+    });
+  }
+);
+
+server.registerTool(
+  "list_asset_providers",
+  {
+    description: "List currently supported live asset providers.",
+    inputSchema: z.object({})
+  },
+  async () => text({ providers: listProviders() })
 );
 
 server.registerTool(
