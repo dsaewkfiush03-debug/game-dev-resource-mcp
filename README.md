@@ -8,16 +8,45 @@ Help Codex, Claude Code, Cursor, Trae and other MCP-capable agents discover reus
 
 The project is registry-first: it stores source metadata, licensing posture, API/auth requirements and retrieval rules rather than mirroring large third-party asset collections.
 
-## V0.3 tools
+## V0.4 tools
 
+- `find_game_assets` — preferred cross-provider search: query all supported sources, apply commercial/license filters, rank results and explain why each result matched.
 - `search_game_assets` — search the curated source registry.
-- `search_live_assets` — search supported asset providers; providers may be live APIs or maintained verified catalogs.
+- `search_live_assets` — search one supported asset provider; providers may be live APIs or maintained verified catalogs.
 - `get_asset_files` — return official provider-hosted file URLs/metadata when a provider supports file lookup.
 - `list_asset_providers` — list providers and their operating mode.
 - `search_open_source_projects` — search GitHub for reusable game-development repositories.
 - `check_license` — classify common licenses conservatively.
 - `inspect_repository` — inspect GitHub repository metadata and detected license.
 - `generate_attribution` — generate a CREDITS/attribution entry.
+
+## Unified search
+
+`find_game_assets` is the main tool for AI agents when the user describes what they need rather than naming a source site.
+
+Example request:
+
+```text
+Find commercially usable pixel vehicle assets. Attribution is acceptable, but do not include share-alike assets.
+```
+
+The search fans out across all selected providers concurrently, keeps successful provider results even if one provider fails, applies license filters, and then ranks results using explainable signals:
+
+1. asset-name matches
+2. tag matches
+3. category matches
+4. description matches
+5. confirmed commercial-use rights
+6. simpler license obligations
+7. presence of a license-source URL
+
+Each result includes `score`, `matchReasons`, `licenseRisk`, and `providerMode`. The score is a retrieval heuristic, not a legal-safety guarantee.
+
+Default filters are conservative:
+
+- `commercialOnly: true`
+- `allowAttribution: true`
+- `allowShareAlike: false`
 
 ## Asset providers
 
@@ -105,10 +134,10 @@ This project provides technical metadata and conservative automated classificati
 
 - expand verified Kenney and Quaternius catalogs
 - add safe per-item OpenGameArt ingestion without aggressive scraping
+- improve cross-provider ranking with engine/format/style signals
 - provenance snapshots and freshness checks
 - automated attribution manifests
 - engine-aware filters (Godot / Unity / Unreal / web)
-- asset-format and style metadata
 - contribution validation and CI
 
 ## Contributing
