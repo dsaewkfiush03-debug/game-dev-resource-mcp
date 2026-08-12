@@ -25,8 +25,18 @@ export interface ProviderAsset {
   retrievedAt: string;
 }
 
+export interface ProviderFile {
+  path: string;
+  url: string;
+  size?: number;
+  md5?: string;
+  format?: string;
+  resolution?: string;
+}
+
 export interface AssetProvider {
   id: AssetProviderId;
   name: string;
   search(options: ProviderSearchOptions): Promise<ProviderAsset[]>;
+  getFiles?(assetId: string): Promise<ProviderFile[]>;
 }
