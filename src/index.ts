@@ -5,6 +5,7 @@ import * as z from "zod/v4";
 import { generateProjectAttribution } from "./attribution.js";
 import { installAssetFile, planAssetInstall } from "./install.js";
 import { checkLicense } from "./licenses.js";
+import { recommendStack } from "./recommend.js";
 import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
@@ -28,6 +29,22 @@ server.registerTool("find_game_assets", {
   description: "Search all supported providers, filter by license and game-development metadata, and return ranked results with explainable reasons.",
   inputSchema: z.object({ query: z.string().min(1), categories: z.array(z.string()).default([]), providers: z.array(providerId).optional(), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), commercialOnly: z.boolean().default(true), allowAttribution: z.boolean().default(true), allowShareAlike: z.boolean().default(false), limit: z.number().int().min(1).max(100).default(20), perProviderLimit: z.number().int().min(1).max(100).default(50) })
 }, async options => text({ query: options.query, ...(await searchAllAssets(options)), filters: { commercialOnly: options.commercialOnly, allowAttribution: options.allowAttribution, allowShareAlike: options.allowShareAlike, engines: options.engines, dimensions: options.dimensions, styles: options.styles, formats: options.formats, assetTypes: options.assetTypes, gameGenres: options.gameGenres, animated: options.animated } }));
+
+server.registerTool("recommend_stack", {
+  description: "Turn a game description into a deterministic resource stack: infer practical asset/code slots, search each slot with existing conservative license filters, return primary recommendations, alternatives, license summary and unresolved gaps.",
+  inputSchema: z.object({
+    description: z.string().min(3),
+    engine: z.string().optional(),
+    dimension: z.enum(["2D", "3D"]).optional(),
+    styles: z.array(z.string()).default([]),
+    gameGenres: z.array(z.string()).default([]),
+    providers: z.array(providerId).optional(),
+    commercialOnly: z.boolean().default(true),
+    allowAttribution: z.boolean().default(true),
+    allowShareAlike: z.boolean().default(false),
+    perSlotLimit: z.number().int().min(1).max(10).default(3)
+  })
+}, async options => text(await recommendStack(options)));
 
 server.registerTool("search_game_assets", {
   description: "Search the local registry of game-development resource sources.",
