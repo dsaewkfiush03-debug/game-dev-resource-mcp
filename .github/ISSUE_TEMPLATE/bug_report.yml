@@ -1,0 +1,52 @@
+name: Bug report
+description: Report a reproducible defect in the MCP server, provider, search, license or install behavior
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include API keys, tokens, cookies, credentials, signed private URLs or proprietary assets.
+        For security vulnerabilities, follow SECURITY.md instead of publishing exploit details here.
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: "v1.0.0 or commit SHA"
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - MCP server / client integration
+        - Asset search / ranking
+        - Provider metadata
+        - License classification
+        - GitHub repository inspection
+        - Attribution generation
+        - Safe asset installation
+        - Build / packaging / CI
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Minimal steps, MCP tool input and relevant non-secret output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
