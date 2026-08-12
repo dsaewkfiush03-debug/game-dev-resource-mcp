@@ -7,11 +7,11 @@ import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.7.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.8.0" });
 function text(data: unknown) { return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }; }
 
 async function githubJson(path: string) {
-  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "game-dev-resource-mcp/0.7.0" };
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "game-dev-resource-mcp/0.8.0" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`https://api.github.com${path}`, { headers });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
