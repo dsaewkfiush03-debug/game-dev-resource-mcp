@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mapPolyHavenAsset } from "./polyhaven.js";
+import { flattenPolyHavenFiles, mapPolyHavenAsset } from "./polyhaven.js";
 
 test("maps Poly Haven assets to conservative provider records", () => {
   const asset = mapPolyHavenAsset(
@@ -23,4 +23,28 @@ test("maps Poly Haven assets to conservative provider records", () => {
   assert.deepEqual(asset.categories, ["Nature", "Rocks"]);
   assert.ok(asset.tags.includes("3d"));
   assert.ok(asset.tags.includes("model"));
+});
+
+test("flattens nested Poly Haven file metadata without downloading assets", () => {
+  const files = flattenPolyHavenFiles({
+    hdri: {
+      "1k": {
+        hdr: {
+          url: "https://example.test/test_1k.hdr",
+          size: 1234,
+          md5: "abc123"
+        }
+      }
+    }
+  });
+
+  assert.equal(files.length, 1);
+  assert.deepEqual(files[0], {
+    path: "hdri/1k/hdr",
+    url: "https://example.test/test_1k.hdr",
+    size: 1234,
+    md5: "abc123",
+    format: "hdr",
+    resolution: "1k"
+  });
 });
