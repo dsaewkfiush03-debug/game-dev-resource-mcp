@@ -1,6 +1,6 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "License-aware game development resource discovery for AI coding agents via MCP.",
   "type": "module",
   "license": "MIT",
@@ -17,7 +17,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts"
+    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts src/providers/catalog.test.ts"
   },
   "engines": {
     "node": ">=20"

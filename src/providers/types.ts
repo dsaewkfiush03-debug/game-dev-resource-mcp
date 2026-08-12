@@ -1,4 +1,4 @@
-export type AssetProviderId = "polyhaven";
+export type AssetProviderId = "polyhaven" | "kenney" | "quaternius";
 
 export interface ProviderSearchOptions {
   query: string;
