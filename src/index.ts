@@ -68,6 +68,42 @@ server.registerTool(
 );
 
 server.registerTool(
+  "get_asset_files",
+  {
+    description: "Return official provider-hosted download links and file metadata for a selected asset without mirroring or downloading the asset into this repository.",
+    inputSchema: z.object({
+      provider: z.enum(["polyhaven"]).default("polyhaven"),
+      assetId: z.string().min(1),
+      format: z.string().optional(),
+      resolution: z.string().optional(),
+      limit: z.number().int().min(1).max(200).default(100)
+    })
+  },
+  async ({ provider, assetId, format, resolution, limit }) => {
+    const adapter = getProvider(provider);
+    if (!adapter.getFiles) {
+      return text({ provider, assetId, error: "file_lookup_not_supported" });
+    }
+
+    let files = await adapter.getFiles(assetId);
+    if (format) files = files.filter(file => file.format?.toLowerCase() === format.toLowerCase());
+    if (resolution) files = files.filter(file => file.resolution?.toLowerCase() === resolution.toLowerCase());
+    files = files.slice(0, limit);
+
+    return text({
+      provider: adapter.name,
+      assetId,
+      count: files.length,
+      mirrored: false,
+      serviceNotice: provider === "polyhaven"
+        ? "These URLs come from Poly Haven's live API. Keep Poly Haven credit visible when integrating the API service."
+        : undefined,
+      files
+    });
+  }
+);
+
+server.registerTool(
   "list_asset_providers",
   {
     description: "List currently supported live asset providers.",
