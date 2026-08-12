@@ -2,16 +2,17 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 import { generateProjectAttribution } from "./attribution.js";
+import { installAssetFile, planAssetInstall } from "./install.js";
 import { checkLicense } from "./licenses.js";
 import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.8.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.9.0" });
 function text(data: unknown) { return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }; }
 
 async function githubJson(path: string) {
-  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "game-dev-resource-mcp/0.8.0" };
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": "game-dev-resource-mcp/0.9.0" };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`https://api.github.com${path}`, { headers });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
@@ -29,9 +30,7 @@ server.registerTool("find_game_assets", {
 server.registerTool("search_game_assets", {
   description: "Search the local registry of game-development resource sources.",
   inputSchema: z.object({ query: z.string().default(""), tags: z.array(z.string()).default([]), commercialOnly: z.boolean().default(false) })
-}, async ({ query, tags, commercialOnly }) => {
-  let results = searchRegistry(query, tags); if (commercialOnly) results = results.filter(item => item.commercialUse === true); return text({ count: results.length, results });
-});
+}, async ({ query, tags, commercialOnly }) => { let results = searchRegistry(query, tags); if (commercialOnly) results = results.filter(item => item.commercialUse === true); return text({ count: results.length, results }); });
 
 server.registerTool("search_live_assets", {
   description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
@@ -42,6 +41,16 @@ server.registerTool("get_asset_files", {
   description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
   inputSchema: z.object({ provider: z.enum(["polyhaven"]).default("polyhaven"), assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), limit: z.number().int().min(1).max(200).default(100) })
 }, async ({ provider, assetId, format, resolution, limit }) => { const adapter = getProvider(provider); if (!adapter.getFiles) return text({ provider, assetId, error: "file_lookup_not_supported" }); let files = await adapter.getFiles(assetId); if (format) files = files.filter(file => file.format?.toLowerCase() === format.toLowerCase()); if (resolution) files = files.filter(file => file.resolution?.toLowerCase() === resolution.toLowerCase()); return text({ provider: adapter.name, assetId, mirrored: false, files: files.slice(0, limit) }); });
+
+server.registerTool("plan_asset_install", {
+  description: "Resolve provider-hosted files for an asset and mark which exact files are safe for automatic installation. Planning never writes to disk.",
+  inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
+}, async options => text(await planAssetInstall(options)));
+
+server.registerTool("install_asset_file", {
+  description: "Download one explicitly selected provider file into a local project directory. Only trusted HTTPS download hosts are allowed; size/hash checks are enforced and downloaded content is never executed.",
+  inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), filePath: z.string().min(1), projectRoot: z.string().min(1), destinationDir: z.string().optional(), overwrite: z.boolean().default(false), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
+}, async request => text(await installAssetFile(request)));
 
 server.registerTool("list_asset_providers", { description: "List supported providers and whether each is a live API or verified catalog.", inputSchema: z.object({}) }, async () => text({ providers: listProviders() }));
 
