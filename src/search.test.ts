@@ -30,7 +30,7 @@ test("name and tag matches outrank description-only matches", () => {
 test("commercial-only filtering removes unknown commercial rights", () => {
   const safe = base({ id: "safe", name: "Safe Car" });
   const unknown = base({ id: "unknown", name: "Unknown Car", commercialUse: "unknown" });
-  const results = rankAssets([unknown, safe], "car", { commercialOnly: true });
+  const results = rankAssets([unknown, safe], "car", { query: "car", commercialOnly: true });
   assert.deepEqual(results.map(item => item.id), ["safe"]);
 });
 
@@ -40,7 +40,7 @@ test("share-alike assets are excluded by default", () => {
   const defaultResults = rankAssets([shareAlike, cc0], "car");
   assert.deepEqual(defaultResults.map(item => item.id), ["cc0"]);
 
-  const allowedResults = rankAssets([shareAlike, cc0], "car", { allowShareAlike: true });
+  const allowedResults = rankAssets([shareAlike, cc0], "car", { query: "car", allowShareAlike: true });
   assert.equal(allowedResults.length, 2);
 });
 
