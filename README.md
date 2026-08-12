@@ -1,17 +1,18 @@
 # GameDev Resource MCP
 
-License-aware game development resource discovery and safe asset installation for AI coding agents via Model Context Protocol (MCP).
+License-aware game development resource discovery, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
 
 ## Why this exists
 
 AI coding agents are good at finding things, but game-development resources are unusually easy to misuse: “free,” “open source,” “downloadable,” “commercial use,” and “redistributable” are not equivalent.
 
-GameDev Resource MCP gives agents a conservative resource layer that keeps **provenance, licensing, search metadata, attribution and installation safety** together.
+GameDev Resource MCP gives agents a conservative resource layer that keeps **provenance, licensing, search metadata, stack planning, attribution and installation safety** together.
 
 It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 
 ## What V1 can do
 
+- Turn a game description into a practical resource stack with `recommend_stack`.
 - Search multiple game-resource providers with one query.
 - Filter by commercial-use posture and license obligations.
 - Filter by engine, 2D/3D/audio/font/code, style, format, asset type, genre and animation state.
@@ -27,7 +28,7 @@ Requires Node.js 20+.
 ```bash
 git clone https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp.git
 cd game-dev-resource-mcp
-npm install
+npm ci
 npm run build
 ```
 
@@ -55,14 +56,18 @@ For Codex `config.toml`, Claude Code, Trae and generic MCP client examples, see 
 
 ## Recommended workflow
 
+For a whole game or feature idea, start with `recommend_stack`:
+
 ```text
-user request
+user game description
     ↓
-find_game_assets
+recommend_stack
     ↓
-license + metadata filtering
+resource slots + primary candidates + alternatives + gaps
     ↓
-select resource
+license summary
+    ↓
+select resources
     ↓
 plan_asset_install (when supported)
     ↓
@@ -73,13 +78,48 @@ generate_project_attribution
 engine-specific integration by the coding agent
 ```
 
+For a single known need, call `find_game_assets` directly.
+
 See [`docs/end-to-end-example.md`](docs/end-to-end-example.md) for a complete example.
+
+## `recommend_stack`
+
+`recommend_stack` converts a broad game description into deterministic resource slots such as:
+
+- starter/framework examples;
+- environment;
+- vehicles;
+- characters;
+- weapons/combat art;
+- UI;
+- icons;
+- sound effects;
+- music/jingles;
+- fonts;
+- shader/GPU examples where relevant.
+
+The planner recognizes common English and Chinese game-development terms, including engine, 2D/3D, pixel, sci-fi, low-poly, survival, RPG, road/vehicle, combat, inventory and related concepts.
+
+It does **not** use model judgment to invent license rights. Each slot is resolved through the same provider metadata and conservative license filters used by `find_game_assets`.
+
+The result includes:
+
+- inferred engine/dimension/style/genre/theme signals;
+- required versus optional slots;
+- a primary recommendation and alternatives per resolved slot;
+- provider failures without discarding other successful slots;
+- unresolved required gaps;
+- a license/risk summary for primary selections;
+- asset attribution and provider service-credit requirements where known.
+
+If a requested engine has no verified starter provider, the slot remains unresolved instead of silently substituting a different engine.
 
 ## MCP tools
 
 | Tool | Purpose |
 |---|---|
-| `find_game_assets` | Preferred cross-provider search with ranking and license filters. |
+| `recommend_stack` | Turn a game description into a multi-category resource stack with license summary and gaps. |
+| `find_game_assets` | Preferred targeted cross-provider search with ranking and license filters. |
 | `search_game_assets` | Search the curated source registry. |
 | `search_live_assets` | Search one provider directly. |
 | `get_asset_files` | Resolve official provider-hosted file metadata where available. |
@@ -131,7 +171,7 @@ allowAttribution = true
 allowShareAlike = false
 ```
 
-Search scores are retrieval heuristics, **not legal clearance**.
+Search scores and stack recommendations are retrieval heuristics, **not legal clearance**.
 
 ## License model
 
@@ -187,18 +227,11 @@ This does not replace legal review, but it makes provenance and release obligati
 ## Development
 
 ```bash
-npm run check
-npm test
-npm run build
-```
-
-Or run all release validation steps:
-
-```bash
+npm ci
 npm run validate
 ```
 
-CI runs the same validation path on Node.js 22.
+CI validates Node.js 20 and 22, then packs the npm tarball, installs it into a clean temporary project and smoke-starts the installed MCP binary.
 
 ## Design principles
 
@@ -209,6 +242,7 @@ CI runs the same validation path on Node.js 22.
 5. Unknown rights fail closed.
 6. Never store secrets.
 7. Never execute downloaded third-party content as part of asset installation.
+8. Recommendation must reuse the same conservative license filters as direct search.
 
 See [`AGENTS.md`](AGENTS.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
