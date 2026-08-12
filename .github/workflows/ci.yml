@@ -42,11 +42,16 @@ jobs:
         run: |
           set -euo pipefail
           PACK_FILE="$(npm pack --silent)"
+          EXPECTED_VERSION="$(node -p "require('$GITHUB_WORKSPACE/package.json').version")"
           mkdir -p /tmp/game-dev-resource-mcp-smoke
           cd /tmp/game-dev-resource-mcp-smoke
           npm init -y >/dev/null
           npm install "$GITHUB_WORKSPACE/$PACK_FILE"
-          node -e "const p=require('./node_modules/game-dev-resource-mcp/package.json'); if(p.version!=='1.0.0') { console.error(p.version); process.exit(1) }"
+          ACTUAL_VERSION="$(node -p "require('./node_modules/game-dev-resource-mcp/package.json').version")"
+          if [ "$ACTUAL_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "Installed version $ACTUAL_VERSION does not match expected $EXPECTED_VERSION"
+            exit 1
+          fi
           set +e
           timeout 2s ./node_modules/.bin/game-dev-resource-mcp </dev/null
           CODE=$?
