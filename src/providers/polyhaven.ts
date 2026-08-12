@@ -1,7 +1,8 @@
+import { VERSION } from "../version.js";
 import type { AssetProvider, ProviderAsset, ProviderFile, ProviderSearchOptions } from "./types.js";
 
 const API_BASE = "https://api.polyhaven.com";
-const USER_AGENT = "game-dev-resource-mcp/0.2 (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)";
+const USER_AGENT = `game-dev-resource-mcp/${VERSION} (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)`;
 const LICENSE_SOURCE = "https://polyhaven.com/license";
 
 interface PolyHavenAssetRaw {

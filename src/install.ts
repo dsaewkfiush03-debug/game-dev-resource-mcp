@@ -3,10 +3,11 @@ import { mkdir, open, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { getProvider, type AssetProviderId } from "./providers/index.js";
 import type { ProviderFile } from "./providers/types.js";
+import { VERSION } from "./version.js";
 
 const DEFAULT_MAX_BYTES = 128 * 1024 * 1024;
 const ABSOLUTE_MAX_BYTES = 1024 * 1024 * 1024;
-const DOWNLOAD_USER_AGENT = "game-dev-resource-mcp/0.9.0 (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)";
+const DOWNLOAD_USER_AGENT = `game-dev-resource-mcp/${VERSION} (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)`;
 
 const TRUSTED_DOWNLOAD_HOSTS: Partial<Record<AssetProviderId, string[]>> = {
   polyhaven: ["dl.polyhaven.org"]
