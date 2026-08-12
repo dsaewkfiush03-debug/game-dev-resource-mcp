@@ -16,6 +16,23 @@ test("MIT requires retaining attribution/license notices", () => {
   assert.equal(rule?.attribution, true);
 });
 
+test("OpenGameArt attribution licenses permit commercial use with credit", () => {
+  for (const id of ["OGA-BY-3.0", "OGA-BY-4.0", "CC-BY-3.0", "CC-BY-4.0"]) {
+    const rule = checkLicense(id);
+    assert.equal(rule?.commercialUse, true);
+    assert.equal(rule?.attribution, true);
+    assert.equal(rule?.risk, "attribution");
+  }
+});
+
+test("share-alike and GPL families remain conditional", () => {
+  for (const id of ["CC-BY-SA-3.0", "CC-BY-SA-4.0", "GPL-2.0", "GPL-3.0", "LGPL-2.1", "LGPL-3.0"]) {
+    const rule = checkLicense(id);
+    assert.equal(rule?.commercialUse, true);
+    assert.equal(rule?.risk, "conditional");
+  }
+});
+
 test("non-commercial Creative Commons is rejected for commercial use", () => {
   const rule = checkLicense("CC BY-NC 4.0");
   assert.equal(rule?.risk, "reject");
