@@ -1,4 +1,4 @@
-import type { AssetProvider, ProviderAsset, ProviderSearchOptions } from "./types.js";
+import type { AssetProvider, ProviderAsset, ProviderFile, ProviderSearchOptions } from "./types.js";
 
 const API_BASE = "https://api.polyhaven.com";
 const USER_AGENT = "game-dev-resource-mcp/0.2 (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)";
@@ -21,6 +21,21 @@ function assetTypeTags(type: PolyHavenAssetRaw["type"]): string[] {
   if (type === 1 || type === "textures" || type === "texture") return ["texture", "pbr"];
   if (type === 2 || type === "models" || type === "model") return ["3d", "model"];
   return [];
+}
+
+async function apiJson(path: string): Promise<unknown> {
+  const response = await fetch(`${API_BASE}${path}`, {
+    headers: {
+      Accept: "application/json",
+      "User-Agent": USER_AGENT
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Poly Haven API ${response.status}: ${await response.text()}`);
+  }
+
+  return response.json();
 }
 
 export function mapPolyHavenAsset(id: string, raw: PolyHavenAssetRaw, retrievedAt = new Date().toISOString()): ProviderAsset {
@@ -47,22 +62,30 @@ export function mapPolyHavenAsset(id: string, raw: PolyHavenAssetRaw, retrievedA
   };
 }
 
+export function flattenPolyHavenFiles(value: unknown, path: string[] = []): ProviderFile[] {
+  if (!value || typeof value !== "object") return [];
+  const object = value as Record<string, unknown>;
+
+  if (typeof object.url === "string") {
+    const parts = path.filter(Boolean);
+    return [{
+      path: parts.join("/"),
+      url: object.url,
+      size: typeof object.size === "number" ? object.size : undefined,
+      md5: typeof object.md5 === "string" ? object.md5 : undefined,
+      format: parts.at(-1),
+      resolution: parts.length >= 2 ? parts.at(-2) : undefined
+    }];
+  }
+
+  return Object.entries(object).flatMap(([key, child]) => flattenPolyHavenFiles(child, [...path, key]));
+}
+
 export const polyHavenProvider: AssetProvider = {
   id: "polyhaven",
   name: "Poly Haven",
   async search({ query, categories = [], limit = 20 }: ProviderSearchOptions): Promise<ProviderAsset[]> {
-    const response = await fetch(`${API_BASE}/assets`, {
-      headers: {
-        Accept: "application/json",
-        "User-Agent": USER_AGENT
-      }
-    });
-
-    if (!response.ok) {
-      throw new Error(`Poly Haven API ${response.status}: ${await response.text()}`);
-    }
-
-    const data = await response.json() as Record<string, PolyHavenAssetRaw>;
+    const data = await apiJson("/assets") as Record<string, PolyHavenAssetRaw>;
     const q = query.trim().toLowerCase();
     const wantedCategories = categories.map(category => category.toLowerCase());
     const retrievedAt = new Date().toISOString();
@@ -78,5 +101,9 @@ export const polyHavenProvider: AssetProvider = {
         return queryMatches && categoryMatches;
       })
       .slice(0, Math.max(1, Math.min(limit, 100)));
+  },
+  async getFiles(assetId: string): Promise<ProviderFile[]> {
+    const data = await apiJson(`/files/${encodeURIComponent(assetId)}`);
+    return flattenPolyHavenFiles(data);
   }
 };
