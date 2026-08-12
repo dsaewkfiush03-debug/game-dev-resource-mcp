@@ -4,8 +4,9 @@ import * as z from "zod/v4";
 import { checkLicense } from "./licenses.js";
 import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
+import { searchAllAssets } from "./search.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.3.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.4.0" });
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -14,7 +15,7 @@ function text(data: unknown) {
 async function githubJson(path: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "game-dev-resource-mcp/0.3.0"
+    "User-Agent": "game-dev-resource-mcp/0.4.0"
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 
@@ -22,6 +23,35 @@ async function githubJson(path: string) {
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
   return response.json();
 }
+
+server.registerTool("find_game_assets", {
+  description: "Search all supported asset providers at once, apply commercial/license filters, and return ranked results with explainable match reasons. This is the preferred tool when the user describes the asset they need without naming a source site.",
+  inputSchema: z.object({
+    query: z.string().min(1),
+    categories: z.array(z.string()).default([]),
+    providers: z.array(z.enum(["polyhaven", "kenney", "quaternius"])).optional(),
+    commercialOnly: z.boolean().default(true),
+    allowAttribution: z.boolean().default(true),
+    allowShareAlike: z.boolean().default(false),
+    limit: z.number().int().min(1).max(100).default(20),
+    perProviderLimit: z.number().int().min(1).max(100).default(50)
+  })
+}, async options => {
+  const result = await searchAllAssets(options);
+  return text({
+    query: options.query,
+    count: result.results.length,
+    searchedProviders: result.searchedProviders,
+    providerErrors: result.errors,
+    filters: {
+      commercialOnly: options.commercialOnly,
+      allowAttribution: options.allowAttribution,
+      allowShareAlike: options.allowShareAlike
+    },
+    ranking: "name matches > tags > categories > description; confirmed commercial rights and simpler license obligations receive small bonuses",
+    results: result.results
+  });
+});
 
 server.registerTool("search_game_assets", {
   description: "Search the local registry of game-development resource sources.",
@@ -33,7 +63,7 @@ server.registerTool("search_game_assets", {
 });
 
 server.registerTool("search_live_assets", {
-  description: "Search a supported asset provider. Providers may be live APIs or maintained verified catalogs; results preserve source and license provenance.",
+  description: "Search one supported asset provider. Providers may be live APIs or maintained verified catalogs; results preserve source and license provenance.",
   inputSchema: z.object({
     provider: z.enum(["polyhaven", "kenney", "quaternius"]).default("polyhaven"),
     query: z.string().default(""),
