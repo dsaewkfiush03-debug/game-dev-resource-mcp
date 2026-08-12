@@ -1,0 +1,59 @@
+name: Resource source proposal
+description: Propose a new game-development resource provider or verified source
+title: "[Source] "
+labels: ["resource-source"]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Source name
+    validations:
+      required: true
+  - type: input
+    id: canonical
+    attributes:
+      label: Canonical source URL
+    validations:
+      required: true
+  - type: input
+    id: license
+    attributes:
+      label: License / licensing model
+      description: Use an exact license identifier where possible; use MULTIPLE or unknown when appropriate.
+    validations:
+      required: true
+  - type: input
+    id: evidence
+    attributes:
+      label: Authoritative license/source evidence URL
+      description: Prefer the author's official site, canonical LICENSE file or official license page.
+    validations:
+      required: true
+  - type: textarea
+    id: content
+    attributes:
+      label: Useful game-development content
+      description: Examples: 2D, 3D, UI, audio, fonts, code, starter projects, shaders.
+    validations:
+      required: true
+  - type: dropdown
+    id: acquisition
+    attributes:
+      label: Acquisition mode
+      options:
+        - Stable official API
+        - Stable official direct files
+        - Verified catalog / manual source links
+        - Per-item inspection required
+        - Unknown
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I am not treating “free” or “open source” as proof of commercial-use or redistribution rights.
+          required: true
+        - label: I have not included credentials, private URLs or proprietary assets.
+          required: true
