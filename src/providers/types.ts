@@ -1,4 +1,4 @@
-export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "godotdemos";
+export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "godotdemos" | "gameicons" | "phaser";
 export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
 
 export interface ProviderSearchOptions {
