@@ -38,7 +38,9 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   polyhaven: "live-api",
   kenney: "verified-catalog",
   quaternius: "verified-catalog",
-  godotdemos: "verified-catalog"
+  godotdemos: "verified-catalog",
+  gameicons: "verified-catalog",
+  phaser: "verified-catalog"
 };
 
 function tokens(input: string): string[] {
@@ -74,44 +76,17 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
   ];
 
   for (const token of queryTokens) {
-    if (contains(asset.name, token)) {
-      score += 8;
-      reasons.push(`name:${token}`);
-    }
-    if (asset.tags.some(tag => contains(tag, token))) {
-      score += 5;
-      reasons.push(`tag:${token}`);
-    }
-    if (asset.categories.some(category => contains(category, token))) {
-      score += 4;
-      reasons.push(`category:${token}`);
-    }
-    if (metadata.some(value => contains(value, token))) {
-      score += 4;
-      reasons.push(`metadata:${token}`);
-    }
-    if (contains(asset.description, token)) {
-      score += 2;
-      reasons.push(`description:${token}`);
-    }
+    if (contains(asset.name, token)) { score += 8; reasons.push(`name:${token}`); }
+    if (asset.tags.some(tag => contains(tag, token))) { score += 5; reasons.push(`tag:${token}`); }
+    if (asset.categories.some(category => contains(category, token))) { score += 4; reasons.push(`category:${token}`); }
+    if (metadata.some(value => contains(value, token))) { score += 4; reasons.push(`metadata:${token}`); }
+    if (contains(asset.description, token)) { score += 2; reasons.push(`description:${token}`); }
   }
 
-  if (asset.commercialUse === true) {
-    score += 5;
-    reasons.push("commercial-use-confirmed");
-  }
-  if (asset.attribution === false) {
-    score += 2;
-    reasons.push("no-asset-attribution-required");
-  }
-  if (asset.shareAlike === false) {
-    score += 1;
-    reasons.push("no-share-alike");
-  }
-  if (asset.licenseSource) {
-    score += 1;
-    reasons.push("license-source-present");
-  }
+  if (asset.commercialUse === true) { score += 5; reasons.push("commercial-use-confirmed"); }
+  if (asset.attribution === false) { score += 2; reasons.push("no-asset-attribution-required"); }
+  if (asset.shareAlike === false) { score += 1; reasons.push("no-share-alike"); }
+  if (asset.licenseSource) { score += 1; reasons.push("license-source-present"); }
 
   return { score, matchReasons: Array.from(new Set(reasons)) };
 }
