@@ -1,8 +1,16 @@
-export type AssetProviderId = "polyhaven" | "kenney" | "quaternius";
+export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "gameicons" | "godotdemos";
+export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
 
 export interface ProviderSearchOptions {
   query: string;
   categories?: string[];
+  engines?: string[];
+  dimensions?: AssetDimension[];
+  styles?: string[];
+  formats?: string[];
+  assetTypes?: string[];
+  gameGenres?: string[];
+  animated?: boolean;
   limit?: number;
 }
 
@@ -14,6 +22,14 @@ export interface ProviderAsset {
   description?: string;
   categories: string[];
   tags: string[];
+  engine?: string[];
+  dimension?: AssetDimension;
+  style?: string[];
+  formats?: string[];
+  assetTypes?: string[];
+  gameGenres?: string[];
+  resolution?: string;
+  animated?: boolean;
   license: string;
   licenseSource: string;
   commercialUse: boolean | "unknown";
