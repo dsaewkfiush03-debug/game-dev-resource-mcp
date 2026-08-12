@@ -9,12 +9,22 @@ Use this checklist for stable releases.
 - [ ] Confirm `src/version.test.ts` passes.
 - [ ] Update `RELEASE_NOTES.md`.
 
+## Dependency reproducibility
+
+- [ ] `package-lock.json` is committed and matches `package.json`.
+- [ ] CI installs repository dependencies with `npm ci`.
+- [ ] Dependabot is enabled for npm and GitHub Actions.
+
 ## Validation
 
 - [ ] `npm run check`
 - [ ] `npm test`
 - [ ] `npm run build`
 - [ ] `npm pack --dry-run`
+- [ ] Node 20 compatibility CI is green.
+- [ ] Node 22 CI is green.
+- [ ] The packed tarball installs into a clean temporary project.
+- [ ] The installed MCP binary survives a smoke start.
 - [ ] GitHub Actions is green on the release PR.
 
 ## Documentation
@@ -23,6 +33,7 @@ Use this checklist for stable releases.
 - [ ] Client setup examples match current MCP client behavior.
 - [ ] End-to-end example reflects current safe-install flow.
 - [ ] Known limitations are explicit.
+- [ ] `SECURITY.md`, issue templates and PR template remain current.
 
 ## License/provenance
 
