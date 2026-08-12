@@ -6,7 +6,7 @@ import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.4.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.5.0" });
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -15,21 +15,30 @@ function text(data: unknown) {
 async function githubJson(path: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "game-dev-resource-mcp/0.4.0"
+    "User-Agent": "game-dev-resource-mcp/0.5.0"
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-
   const response = await fetch(`https://api.github.com${path}`, { headers });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
   return response.json();
 }
 
+const providerId = z.enum(["polyhaven", "kenney", "quaternius", "godotdemos"]);
+const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
+
 server.registerTool("find_game_assets", {
-  description: "Search all supported asset providers at once, apply commercial/license filters, and return ranked results with explainable match reasons. This is the preferred tool when the user describes the asset they need without naming a source site.",
+  description: "Search all supported providers, filter by license and game-development metadata, and return ranked results with explainable reasons.",
   inputSchema: z.object({
     query: z.string().min(1),
     categories: z.array(z.string()).default([]),
-    providers: z.array(z.enum(["polyhaven", "kenney", "quaternius"])).optional(),
+    providers: z.array(providerId).optional(),
+    engines: z.array(z.string()).default([]),
+    dimensions: z.array(dimension).default([]),
+    styles: z.array(z.string()).default([]),
+    formats: z.array(z.string()).default([]),
+    assetTypes: z.array(z.string()).default([]),
+    gameGenres: z.array(z.string()).default([]),
+    animated: z.boolean().optional(),
     commercialOnly: z.boolean().default(true),
     allowAttribution: z.boolean().default(true),
     allowShareAlike: z.boolean().default(false),
@@ -46,9 +55,16 @@ server.registerTool("find_game_assets", {
     filters: {
       commercialOnly: options.commercialOnly,
       allowAttribution: options.allowAttribution,
-      allowShareAlike: options.allowShareAlike
+      allowShareAlike: options.allowShareAlike,
+      engines: options.engines,
+      dimensions: options.dimensions,
+      styles: options.styles,
+      formats: options.formats,
+      assetTypes: options.assetTypes,
+      gameGenres: options.gameGenres,
+      animated: options.animated
     },
-    ranking: "name matches > tags > categories > description; confirmed commercial rights and simpler license obligations receive small bonuses",
+    ranking: "name > tags > categories/metadata > description; confirmed commercial rights and simpler obligations receive small bonuses",
     results: result.results
   });
 });
@@ -63,27 +79,34 @@ server.registerTool("search_game_assets", {
 });
 
 server.registerTool("search_live_assets", {
-  description: "Search one supported asset provider. Providers may be live APIs or maintained verified catalogs; results preserve source and license provenance.",
+  description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
   inputSchema: z.object({
-    provider: z.enum(["polyhaven", "kenney", "quaternius"]).default("polyhaven"),
+    provider: providerId.default("polyhaven"),
     query: z.string().default(""),
     categories: z.array(z.string()).default([]),
+    engines: z.array(z.string()).default([]),
+    dimensions: z.array(dimension).default([]),
+    styles: z.array(z.string()).default([]),
+    formats: z.array(z.string()).default([]),
+    assetTypes: z.array(z.string()).default([]),
+    gameGenres: z.array(z.string()).default([]),
+    animated: z.boolean().optional(),
     limit: z.number().int().min(1).max(100).default(20)
   })
-}, async ({ provider, query, categories, limit }) => {
-  const adapter = getProvider(provider);
-  const results = await adapter.search({ query, categories, limit });
+}, async options => {
+  const adapter = getProvider(options.provider);
+  const results = await adapter.search(options);
   return text({
     provider: adapter.name,
     count: results.length,
-    providerMode: provider === "polyhaven" ? "live-api" : "verified-catalog",
-    serviceNotice: provider === "polyhaven" ? "Poly Haven assets are CC0, but use of the live API requires clear Poly Haven credit and a unique User-Agent." : undefined,
+    providerMode: options.provider === "polyhaven" ? "live-api" : "verified-catalog",
+    serviceNotice: options.provider === "polyhaven" ? "Poly Haven assets are CC0, but use of the live API requires clear Poly Haven credit and a unique User-Agent." : undefined,
     results
   });
 });
 
 server.registerTool("get_asset_files", {
-  description: "Return official provider-hosted download links and file metadata for a selected asset without mirroring it.",
+  description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
   inputSchema: z.object({
     provider: z.enum(["polyhaven"]).default("polyhaven"),
     assetId: z.string().min(1),
@@ -102,7 +125,7 @@ server.registerTool("get_asset_files", {
 });
 
 server.registerTool("list_asset_providers", {
-  description: "List supported asset providers and whether each is a live API or verified catalog.",
+  description: "List supported providers and whether each is a live API or verified catalog.",
   inputSchema: z.object({})
 }, async () => text({ providers: listProviders() }));
 
@@ -118,7 +141,7 @@ server.registerTool("search_open_source_projects", {
 });
 
 server.registerTool("check_license", {
-  description: "Classify a known license using conservative game-commercial-use rules.",
+  description: "Classify a known license using conservative commercial-game rules.",
   inputSchema: z.object({ license: z.string().min(1) })
 }, async ({ license }) => {
   const rule = checkLicense(license);
@@ -139,7 +162,7 @@ server.registerTool("inspect_repository", {
 });
 
 server.registerTool("generate_attribution", {
-  description: "Generate a conservative attribution/CREDITS entry for a resource after its license has been identified.",
+  description: "Generate a conservative CREDITS entry after a resource license has been identified.",
   inputSchema: z.object({ name: z.string().min(1), author: z.string().optional(), sourceUrl: z.string().url(), license: z.string().min(1), licenseUrl: z.string().url().optional(), modified: z.boolean().default(false) })
 }, async ({ name, author, sourceUrl, license, licenseUrl, modified }) => {
   const rule = checkLicense(license);
