@@ -6,7 +6,7 @@ import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.5.0" });
+const server = new McpServer({ name: "game-dev-resource-mcp", version: "0.6.0" });
 
 function text(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
@@ -15,7 +15,7 @@ function text(data: unknown) {
 async function githubJson(path: string) {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
-    "User-Agent": "game-dev-resource-mcp/0.5.0"
+    "User-Agent": "game-dev-resource-mcp/0.6.0"
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`https://api.github.com${path}`, { headers });
@@ -23,7 +23,7 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "kenney", "quaternius", "godotdemos"]);
+const providerId = z.enum(["polyhaven", "kenney", "quaternius", "godotdemos", "gameicons", "phaser"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 
 server.registerTool("find_game_assets", {
