@@ -40,7 +40,8 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   quaternius: "verified-catalog",
   godotdemos: "verified-catalog",
   gameicons: "verified-catalog",
-  phaser: "verified-catalog"
+  phaser: "verified-catalog",
+  googlefonts: "verified-catalog"
 };
 
 function tokens(input: string): string[] {

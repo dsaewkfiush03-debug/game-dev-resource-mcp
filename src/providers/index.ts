@@ -1,5 +1,6 @@
 import { gameIconsProvider } from "./gameicons.js";
 import { godotDemosProvider } from "./godotdemos.js";
+import { googleFontsProvider } from "./googlefonts.js";
 import { kenneyProvider } from "./kenney.js";
 import { phaserProvider } from "./phaser.js";
 import { polyHavenProvider } from "./polyhaven.js";
@@ -12,7 +13,8 @@ const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   quaternius: quaterniusProvider,
   godotdemos: godotDemosProvider,
   gameicons: gameIconsProvider,
-  phaser: phaserProvider
+  phaser: phaserProvider,
+  googlefonts: googleFontsProvider
 };
 
 export function getProvider(id: AssetProviderId): AssetProvider {
