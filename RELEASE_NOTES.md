@@ -1,8 +1,54 @@
-# GameDev Resource MCP v1.0.0
+# Release notes
+
+## v1.1.0
+
+V1.1 adds a deterministic game-resource stack recommendation layer on top of the existing license-aware search system.
+
+### `recommend_stack`
+
+A coding agent can now provide a whole-game or feature description instead of searching one resource category at a time.
+
+`recommend_stack`:
+
+- infers practical signals such as engine, 2D/3D, style, genre and game themes;
+- understands common English and Chinese game-development terms;
+- expands the request into required and optional resource slots;
+- searches each slot through the existing verified providers and conservative license filters;
+- returns a primary recommendation plus alternatives for each resolved slot;
+- preserves provider errors without discarding successful slots;
+- reports unresolved required gaps explicitly;
+- summarizes licenses, license risks, attribution requirements and provider service credits for primary selections.
+
+Typical slots include starter/framework references, environment art, vehicles, characters, weapons/combat art, UI, icons, sound effects, music, fonts and relevant shader examples.
+
+If a requested engine has no verified starter provider, V1.1 leaves that required slot unresolved rather than silently recommending a different engine.
+
+### Safety model
+
+The recommendation layer does not invent commercial-use or redistribution rights. It reuses `find_game_assets` / `searchAllAssets` provider metadata and the same conservative defaults:
+
+- `commercialOnly: true`
+- `allowAttribution: true`
+- `allowShareAlike: false`
+
+Recommendations remain retrieval assistance, not legal clearance.
+
+### Release engineering
+
+- package/runtime version: `1.1.0`;
+- npm lockfile refreshed by npm itself;
+- package-smoke version validation now reads the package version dynamically rather than hard-coding `1.0.0`;
+- existing Node 20/22, `npm ci`, tarball clean-install and MCP binary smoke tests remain in place.
+
+### Compatibility
+
+V1.1 is additive. Existing V1 tool names and existing search/install workflows remain available.
+
+---
+
+## v1.0.0
 
 First stable release of the license-aware game-development resource layer for MCP-capable coding agents.
-
-## Highlights
 
 ### Cross-provider resource discovery
 
@@ -56,7 +102,7 @@ The installer:
 - verifies MD5 when available;
 - never executes or extracts downloaded content.
 
-## MCP tools in v1.0.0
+### MCP tools in v1.0.0
 
 - `find_game_assets`
 - `search_game_assets`
@@ -71,17 +117,17 @@ The installer:
 - `generate_attribution`
 - `generate_project_attribution`
 
-## Compatibility
+### Compatibility
 
 - Node.js 20+
 - Local STDIO MCP transport
 - Designed for Codex, Claude Code, Trae and generic MCP clients that support local STDIO servers.
 
-## Breaking-change policy
+### Breaking-change policy
 
 v1.0.0 establishes the initial stable tool names and core result shapes. Future breaking changes should use a new major version or a clearly documented migration path.
 
-## Known limitations
+### Known limitations
 
 - Verified catalog coverage is intentionally incomplete.
 - Automatic installation is currently Poly Haven only.
