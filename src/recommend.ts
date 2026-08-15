@@ -129,6 +129,11 @@ function artProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
   return ["kenney", "quaternius", "polyhaven"];
 }
 
+function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
+  const base = artProviders(dimension);
+  return dimension === "2D" || dimension === undefined ? [...base, "openverse"] : base;
+}
+
 function filterAllowedProviders(slotProviders: AssetProviderId[], requested?: AssetProviderId[]): AssetProviderId[] {
   if (!requested?.length) return slotProviders;
   return slotProviders.filter(provider => requested.includes(provider));
@@ -162,13 +167,13 @@ export function buildStackPlan(options: RecommendStackOptions): {
   const artDims: AssetDimension[] | undefined = dimension ? [dimension] : undefined;
 
   if (engine) {
-    const providers: AssetProviderId[] = engine === "godot" ? ["godotdemos"] : engine === "phaser" || engine === "web" ? ["phaser"] : [];
+    const providers: AssetProviderId[] = engine === "godot" ? ["godotassetlib", "godotdemos"] : engine === "phaser" || engine === "web" ? ["phaser"] : [];
     const starterQuery = engine === "godot" && dimension ? `${engine} ${dimension.toLowerCase()} starter` : `${engine} starter`;
-    add({ id: "starter", label: "Starter / framework", required: true, rationale: `A ${engine} project needs a reusable starting point or implementation reference.`, queries: unique([starterQuery, `${engine} starter`, `${engine} code`]), providers, dimensions: ["code"] });
+    add({ id: "starter", label: "Starter / framework", required: true, rationale: `A ${engine} project needs a reusable starting point or implementation reference.`, queries: unique([starterQuery, `${engine} starter`, `${engine} template`, `${engine} code`]), providers, dimensions: ["code"] });
   }
 
   const environmentTheme = themes.includes("road") ? "road" : themes.includes("nature") ? "nature" : themes.includes("space") ? "space" : undefined;
-  add({ id: "environment", label: "Environment", required: true, rationale: "Core world/environment art is needed for a coherent playable scene.", queries: buildQueries("environment", styles, gameGenres, environmentTheme), providers: artProviders(dimension), dimensions: artDims });
+  add({ id: "environment", label: "Environment", required: true, rationale: "Core world/environment art is needed for a coherent playable scene.", queries: buildQueries("environment", styles, gameGenres, environmentTheme), providers: environmentProviders(dimension), dimensions: artDims });
 
   if (themes.includes("vehicle") || gameGenres.includes("racing")) {
     add({ id: "vehicle", label: "Vehicles", required: true, rationale: "The game description explicitly depends on vehicles/driving.", queries: buildQueries("vehicle", styles, gameGenres), providers: artProviders(dimension), dimensions: artDims });
@@ -188,14 +193,14 @@ export function buildStackPlan(options: RecommendStackOptions): {
   add({ id: "icons", label: "Icons", required: false, rationale: "Icons improve HUD, inventory, skills and status communication.", queries: buildQueries("icon", [], gameGenres, iconTheme), providers: ["gameicons", "kenney"], dimensions: ["2D"] });
 
   const sfxTheme = styles.includes("sci-fi") ? "sci-fi" : themes.includes("combat") ? "impact" : "interface";
-  add({ id: "sfx", label: "Sound effects", required: true, rationale: "Interaction and gameplay feedback require sound effects.", queries: unique([`${sfxTheme} sounds`, "sounds", "audio"]), providers: ["kenney"], dimensions: ["audio"] });
+  add({ id: "sfx", label: "Sound effects", required: true, rationale: "Interaction and gameplay feedback require sound effects.", queries: unique([`${sfxTheme} sounds`, "game sound effect", "sounds", "audio"]), providers: ["kenney", "openverse"], dimensions: ["audio"] });
 
-  add({ id: "music", label: "Music / jingles", required: false, rationale: "Music is optional for a first playable build but useful for presentation and pacing.", queries: ["music", "jingle"], providers: ["kenney"], dimensions: ["audio"] });
+  add({ id: "music", label: "Music / jingles", required: false, rationale: "Music is optional for a first playable build but useful for presentation and pacing.", queries: unique([[styles[0], gameGenres[0], "game music"].filter(Boolean).join(" "), "game music", "music", "jingle"]), providers: ["kenney", "openverse"], dimensions: ["audio"] });
 
   add({ id: "font", label: "Font", required: true, rationale: "A distributable game should use a font with explicit embedding/redistribution terms.", queries: buildQueries("font", styles, gameGenres), providers: ["googlefonts"], dimensions: ["font"] });
 
   if (engine === "godot" && (styles.includes("sci-fi") || dimension === "3D")) {
-    add({ id: "shader", label: "Shader / GPU examples", required: false, rationale: "Godot 3D or sci-fi presentation can benefit from official shader/compute examples.", queries: ["godot shader", "godot compute"], providers: ["godotdemos"], dimensions: ["code"] });
+    add({ id: "shader", label: "Shader / GPU examples", required: false, rationale: "Godot 3D or sci-fi presentation can benefit from official/community shader and compute resources with explicit licenses.", queries: ["shader", "compute", "visual effect"], providers: ["godotassetlib", "godotdemos"], dimensions: ["code"] });
   }
 
   return { inferred: { engine, dimension, styles, gameGenres, themes }, slots };
@@ -269,7 +274,8 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
   const notes = [
     "Recommendations are retrieval results, not legal clearance. Verify original license/provenance before shipping.",
     "Only primary recommendations are counted in the license summary; alternatives retain their own license metadata.",
-    "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path."
+    "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path.",
+    "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor."
   ];
   if (inferred.engine && !["godot", "phaser", "web"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
