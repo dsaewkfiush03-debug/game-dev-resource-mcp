@@ -16,6 +16,20 @@ test("MIT requires retaining attribution/license notices", () => {
   assert.equal(rule?.attribution, true);
 });
 
+test("dual MIT or Apache licensing is recognized as permissive", () => {
+  const rule = checkLicense("MIT OR Apache-2.0");
+  assert.equal(rule?.risk, "safe");
+  assert.equal(rule?.commercialUse, true);
+  assert.equal(rule?.redistribution, true);
+});
+
+test("zlib license is recognized as commercially usable", () => {
+  const rule = checkLicense("Zlib");
+  assert.equal(rule?.risk, "safe");
+  assert.equal(rule?.commercialUse, true);
+  assert.equal(rule?.modification, true);
+});
+
 test("OpenGameArt attribution licenses permit commercial use with credit", () => {
   for (const id of ["OGA-BY-3.0", "OGA-BY-4.0", "CC-BY-3.0", "CC-BY-4.0"]) {
     const rule = checkLicense(id);
