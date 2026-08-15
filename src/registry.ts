@@ -1,3 +1,4 @@
+import { EXPANDED_REGISTRY } from "./registry-expanded.js";
 import type { ResourceRecord } from "./types.js";
 
 export const REGISTRY: ResourceRecord[] = [
@@ -87,7 +88,8 @@ export const REGISTRY: ResourceRecord[] = [
     authType: "none",
     tags: ["code", "framework", "starter", "engine", "game"],
     notes: "Every repository must be inspected for an explicit license before reuse."
-  }
+  },
+  ...EXPANDED_REGISTRY
 ];
 
 export function searchRegistry(query: string, tags: string[] = []): ResourceRecord[] {
