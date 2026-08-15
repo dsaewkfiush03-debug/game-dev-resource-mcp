@@ -22,7 +22,7 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "kenney", "quaternius", "godotdemos", "gameicons", "phaser", "googlefonts"]);
+const providerId = z.enum(["polyhaven", "kenney", "quaternius", "godotdemos", "gameicons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 
 server.registerTool("find_game_assets", {
@@ -54,7 +54,7 @@ server.registerTool("search_game_assets", {
 server.registerTool("search_live_assets", {
   description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
   inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
-}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: options.provider === "polyhaven" ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
+}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "openverse", "godotassetlib"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
 
 server.registerTool("get_asset_files", {
   description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
