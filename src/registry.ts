@@ -1,3 +1,4 @@
+import { ECOSYSTEM_REGISTRY } from "./registry-ecosystems.js";
 import { EXPANDED_REGISTRY } from "./registry-expanded.js";
 import type { ResourceRecord } from "./types.js";
 
@@ -89,7 +90,8 @@ export const REGISTRY: ResourceRecord[] = [
     tags: ["code", "framework", "starter", "engine", "game"],
     notes: "Every repository must be inspected for an explicit license before reuse."
   },
-  ...EXPANDED_REGISTRY
+  ...EXPANDED_REGISTRY,
+  ...ECOSYSTEM_REGISTRY
 ];
 
 const QUERY_ALIASES: Record<string, string[]> = {
