@@ -1,5 +1,90 @@
 # Release notes
 
+## v1.2.0
+
+V1.2 expands GameDev Resource MCP from a small curated source registry into a broad game-development discovery map while keeping the existing verified-provider and fail-closed licensing model.
+
+### Major resource-source expansion
+
+The source registry now contains 40+ high-value game-development sources and ecosystem routes spanning:
+
+- 2D sprites, tilesets and UI;
+- 3D models, characters, vehicles and environments;
+- PBR materials and HDRIs;
+- icon libraries;
+- fonts and CJK/localization fonts;
+- SFX, ambience, Foley and music sources;
+- shaders and VFX;
+- engines and rendering frameworks;
+- physics libraries;
+- plugins/addons;
+- starters/templates;
+- reusable inventory, combat, save, networking, pathfinding and procedural-generation code discovery.
+
+Newly represented sources/ecosystems include ambientCG, Openverse, Freesound, Godot Asset Library, itch.io Game Assets, Sketchfab, Unity Asset Store, Epic Games Fab, Sonniss, Pixabay, Mixkit, Khronos glTF Sample Assets, Tabler Icons, Heroicons, Feather Icons, Bootstrap Icons, Noto Fonts, Bevy, Babylon.js, three.js, PixiJS, Matter.js, libGDX, raylib, Godot shader discovery, Shadertoy and additional GitHub game-development discovery routes.
+
+### Two-tier safety model
+
+V1.2 deliberately distinguishes between:
+
+1. **Uniform/verified source licensing** — sources whose relevant core content has a known source-level open/permissive license, such as CC0, MIT, Apache-2.0, OFL or Zlib.
+2. **Per-item review sources** — large marketplaces, community libraries and aggregators where license rights vary by item or repository.
+
+Per-item sources are discovery routes, not blanket commercial-use approvals. `MULTIPLE` and `CUSTOM` sources remain unknown/fail-closed until the exact item license is inspected.
+
+See `docs/resource-sources.md` for the source map and safety boundary.
+
+### Chinese query expansion
+
+`search_game_assets` now expands common Chinese game-development requests into useful English discovery tags, including terms such as:
+
+- `音效`
+- `音乐`
+- `字体` / `中文字体`
+- `着色器` / `特效`
+- `背包`
+- `战斗`
+- `联网` / `多人`
+- `存档`
+- `寻路`
+- `程序化`
+- `车辆`
+- `公路`
+- `模板`
+- `插件`
+- `低模`
+- `科幻`
+
+This lets Chinese-language agents discover the same broad source registry without requiring the user to translate domain terms manually.
+
+### License-rule expansion
+
+V1.2 adds explicit recognition for:
+
+- `MIT OR Apache-2.0` dual permissive licensing;
+- `Zlib` / zlib-libpng licensing.
+
+These are used by newly indexed permissive code ecosystems such as Bevy and raylib.
+
+### Installation boundary unchanged
+
+The registry is much broader, but automatic installation remains intentionally narrow. A resource appearing in the registry does **not** mean the MCP may automatically download, extract or execute it.
+
+`install_asset_file` still requires a verified provider acquisition path, trusted HTTPS host, explicit file selection, path containment and size/hash checks where supported.
+
+### Release engineering
+
+- package/runtime version: `1.2.0`;
+- npm lockfile refreshed by npm itself;
+- expanded registry and Chinese query behavior covered by tests;
+- existing Node 20/22, `npm ci`, tarball clean-install and MCP binary smoke tests remain in place.
+
+### Compatibility
+
+V1.2 is additive. Existing V1 provider search, `recommend_stack`, installation and attribution workflows remain available.
+
+---
+
 ## v1.1.0
 
 V1.1 adds a deterministic game-resource stack recommendation layer on top of the existing license-aware search system.
