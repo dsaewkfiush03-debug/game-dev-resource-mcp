@@ -22,11 +22,18 @@ test("Chinese pixel road-survival description expands into practical required sl
   }
 
   const starter = slots.find(slot => slot.id === "starter");
-  assert.deepEqual(starter?.providers, ["godotdemos"]);
+  assert.deepEqual(starter?.providers, ["godotassetlib", "godotdemos"]);
   assert.ok(starter?.queries.includes("godot 2d starter"));
+
+  const environment = slots.find(slot => slot.id === "environment");
+  assert.ok(environment?.providers.includes("openverse"));
+
+  const sfx = slots.find(slot => slot.id === "sfx");
+  assert.deepEqual(sfx?.providers, ["kenney", "openverse"]);
 
   const vehicle = slots.find(slot => slot.id === "vehicle");
   assert.deepEqual(vehicle?.dimensions, ["2D"]);
+  assert.deepEqual(vehicle?.providers, ["kenney"]);
   assert.ok(vehicle?.queries.some(query => query.includes("pixel") && query.includes("vehicle")));
 });
 
