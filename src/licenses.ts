@@ -2,9 +2,11 @@ import type { LicenseRule } from "./types.js";
 
 export const LICENSE_RULES: LicenseRule[] = [
   { id: "CC0-1.0", aliases: ["CC0", "CC0 1.0"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: false, shareAlike: false, notes: "Public-domain dedication; preserve source metadata for traceability." },
+  { id: "PDM-1.0", aliases: ["PDM", "Public Domain Mark", "Public Domain Mark 1.0"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: false, shareAlike: false, notes: "Work is marked as being in the public domain. Preserve provenance even when attribution is not required." },
   { id: "MIT", aliases: ["MIT License"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Retain copyright and license notice in substantial copies." },
   { id: "MIT OR Apache-2.0", aliases: ["MIT/Apache-2.0", "MIT OR Apache 2.0", "MIT or Apache-2.0", "MIT/Apache"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Dual permissive licensing. Follow the obligations of the license selected for the redistributed component and retain required notices." },
   { id: "Zlib", aliases: ["zlib", "zlib/libpng", "Zlib License"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Commercial use and modification are allowed. Do not misrepresent origin, clearly mark altered source versions, and do not remove the license notice from source distributions." },
+  { id: "BSL-1.0", aliases: ["Boost", "Boost Software License", "Boost Software License 1.0"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Permissive Boost Software License. Retain the license notice with redistributed source where applicable." },
   { id: "OFL-1.1", aliases: ["OFL", "OFL 1.1", "SIL Open Font License 1.1"], risk: "attribution", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: "depends", notes: "Fonts may be embedded and distributed with software. Do not sell the font by itself; retain copyright/OFL notices, and respect Reserved Font Names for modified versions." },
   { id: "BSD-2-Clause", aliases: ["BSD 2-Clause"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Retain notices." },
   { id: "BSD-3-Clause", aliases: ["BSD 3-Clause"], risk: "safe", commercialUse: true, modification: true, redistribution: true, attribution: true, shareAlike: false, notes: "Retain notices; non-endorsement clause applies." },
@@ -23,7 +25,35 @@ export const LICENSE_RULES: LicenseRule[] = [
   { id: "NO-LICENSE", aliases: ["none", "no license", "unlicensed"], risk: "reject", commercialUse: false, modification: false, redistribution: false, attribution: "depends", shareAlike: false, notes: "No permission should be assumed when copyright is present and no license is granted." }
 ];
 
+function dynamicCreativeCommons(input: string): LicenseRule | undefined {
+  const normalized = input.trim().toUpperCase();
+  const match = /^CC-BY(?:-(NC))?(?:-(SA|ND))?-(1\.0|2\.0|2\.5|3\.0|4\.0)$/.exec(normalized);
+  if (!match) return undefined;
+  const nonCommercial = Boolean(match[1]);
+  const modifier = match[2];
+  const shareAlike = modifier === "SA";
+  const noDerivatives = modifier === "ND";
+  return {
+    id: normalized,
+    aliases: [],
+    risk: nonCommercial ? "reject" : (shareAlike || noDerivatives ? "conditional" : "attribution"),
+    commercialUse: !nonCommercial,
+    modification: noDerivatives ? false : true,
+    redistribution: true,
+    attribution: true,
+    shareAlike,
+    notes: nonCommercial
+      ? "Creative Commons NonCommercial restriction is incompatible with commercial game use."
+      : noDerivatives
+        ? "Commercial redistribution is allowed with attribution, but modified/adapted versions may not be distributed. Review integration carefully."
+        : shareAlike
+          ? "Commercial use is allowed with attribution and share-alike obligations for adaptations."
+          : "Commercial use is allowed with attribution; preserve the original license/version and required credits."
+  };
+}
+
 export function checkLicense(input: string): LicenseRule | undefined {
   const normalized = input.trim().toLowerCase();
-  return LICENSE_RULES.find(rule => rule.id.toLowerCase() === normalized || rule.aliases.some(alias => alias.toLowerCase() === normalized));
+  const exact = LICENSE_RULES.find(rule => rule.id.toLowerCase() === normalized || rule.aliases.some(alias => alias.toLowerCase() === normalized));
+  return exact ?? dynamicCreativeCommons(input);
 }

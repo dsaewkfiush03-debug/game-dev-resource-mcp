@@ -1,5 +1,59 @@
 # Release notes
 
+## v1.3.0
+
+V1.3 turns two major V1.2 discovery routes into first-class live providers.
+
+### Openverse live image/audio search
+
+- Adds `openverse` to `find_game_assets`, `search_live_assets` and `recommend_stack`.
+- Searches Openverse images and/or audio according to requested dimensions.
+- Preserves per-item creator, original landing URL, indexed source, tags, file type, license code/version, license URL and attribution text.
+- Supports CC0, Public Domain Mark, CC BY, CC BY-SA, NonCommercial and NoDerivatives variants conservatively.
+- NonCommercial media is rejected by default commercial search.
+- Mature results are excluded.
+- Openverse is treated as an aggregator, not as the asset licensor; provenance stays attached to the original item/source.
+
+`recommend_stack` now uses Openverse as an additional source for sound effects, music and 2D environment/reference media. It intentionally does not use general Openverse images as a replacement for dedicated character, vehicle or weapon sprite/model providers.
+
+### Godot Asset Library live search
+
+- Adds `godotassetlib` using the official Godot Asset Library API.
+- Searches official/featured/community assets using the current Godot-version filter.
+- Defaults to Godot `4.7` compatibility and supports a `GODOT_VERSION` environment override.
+- Maps the Asset Library `cost` field as the per-item license, as defined by the official API.
+- Known MIT/GPL/LGPL/Apache/CC0/BSD/Zlib/Boost license strings are normalized; unknown/custom licenses remain fail-closed.
+- `recommend_stack` now searches the live Godot Asset Library for Godot starter/template and shader/plugin slots while retaining official demo collections as fallback/reference sources.
+
+### License model additions
+
+- `PDM-1.0` / Public Domain Mark.
+- `BSL-1.0` / Boost Software License.
+- Dynamic version-aware Creative Commons classification for common CC BY / BY-SA / BY-NC / BY-ND combinations across supported historical versions.
+
+### Provider topology
+
+V1.3 exposes 9 direct providers:
+
+- Live API: Poly Haven, Openverse, Godot Asset Library.
+- Verified catalog: Kenney, Quaternius, Godot Demos, Game Icons, Phaser starters, Google Fonts.
+
+The broader 40+ source/ecosystem registry from V1.2 remains available through `search_game_assets` for sources that require per-item/manual review.
+
+### Installation boundary unchanged
+
+Neither Openverse nor Godot Asset Library is automatically installed. Live search does not imply trusted acquisition. Automatic installation remains limited to providers whose download path is separately allowlisted and validated.
+
+### Validation
+
+Provider mapping tests use fixed fixtures rather than depending on third-party API availability during CI. Existing Node 20/22 validation, npm tarball clean-install and MCP binary smoke tests remain in place.
+
+### Compatibility
+
+V1.3 is additive. Existing tools and V1.2 source discovery behavior remain available.
+
+---
+
 ## v1.2.0
 
 V1.2 expands GameDev Resource MCP from a small curated source registry into a broad game-development discovery map while keeping the existing verified-provider and fail-closed licensing model.

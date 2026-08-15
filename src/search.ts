@@ -41,7 +41,9 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   godotdemos: "verified-catalog",
   gameicons: "verified-catalog",
   phaser: "verified-catalog",
-  googlefonts: "verified-catalog"
+  googlefonts: "verified-catalog",
+  openverse: "live-api",
+  godotassetlib: "live-api"
 };
 
 function tokens(input: string): string[] {

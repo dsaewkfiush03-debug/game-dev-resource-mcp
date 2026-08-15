@@ -1,7 +1,9 @@
 import { gameIconsProvider } from "./gameicons.js";
+import { godotAssetLibraryProvider } from "./godotassetlib.js";
 import { godotDemosProvider } from "./godotdemos.js";
 import { googleFontsProvider } from "./googlefonts.js";
 import { kenneyProvider } from "./kenney.js";
+import { openverseProvider } from "./openverse.js";
 import { phaserProvider } from "./phaser.js";
 import { polyHavenProvider } from "./polyhaven.js";
 import { quaterniusProvider } from "./quaternius.js";
@@ -14,7 +16,9 @@ const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   godotdemos: godotDemosProvider,
   gameicons: gameIconsProvider,
   phaser: phaserProvider,
-  googlefonts: googleFontsProvider
+  googlefonts: googleFontsProvider,
+  openverse: openverseProvider,
+  godotassetlib: godotAssetLibraryProvider
 };
 
 export function getProvider(id: AssetProviderId): AssetProvider {
@@ -25,7 +29,7 @@ export function listProviders(): Array<{ id: AssetProviderId; name: string; mode
   return Object.values(PROVIDERS).map(provider => ({
     id: provider.id,
     name: provider.name,
-    mode: provider.id === "polyhaven" ? "live-api" : "verified-catalog"
+    mode: ["polyhaven", "openverse", "godotassetlib"].includes(provider.id) ? "live-api" : "verified-catalog"
   }));
 }
 
