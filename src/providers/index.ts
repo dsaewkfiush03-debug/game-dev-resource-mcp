@@ -1,3 +1,4 @@
+import { ambientCgProvider } from "./ambientcg.js";
 import { gameIconsProvider } from "./gameicons.js";
 import { godotAssetLibraryProvider } from "./godotassetlib.js";
 import { godotDemosProvider } from "./godotdemos.js";
@@ -11,6 +12,7 @@ import type { AssetProvider, AssetProviderId } from "./types.js";
 
 const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   polyhaven: polyHavenProvider,
+  ambientcg: ambientCgProvider,
   kenney: kenneyProvider,
   quaternius: quaterniusProvider,
   godotdemos: godotDemosProvider,
@@ -29,7 +31,7 @@ export function listProviders(): Array<{ id: AssetProviderId; name: string; mode
   return Object.values(PROVIDERS).map(provider => ({
     id: provider.id,
     name: provider.name,
-    mode: ["polyhaven", "openverse", "godotassetlib"].includes(provider.id) ? "live-api" : "verified-catalog"
+    mode: ["polyhaven", "ambientcg", "openverse", "godotassetlib"].includes(provider.id) ? "live-api" : "verified-catalog"
   }));
 }
 
