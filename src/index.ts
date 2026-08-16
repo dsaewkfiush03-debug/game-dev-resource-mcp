@@ -27,16 +27,58 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
+const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "raylib", "googlefonts", "openverse", "godotassetlib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
+const reuseScope = z.enum(["whole-project", "code-only", "reference-only", "asset-only"]);
+const bundledAssetStatus = z.enum(["none", "same-license", "separately-licensed", "needs-review"]);
 
 server.registerTool("find_game_assets", {
-  description: "Search all supported providers, filter by license and game-development metadata, and return ranked results with explainable reasons.",
-  inputSchema: z.object({ query: z.string().min(1), categories: z.array(z.string()).default([]), providers: z.array(providerId).optional(), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), commercialOnly: z.boolean().default(true), allowAttribution: z.boolean().default(true), allowShareAlike: z.boolean().default(false), limit: z.number().int().min(1).max(100).default(20), perProviderLimit: z.number().int().min(1).max(100).default(50) })
-}, async options => text({ query: options.query, ...(await searchAllAssets(options)), filters: { commercialOnly: options.commercialOnly, allowAttribution: options.allowAttribution, allowShareAlike: options.allowShareAlike, engines: options.engines, dimensions: options.dimensions, styles: options.styles, formats: options.formats, assetTypes: options.assetTypes, gameGenres: options.gameGenres, animated: options.animated } }));
+  description: "Search all supported providers, filter by license, project-reuse safety and game-development metadata, and return ranked results with explainable reasons.",
+  inputSchema: z.object({ query: z.string().min(1), categories: z.array(z.string()).default([]), providers: z.array(providerId).optional(), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), reuseScopes: z.array(reuseScope).default([]), bundledAssetStatuses: z.array(bundledAssetStatus).default([]), animated: z.boolean().optional(), commercialOnly: z.boolean().default(true), allowAttribution: z.boolean().default(true), allowShareAlike: z.boolean().default(false), limit: z.number().int().min(1).max(100).default(20), perProviderLimit: z.number().int().min(1).max(100).default(50) })
+}, async options => text({ query: options.query, ...(await searchAllAssets(options)), filters: { commercialOnly: options.commercialOnly, allowAttribution: options.allowAttribution, allowShareAlike: options.allowShareAlike, engines: options.engines, dimensions: options.dimensions, styles: options.styles, formats: options.formats, assetTypes: options.assetTypes, gameGenres: options.gameGenres, reuseScopes: options.reuseScopes, bundledAssetStatuses: options.bundledAssetStatuses, animated: options.animated } }));
+
+server.registerTool("find_reusable_projects", {
+  description: "Find verified reusable game starters, complete-game references and project skeletons. Results explicitly distinguish whole-project reuse from code-only reuse and expose bundled-asset review status.",
+  inputSchema: z.object({
+    query: z.string().min(1),
+    engines: z.array(z.string()).default([]),
+    providers: z.array(providerId).optional(),
+    reuseScopes: z.array(reuseScope).default(["whole-project", "code-only"]),
+    bundledAssetStatuses: z.array(bundledAssetStatus).default([]),
+    commercialOnly: z.boolean().default(true),
+    allowAttribution: z.boolean().default(true),
+    allowShareAlike: z.boolean().default(false),
+    limit: z.number().int().min(1).max(50).default(20)
+  })
+}, async options => {
+  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib"] as const;
+  const result = await searchAllAssets({
+    query: options.query,
+    providers: [...projectProviders],
+    engines: options.engines,
+    dimensions: ["code"],
+    reuseScopes: options.reuseScopes,
+    bundledAssetStatuses: options.bundledAssetStatuses,
+    commercialOnly: options.commercialOnly,
+    allowAttribution: options.allowAttribution,
+    allowShareAlike: options.allowShareAlike,
+    limit: options.limit,
+    perProviderLimit: Math.max(options.limit, 30)
+  });
+  return text({
+    query: options.query,
+    ...result,
+    guidance: {
+      "whole-project": "Catalog evidence supports using the maintained project as a project-wide starting point, subject to its stated license obligations.",
+      "code-only": "Reuse source structure/code only; bundled images, audio and other media require independent review or replacement.",
+      "reference-only": "Use for implementation study until component licensing is reviewed.",
+      "asset-only": "Reuse is scoped to asset/media content rather than project code."
+    }
+  });
+});
 
 server.registerTool("recommend_stack", {
-  description: "Turn a game description into a deterministic resource stack: infer practical asset/code slots, search each slot with existing conservative license filters, return primary recommendations, alternatives, license summary and unresolved gaps.",
+  description: "Turn a game description into a deterministic resource stack: infer practical asset/code slots, prefer verified reusable starters where available, return primary recommendations, alternatives, license summary and unresolved gaps.",
   inputSchema: z.object({
     description: z.string().min(3),
     engine: z.string().optional(),
@@ -58,7 +100,7 @@ server.registerTool("search_game_assets", {
 
 server.registerTool("search_live_assets", {
   description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
-  inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
+  inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), reuseScopes: z.array(reuseScope).default([]), bundledAssetStatuses: z.array(bundledAssetStatus).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
 }, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "githubcode", "kaykit", "openverse", "godotassetlib", "gameicons", "tablericons"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
 
 server.registerTool("get_asset_files", {
