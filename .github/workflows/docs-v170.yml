@@ -1,0 +1,63 @@
+name: Synchronize v1.7 docs
+
+on:
+  push:
+    branches: [agent/kenney-verification-v170]
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/kenney-verification-v170
+      - name: Update README and release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          readme_path = Path('README.md')
+          readme = readme_path.read_text()
+          bullet = '- Audit static verified-catalog freshness and surface stale, needs-review and untracked records with `audit_resource_verification`.\n'
+          anchor = '- Generate project-level `THIRD_PARTY_ASSETS.md` and `CREDITS.md` content.\n'
+          if bullet not in readme and anchor in readme:
+              readme = readme.replace(anchor, bullet + anchor)
+
+          old_kenney = '| Kenney | Verified catalog | 2D, 3D, UI, vehicles, audio | CC0 | No |'
+          new_kenney = '| Kenney | Verified catalog | 60+ structured packs across 2D, 3D, cities/roads, UI/VFX and audio | CC0, reverified 2026-08-16 | No |'
+          readme = readme.replace(old_kenney, new_kenney)
+
+          tool_anchor = '| `list_asset_providers` | List provider modes. |\n'
+          audit_row = '| `audit_resource_verification` | Audit freshness of maintained verified catalogs and surface stale/untracked records. |\n'
+          if audit_row not in readme and tool_anchor in readme:
+              readme = readme.replace(tool_anchor, tool_anchor + audit_row)
+
+          verification_section = '''\n## Verification freshness\n\nVerified static catalogs can carry `verificationStatus` and `verifiedAt` metadata. `audit_resource_verification` scans maintained verified catalogs and reports `current`, `stale`, `needs-review` and `untracked` entries.\n\nA stale record is **not automatically unusable**: it means the project's cached source/license verification is old enough to recheck. The audit never upgrades or downgrades upstream license rights. Legacy catalogs without a real review date remain visibly `untracked` rather than receiving fabricated fresh dates.\n\nSee [`docs/verification.md`](docs/verification.md).\n\n'''
+          section_anchor = '## Search model\n'
+          if '## Verification freshness\n' not in readme and section_anchor in readme:
+              readme = readme.replace(section_anchor, verification_section + section_anchor)
+          readme_path.write_text(readme)
+
+          release_path = Path('RELEASE_NOTES.md')
+          release = release_path.read_text()
+          v17 = '''## v1.7.0\n\nV1.7 expands the highest-value static catalog and introduces explicit verification-freshness tracking so the registry can grow without silently becoming stale.\n\n### Major Kenney verified-catalog expansion\n\n- Expands Kenney from roughly two dozen selected packs to 60+ structured packs.\n- Adds broad 3D coverage for factory/industrial, platformer, modular dungeon/cave/space, city commercial/industrial/suburban/roads, modular buildings, racing, nature, fantasy and more.\n- Adds broad 2D coverage for pixel/1-bit platformers, roguelike modern city/caves, top-down shooters/tanks, isometric vehicles, town/farm, RPG and production-support assets.\n- Adds input prompts, mobile controls, light/VFX masks, skyboxes and development textures in addition to the existing UI/audio catalog.\n- Keeps Kenney's source-level CC0 posture and records the actual V1.7 review date as 2026-08-16.\n\n### Verification freshness metadata\n\nStatic verified-catalog entries may now carry:\n\n```text\nverificationStatus: verified | needs-review\nverifiedAt: YYYY-MM-DD\n```\n\nThe V1.7 review date is also applied to the curated Google Fonts catalog, Godot official demo collections and Phaser official starters because those sources were explicitly rechecked during this project cycle. Legacy catalogs that have not received a real review remain untracked rather than receiving fabricated timestamps.\n\n### `audit_resource_verification`\n\nAdds an MCP audit tool for maintained verified catalogs. It reports:\n\n- `current`;\n- `stale`;\n- `needs-review`;\n- `untracked`.\n\nThe stale threshold defaults to 365 days and can be changed by the caller. Provider-level summaries and an `attention` list make future maintenance work visible to agents.\n\nFreshness is evidence quality, not a replacement license. A stale CC0/MIT/OFL record does not automatically become forbidden; it means the canonical source/license should be rechecked before relying on cached metadata for release decisions.\n\n### Release engineering\n\n- package/runtime version: `1.7.0`;\n- npm lockfile refreshed by npm itself;\n- expanded Kenney coverage and verification assessments are covered by deterministic tests;\n- existing Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.\n\n### Compatibility\n\nV1.7 is additive. Existing provider IDs, search tools, stack planning, installation and attribution workflows remain available.\n\n---\n\n'''
+          if '## v1.7.0\n' not in release:
+              release = release.replace('# Release notes\n\n', '# Release notes\n\n' + v17)
+          release_path.write_text(release)
+          PY
+      - name: Remove docs workflow and commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/docs-v170.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md RELEASE_NOTES.md
+          git commit -m "Document v1.7 verification freshness and Kenney expansion"
+          git push origin HEAD:agent/kenney-verification-v170
