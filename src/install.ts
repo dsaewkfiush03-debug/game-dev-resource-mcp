@@ -10,8 +10,21 @@ const ABSOLUTE_MAX_BYTES = 1024 * 1024 * 1024;
 const MAX_DOWNLOAD_REDIRECTS = 3;
 const DOWNLOAD_USER_AGENT = `game-dev-resource-mcp/${VERSION} (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)`;
 
-const TRUSTED_DOWNLOAD_HOSTS: Partial<Record<AssetProviderId, string[]>> = {
-  polyhaven: ["dl.polyhaven.org"]
+interface TrustedDownloadRule {
+  hosts: string[];
+  pathPrefixes?: string[];
+}
+
+const TRUSTED_DOWNLOAD_RULES: Partial<Record<AssetProviderId, TrustedDownloadRule>> = {
+  polyhaven: { hosts: ["dl.polyhaven.org"] },
+  gameicons: {
+    hosts: ["raw.githubusercontent.com"],
+    pathPrefixes: ["/game-icons/icons/master/"]
+  },
+  tablericons: {
+    hosts: ["raw.githubusercontent.com"],
+    pathPrefixes: ["/tabler/tabler-icons/main/icons/"]
+  }
 };
 
 export interface InstallPlanOptions {
@@ -69,8 +82,12 @@ export function validateDownloadUrl(provider: AssetProviderId, rawUrl: string): 
   const url = new URL(rawUrl);
   if (url.protocol !== "https:") throw new Error("download_url_must_use_https");
 
-  const allowedHosts = TRUSTED_DOWNLOAD_HOSTS[provider] ?? [];
-  if (!allowedHosts.includes(url.hostname.toLowerCase())) throw new Error(`untrusted_download_host:${url.hostname}`);
+  const rule = TRUSTED_DOWNLOAD_RULES[provider];
+  const hostname = url.hostname.toLowerCase();
+  if (!rule?.hosts.includes(hostname)) throw new Error(`untrusted_download_host:${url.hostname}`);
+  if (rule.pathPrefixes?.length && !rule.pathPrefixes.some(prefix => url.pathname.startsWith(prefix))) {
+    throw new Error(`untrusted_download_path:${url.pathname}`);
+  }
   return url;
 }
 
