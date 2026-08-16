@@ -18,11 +18,13 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Search openly licensed images/audio through Openverse with per-item creator/license metadata.
 - Search the Godot Asset Library live for addons/projects with per-item licenses.
 - Search GitHub live for reusable game systems and conservatively classify detected repository licenses.
+- Search thousands of individual Game Icons and Tabler Icons SVGs instead of only category pages.
+- Preserve creator/attribution metadata for per-item resources where the upstream source exposes it.
 - Filter by commercial-use posture and license obligations.
 - Filter by engine, 2D/3D/audio/font/code, style, format, asset type, genre and animation state.
 - Generate project-level `THIRD_PARTY_ASSETS.md` and `CREDITS.md` content.
 - Resolve official provider-hosted files where supported.
-- Safely install an explicitly selected file into a local project with path, host, size and hash checks.
+- Safely install an explicitly selected Poly Haven file or individual Game Icons/Tabler SVG with host/path, size and filesystem checks.
 
 ## 5-minute setup
 
@@ -104,7 +106,7 @@ Typical media/resource slots include:
 - fonts, including verified CJK/Chinese options;
 - shader/GPU examples where relevant.
 
-V1.4 also creates reusable gameplay-code slots when the description explicitly requires them:
+V1.4+ also creates reusable gameplay-code slots when the description explicitly requires them:
 
 - vehicle/driving system;
 - inventory/loot/crafting system;
@@ -155,15 +157,18 @@ If a requested engine has no verified starter provider, the starter slot remains
 |---|---|---|---|---|
 | Poly Haven | Live API | HDRIs, PBR textures, 3D models | CC0 assets | Yes, for allowlisted official file URLs |
 | ambientCG | Live API | PBR materials, HDRIs, terrain, decals, atlases, 3D models | CC0 | No |
-| Openverse | Live API | Open images and audio | Per-item CC/public-domain metadata | No |
+| Openverse | Live API | Open images and audio | Per-item CC/public-domain metadata with creator provenance where available | No |
 | Godot Asset Library | Live API | Godot addons, tools, projects, shaders | Per-item license | No |
 | GitHub Open-Source Code | Live API | Inventory, combat, networking, AI, save, procedural and other code | Detected repository SPDX license; fail closed when unknown/missing | No |
+| Game Icons | Live API/index | Individual game/UI SVG icons | Conservatively CC BY 3.0 with creator attribution metadata | Yes, exact official-repo SVG only |
+| Tabler Icons | Live API/index | Individual outline/filled SVG icons | MIT | Yes, exact official-repo SVG only |
 | Kenney | Verified catalog | 2D, 3D, UI, vehicles, audio | CC0 | No |
 | Quaternius | Verified catalog | 3D characters, vehicles, environments | CC0 | No |
-| Game Icons | Verified catalog | Game/UI icons | Conservatively treated as CC BY 3.0 | No |
 | Google Fonts | Verified catalog | 15 game-oriented fonts including CJK/Chinese | SIL OFL 1.1 with per-family license provenance | No |
 | Godot demos | Verified catalog | Code, shaders, starter demos | MIT at repository level | No |
 | Phaser starters | Verified catalog | Web-game starter templates | MIT code templates | No |
+
+Game Icons and Tabler Icons are indexed from their official GitHub repository trees. This means searches operate on individual SVG filenames/metadata rather than five broad category links.
 
 The broader source registry also contains marketplaces and community libraries such as OpenGameArt, itch.io, Sketchfab, Fab, Unity Asset Store, Freesound and others. Those are **discovery sources**, not blanket commercial-use approvals.
 
@@ -196,7 +201,7 @@ allowShareAlike = false
 
 Search scores and stack recommendations are retrieval heuristics, **not legal clearance**.
 
-## License model
+## License and provenance model
 
 The project tracks these separately rather than collapsing them into one “safe” flag:
 
@@ -205,6 +210,8 @@ The project tracks these separately rather than collapsing them into one “safe
 - redistribution
 - attribution
 - share-alike / copyleft-like obligations
+- creator / creator URL when available
+- attribution text when upstream exposes or requires it
 - canonical source URL
 - license source URL
 - API/service-level obligations
@@ -217,13 +224,21 @@ Repository-level licenses must not be assumed to cover dependencies or independe
 
 ## Safe installation
 
-V1 automatic installation is intentionally narrow. **Only Poly Haven currently exposes a sufficiently verifiable automatic acquisition path.**
+V1 automatic installation remains intentionally narrow. Current allowlisted acquisition paths are:
+
+- Poly Haven verified provider files;
+- individual Game Icons SVGs from `game-icons/icons`;
+- individual Tabler SVGs from `tabler/tabler-icons/icons`.
+
+`raw.githubusercontent.com` is **not** trusted globally. The installer validates both hostname and provider-specific repository path prefixes.
 
 `install_asset_file`:
 
 - requires an absolute project root;
 - prevents path traversal outside the project;
-- only accepts allowlisted HTTPS download hosts;
+- rejects pre-existing symlink/junction destination components;
+- only accepts allowlisted HTTPS download hosts and provider-specific paths;
+- manually validates every redirect target;
 - defaults to a 128 MiB per-file limit;
 - enforces a 1 GiB hard maximum;
 - validates provider size metadata;
@@ -244,6 +259,8 @@ After adopting resources, use `generate_project_attribution` to create content f
 THIRD_PARTY_ASSETS.md
 CREDITS.md
 ```
+
+When a provider result includes `creator` or `attributionText`, the coding agent should preserve that provenance when passing adopted resources into the attribution workflow.
 
 This does not replace legal review, but it makes provenance and release obligations much harder to lose during AI-driven development.
 
@@ -267,6 +284,7 @@ CI validates Node.js 20 and 22, then packs the npm tarball, installs it into a c
 7. Never execute downloaded third-party content as part of asset installation.
 8. Recommendation must reuse the same conservative license filters as direct search.
 9. Repository-level license detection is evidence about that repository, not automatic clearance for dependencies or bundled media.
+10. Shared download/CDN hosts require provider-specific path restrictions, not host-only trust.
 
 See [`AGENTS.md`](AGENTS.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
