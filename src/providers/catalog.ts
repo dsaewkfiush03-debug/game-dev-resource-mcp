@@ -4,6 +4,7 @@ export interface VerifiedCatalogEntry {
   id: string;
   name: string;
   sourceUrl: string;
+  licenseSource?: string;
   description?: string;
   categories: string[];
   tags: string[];
@@ -94,6 +95,7 @@ export function createVerifiedCatalogProvider(
           ...entry,
           provider: id,
           ...license,
+          licenseSource: entry.licenseSource ?? license.licenseSource,
           retrievedAt
         }));
     }
