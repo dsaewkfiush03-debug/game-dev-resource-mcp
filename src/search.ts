@@ -37,6 +37,7 @@ export interface ProviderSearchError {
 const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   polyhaven: "live-api",
   ambientcg: "live-api",
+  githubcode: "live-api",
   kenney: "verified-catalog",
   quaternius: "verified-catalog",
   godotdemos: "verified-catalog",
