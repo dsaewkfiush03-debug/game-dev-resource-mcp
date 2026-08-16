@@ -10,6 +10,7 @@ import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
 import { VERSION } from "./version.js";
+import { assessVerification, summarizeVerification } from "./verification.js";
 
 const server = new McpServer({ name: "game-dev-resource-mcp", version: VERSION });
 function text(data: unknown) { return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }; }
@@ -76,6 +77,34 @@ server.registerTool("install_asset_file", {
 }, async request => text(await installAssetFile(request)));
 
 server.registerTool("list_asset_providers", { description: "List supported providers and whether each is a live API or verified catalog.", inputSchema: z.object({}) }, async () => text({ providers: listProviders() }));
+
+server.registerTool("audit_resource_verification", {
+  description: "Audit verification freshness for maintained verified catalogs. Reports current, stale, needs-review and untracked entries without changing license rights.",
+  inputSchema: z.object({
+    staleAfterDays: z.number().int().min(1).max(3650).default(365),
+    providers: z.array(providerId).optional()
+  })
+}, async ({ staleAfterDays, providers }) => {
+  const catalogs = listProviders().filter(provider => provider.mode === "verified-catalog");
+  const selected = providers?.length ? catalogs.filter(provider => providers.includes(provider.id)) : catalogs;
+  const allItems = [];
+  const providerAudits = [];
+  for (const meta of selected) {
+    const assets = await getProvider(meta.id).search({ query: "", limit: 100 });
+    const items = assets.map(asset => assessVerification(asset, staleAfterDays));
+    allItems.push(...items);
+    providerAudits.push({ provider: meta.id, name: meta.name, count: items.length, summary: summarizeVerification(items) });
+  }
+  const attention = allItems.filter(item => item.assessment !== "current");
+  return text({
+    staleAfterDays,
+    providerCount: selected.length,
+    assetCount: allItems.length,
+    summary: summarizeVerification(allItems),
+    providers: providerAudits,
+    attention
+  });
+});
 
 server.registerTool("search_open_source_projects", {
   description: "Search GitHub repositories for reusable game-development code. Inspect the explicit repository license before reuse.",
