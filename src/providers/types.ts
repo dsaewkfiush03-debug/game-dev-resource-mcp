@@ -1,6 +1,18 @@
-export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "kaykit" | "godotdemos" | "gameicons" | "tablericons" | "phaser" | "googlefonts" | "openverse" | "godotassetlib" | "ambientcg" | "githubcode";
+export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "kaykit" | "godotdemos" | "gameicons" | "tablericons" | "phaser" | "raylib" | "googlefonts" | "openverse" | "godotassetlib" | "ambientcg" | "githubcode";
 export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
 export type VerificationStatus = "verified" | "needs-review";
+export type ReuseScope = "whole-project" | "code-only" | "reference-only" | "asset-only";
+export type BundledAssetStatus = "none" | "same-license" | "separately-licensed" | "needs-review";
+
+export interface ComponentLicense {
+  scope: string;
+  license: string;
+  licenseSource: string;
+  commercialUse: boolean | "unknown";
+  attribution: boolean | "unknown";
+  shareAlike: boolean | "unknown";
+  notes?: string;
+}
 
 export interface ProviderSearchOptions {
   query: string;
@@ -11,6 +23,8 @@ export interface ProviderSearchOptions {
   formats?: string[];
   assetTypes?: string[];
   gameGenres?: string[];
+  reuseScopes?: ReuseScope[];
+  bundledAssetStatuses?: BundledAssetStatus[];
   animated?: boolean;
   limit?: number;
 }
@@ -38,6 +52,10 @@ export interface ProviderAsset {
   gameGenres?: string[];
   resolution?: string;
   animated?: boolean;
+  reuseScope?: ReuseScope;
+  bundledAssetStatus?: BundledAssetStatus;
+  bundledAssetNotes?: string;
+  componentLicenses?: ComponentLicense[];
   license: string;
   licenseSource: string;
   commercialUse: boolean | "unknown";
