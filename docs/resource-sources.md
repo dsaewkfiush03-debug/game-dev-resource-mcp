@@ -4,7 +4,7 @@ GameDev Resource MCP separates **source licensing**, **per-item licensing**, **A
 
 ## First-class direct providers
 
-V1.6 directly searches these provider adapters.
+V1.8 directly searches these provider adapters.
 
 ### Live APIs / live official indexes
 
@@ -19,17 +19,17 @@ V1.6 directly searches these provider adapters.
 
 ### Verified catalogs
 
-- Kenney — CC0 game asset packs.
-- Quaternius — CC0 3D packs, including current city/environment coverage.
+- Kenney — 60+ structured CC0 game-asset packs, reverified 2026-08-16.
+- Quaternius — 35+ structured CC0 3D packs spanning cities/roads, characters and universal animation, vehicles, fantasy/medieval, sci-fi, survival, space, interiors and nature; reverified 2026-08-16.
 - Google Fonts — curated game-font families with exact family OFL provenance, including CJK choices.
-- Godot official demos — MIT repository-level code examples.
-- Phaser official starters — MIT starter templates.
+- Godot official demos — MIT repository-level collections plus concrete 2D/3D starter games and navigation, AI, vehicle, voxel, shader/rendering examples; reverified 2026-08-16.
+- Phaser official starters — MIT starter templates plus the official `phaserjs/create-game` project generator; mixed-license example media remains excluded.
 
 A direct provider does **not** imply automatic installation. Search trust, license trust and acquisition trust remain separate layers.
 
 ## Quality-aware ranking
 
-When a provider exposes reliable quality metadata, V1.6 can use small ranking bonuses for:
+When a provider exposes reliable quality metadata, V1.6+ can use small ranking bonuses for:
 
 - repository/resource popularity;
 - recent update activity relative to retrieval time.
@@ -91,6 +91,10 @@ These sources contain substantial useful material but cannot be blanket-approved
 
 For Tier B, a registry hit is a **discovery route**, not commercial-use approval.
 
+### Phaser examples boundary
+
+The official Phaser starter/templates and `phaserjs/create-game` code are treated separately from `phaserjs/examples`. The examples repository contains reusable source code but its bundled example media is not blanket-cleared by the code license, so the examples repository is not admitted into the default commercial-safe verified catalog.
+
 ### Freesound-specific boundary
 
 Freesound is intentionally not a default live provider in the commercial workflow. Individual sounds carry their own Creative Commons licenses, but Freesound's free API access has separate non-commercial API-use terms. A commercial API agreement must be handled separately before enabling that API for a commercial automated workflow.
@@ -106,6 +110,7 @@ The source and provider layers can route/discover:
 - PBR materials and HDRIs
 - vehicles and characters
 - modern city/urban environment packs
+- reusable character animation libraries
 - weapons and props
 - UI and HUD assets
 - icon libraries
@@ -114,7 +119,7 @@ The source and provider layers can route/discover:
 - shaders and VFX
 - game engines/frameworks
 - physics/rendering libraries
-- starters/templates
+- concrete starter/complete demo projects
 - plugins/addons
 - vehicle/driving systems
 - inventory/loot/crafting systems
@@ -122,8 +127,8 @@ The source and provider layers can route/discover:
 - networking/multiplayer
 - save/persistence
 - enemy/NPC AI
-- pathfinding
-- procedural generation
+- pathfinding/navigation
+- procedural generation/voxel examples
 - dialogue/conversation systems
 
 Chinese aliases/intent rules cover common requests such as `音效`, `字体`, `中文字体`, `着色器`, `背包`, `战斗`, `联网`, `存档`, `AI`, `程序化`, `车辆`, `公路`, `模板`, `插件`, `低模`, `科幻`, `恐怖`, `奇幻` and others.
