@@ -12,11 +12,14 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 
 ## What V1 can do
 
-- Turn a game description into a practical resource stack with `recommend_stack`.
+- Turn a game description into a practical **art + audio + font + reusable code** stack with `recommend_stack`.
 - Search multiple game-resource providers with one query.
+- Search live CC0 materials/HDRIs/3D assets from Poly Haven and ambientCG.
+- Search openly licensed images/audio through Openverse with per-item creator/license metadata.
+- Search the Godot Asset Library live for addons/projects with per-item licenses.
+- Search GitHub live for reusable game systems and conservatively classify detected repository licenses.
 - Filter by commercial-use posture and license obligations.
 - Filter by engine, 2D/3D/audio/font/code, style, format, asset type, genre and animation state.
-- Search GitHub for reusable game-development projects and inspect detected repository licenses.
 - Generate project-level `THIRD_PARTY_ASSETS.md` and `CREDITS.md` content.
 - Resolve official provider-hosted files where supported.
 - Safely install an explicitly selected file into a local project with path, host, size and hash checks.
@@ -52,7 +55,7 @@ codex mcp list
 
 For Codex `config.toml`, Claude Code, Trae and generic MCP client examples, see [`docs/client-setup.md`](docs/client-setup.md).
 
-`GITHUB_TOKEN` is optional and only improves GitHub API rate limits. Never commit tokens or API keys.
+`GITHUB_TOKEN` is optional and improves GitHub API rate limits. Never commit tokens or API keys.
 
 ## Recommended workflow
 
@@ -63,7 +66,9 @@ user game description
     ↓
 recommend_stack
     ↓
-resource slots + primary candidates + alternatives + gaps
+art + audio + font + gameplay-code slots
+    ↓
+primary candidates + alternatives + gaps
     ↓
 license summary
     ↓
@@ -84,21 +89,33 @@ See [`docs/end-to-end-example.md`](docs/end-to-end-example.md) for a complete ex
 
 ## `recommend_stack`
 
-`recommend_stack` converts a broad game description into deterministic resource slots such as:
+`recommend_stack` converts a broad game description into deterministic resource slots.
+
+Typical media/resource slots include:
 
 - starter/framework examples;
 - environment;
 - vehicles;
 - characters;
 - weapons/combat art;
-- UI;
-- icons;
+- UI and icons;
 - sound effects;
 - music/jingles;
-- fonts;
+- fonts, including verified CJK/Chinese options;
 - shader/GPU examples where relevant.
 
-The planner recognizes common English and Chinese game-development terms, including engine, 2D/3D, pixel, sci-fi, low-poly, survival, RPG, road/vehicle, combat, inventory and related concepts.
+V1.4 also creates reusable gameplay-code slots when the description explicitly requires them:
+
+- vehicle/driving system;
+- inventory/loot/crafting system;
+- combat system;
+- networking/multiplayer;
+- save/persistence system;
+- enemy/NPC AI;
+- procedural generation;
+- dialogue/conversation system.
+
+The planner recognizes common English and Chinese game-development terms, including engine, 2D/3D, pixel, sci-fi, fantasy, horror, military, low-poly, survival, RPG, road/vehicle, combat, inventory, networking, save, AI, procedural generation, dialogue and CJK/Chinese UI intent.
 
 It does **not** use model judgment to invent license rights. Each slot is resolved through the same provider metadata and conservative license filters used by `find_game_assets`.
 
@@ -112,21 +129,21 @@ The result includes:
 - a license/risk summary for primary selections;
 - asset attribution and provider service-credit requirements where known.
 
-If a requested engine has no verified starter provider, the slot remains unresolved instead of silently substituting a different engine.
+If a requested engine has no verified starter provider, the starter slot remains unresolved instead of silently substituting a different engine. Gameplay-code discovery may still search GitHub, but repository-level licensing does not prove dependency or bundled-media licensing.
 
 ## MCP tools
 
 | Tool | Purpose |
 |---|---|
-| `recommend_stack` | Turn a game description into a multi-category resource stack with license summary and gaps. |
+| `recommend_stack` | Turn a game description into a multi-category media + code resource stack with license summary and gaps. |
 | `find_game_assets` | Preferred targeted cross-provider search with ranking and license filters. |
-| `search_game_assets` | Search the curated source registry. |
+| `search_game_assets` | Search the broad source registry. |
 | `search_live_assets` | Search one provider directly. |
 | `get_asset_files` | Resolve official provider-hosted file metadata where available. |
 | `plan_asset_install` | Plan a safe installation without writing to disk. |
 | `install_asset_file` | Download one explicitly selected verified file into a local project. |
 | `list_asset_providers` | List provider modes. |
-| `search_open_source_projects` | Search GitHub for reusable game-development repositories. |
+| `search_open_source_projects` | Compatibility tool for targeted GitHub repository search. |
 | `inspect_repository` | Inspect repository metadata and detected license. |
 | `check_license` | Classify common licenses conservatively. |
 | `generate_attribution` | Generate attribution for one resource. |
@@ -136,15 +153,21 @@ If a requested engine has no verified starter provider, the slot remains unresol
 
 | Provider | Mode | Typical content | License posture | Auto-install |
 |---|---|---|---|---|
-| Poly Haven | Live API | HDRIs, textures, 3D models | CC0 assets | Yes, for allowlisted official file URLs |
+| Poly Haven | Live API | HDRIs, PBR textures, 3D models | CC0 assets | Yes, for allowlisted official file URLs |
+| ambientCG | Live API | PBR materials, HDRIs, terrain, decals, atlases, 3D models | CC0 | No |
+| Openverse | Live API | Open images and audio | Per-item CC/public-domain metadata | No |
+| Godot Asset Library | Live API | Godot addons, tools, projects, shaders | Per-item license | No |
+| GitHub Open-Source Code | Live API | Inventory, combat, networking, AI, save, procedural and other code | Detected repository SPDX license; fail closed when unknown/missing | No |
 | Kenney | Verified catalog | 2D, 3D, UI, vehicles, audio | CC0 | No |
 | Quaternius | Verified catalog | 3D characters, vehicles, environments | CC0 | No |
 | Game Icons | Verified catalog | Game/UI icons | Conservatively treated as CC BY 3.0 | No |
-| Google Fonts | Verified catalog | Game-suitable fonts | SIL OFL 1.1 | No |
+| Google Fonts | Verified catalog | 15 game-oriented fonts including CJK/Chinese | SIL OFL 1.1 with per-family license provenance | No |
 | Godot demos | Verified catalog | Code, shaders, starter demos | MIT at repository level | No |
 | Phaser starters | Verified catalog | Web-game starter templates | MIT code templates | No |
 
-OpenGameArt and arbitrary GitHub repositories remain **per-item/per-repository review sources**, not blanket-whitelisted providers.
+The broader source registry also contains marketplaces and community libraries such as OpenGameArt, itch.io, Sketchfab, Fab, Unity Asset Store, Freesound and others. Those are **discovery sources**, not blanket commercial-use approvals.
+
+Freesound is intentionally not a default live provider for commercial workflows: using the free Freesound API has separate non-commercial API terms even though individual sounds have their own Creative Commons licenses. A commercial API agreement would need to be handled separately.
 
 ## Search model
 
@@ -186,11 +209,11 @@ The project tracks these separately rather than collapsing them into one “safe
 - license source URL
 - API/service-level obligations
 
-Examples of recognized licenses include CC0, MIT, BSD, Apache-2.0, CC BY, CC BY-SA, GPL/LGPL families, OpenGameArt attribution licenses and SIL OFL 1.1.
+Recognized licenses include CC0, Public Domain Mark, MIT, MIT/Apache dual licensing, BSD, Apache-2.0, Zlib, Boost, CC BY, CC BY-SA, GPL/LGPL families, OpenGameArt attribution licenses and SIL OFL 1.1.
 
 Unknown, custom, missing or non-commercial licenses fail closed to manual review/rejection.
 
-Repository-level licenses must not be assumed to cover independently licensed bundled assets.
+Repository-level licenses must not be assumed to cover dependencies or independently licensed bundled assets/media.
 
 ## Safe installation
 
@@ -243,12 +266,13 @@ CI validates Node.js 20 and 22, then packs the npm tarball, installs it into a c
 6. Never store secrets.
 7. Never execute downloaded third-party content as part of asset installation.
 8. Recommendation must reuse the same conservative license filters as direct search.
+9. Repository-level license detection is evidence about that repository, not automatic clearance for dependencies or bundled media.
 
 See [`AGENTS.md`](AGENTS.md) and [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## V1 scope and limitations
 
-V1 is a practical foundation, not a universal asset index. Verified catalog coverage is intentionally incomplete. Some providers expose only canonical source links because a stable, safe public acquisition API is not available.
+V1 is a practical foundation, not a universal asset index. Provider and verified-catalog coverage continues to expand. Some sources expose only canonical links because a stable, safe public acquisition API is not available or API terms are not suitable for the default commercial workflow.
 
 The project provides technical metadata and conservative automated classification, **not legal advice**. Before shipping a commercial game, verify the original license text and provenance of every incorporated resource.
 

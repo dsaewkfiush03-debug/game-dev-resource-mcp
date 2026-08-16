@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { buildStackPlan } from "./recommend.js";
 
-test("Chinese pixel road-survival description expands into practical required slots", () => {
+test("Chinese pixel road-survival description expands into art and gameplay-code slots", () => {
   const { inferred, slots } = buildStackPlan({
     description: "用 Godot 做一个 2D 像素公路求生游戏，玩家驾驶车辆、搜物资、和敌人战斗，有角色、枪械和背包。"
   });
@@ -14,9 +14,10 @@ test("Chinese pixel road-survival description expands into practical required sl
   assert.ok(inferred.themes.includes("road"));
   assert.ok(inferred.themes.includes("vehicle"));
   assert.ok(inferred.themes.includes("combat"));
+  assert.ok(inferred.themes.includes("inventory"));
 
   const ids = slots.map(slot => slot.id);
-  for (const required of ["starter", "environment", "vehicle", "character", "weapon", "ui", "sfx", "font"]) {
+  for (const required of ["starter", "environment", "vehicle", "vehicle-system", "character", "weapon", "combat-system", "inventory-system", "ui", "sfx", "font"]) {
     assert.ok(ids.includes(required as any), `missing slot ${required}`);
     assert.equal(slots.find(slot => slot.id === required)?.required, true);
   }
@@ -35,6 +36,33 @@ test("Chinese pixel road-survival description expands into practical required sl
   assert.deepEqual(vehicle?.dimensions, ["2D"]);
   assert.deepEqual(vehicle?.providers, ["kenney"]);
   assert.ok(vehicle?.queries.some(query => query.includes("pixel") && query.includes("vehicle")));
+
+  for (const id of ["vehicle-system", "combat-system", "inventory-system"] as const) {
+    const slot = slots.find(item => item.id === id);
+    assert.deepEqual(slot?.providers, ["godotassetlib", "githubcode"]);
+    assert.deepEqual(slot?.dimensions, ["code"]);
+  }
+});
+
+test("explicit networking save AI procedural and dialogue requirements create code slots", () => {
+  const { inferred, slots } = buildStackPlan({
+    description: "Godot 多人联网 PVP 生存游戏，需要存档、敌人 AI、程序化地图生成和对话系统"
+  });
+  for (const theme of ["networking", "save", "ai", "procedural", "dialogue"]) assert.ok(inferred.themes.includes(theme));
+  for (const id of ["networking", "save-system", "ai-system", "procedural-generation", "dialogue-system"] as const) {
+    const slot = slots.find(item => item.id === id);
+    assert.equal(slot?.required, true);
+    assert.deepEqual(slot?.providers, ["godotassetlib", "githubcode"]);
+    assert.ok(slot?.queries.some(query => query.includes("godot")));
+  }
+});
+
+test("CJK intent drives the font slot toward CJK search", () => {
+  const { inferred, slots } = buildStackPlan({ description: "一个支持中文界面的科幻 RPG", dimension: "2D" });
+  assert.ok(inferred.themes.includes("cjk"));
+  const font = slots.find(slot => slot.id === "font");
+  assert.ok(font?.queries.some(query => query.includes("cjk")));
+  assert.deepEqual(font?.providers, ["googlefonts"]);
 });
 
 test("Phaser description selects the verified Phaser starter provider", () => {

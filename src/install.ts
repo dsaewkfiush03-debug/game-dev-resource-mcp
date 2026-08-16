@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, open, rename, rm, stat } from "node:fs/promises";
+import { lstat, mkdir, open, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { getProvider, type AssetProviderId } from "./providers/index.js";
 import type { ProviderFile } from "./providers/types.js";
@@ -7,6 +7,7 @@ import { VERSION } from "./version.js";
 
 const DEFAULT_MAX_BYTES = 128 * 1024 * 1024;
 const ABSOLUTE_MAX_BYTES = 1024 * 1024 * 1024;
+const MAX_DOWNLOAD_REDIRECTS = 3;
 const DOWNLOAD_USER_AGENT = `game-dev-resource-mcp/${VERSION} (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)`;
 
 const TRUSTED_DOWNLOAD_HOSTS: Partial<Record<AssetProviderId, string[]>> = {
@@ -43,6 +44,27 @@ export function safeProjectPath(projectRoot: string, relativePath: string): stri
   return target;
 }
 
+export async function assertNoLinkComponents(projectRoot: string, target: string): Promise<void> {
+  const root = path.resolve(projectRoot);
+  const resolvedTarget = path.resolve(target);
+  const relative = path.relative(root, resolvedTarget);
+  if (relative === ".." || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error("destination_escapes_project_root");
+  }
+
+  let current = root;
+  for (const segment of relative.split(path.sep).filter(Boolean)) {
+    current = path.join(current, segment);
+    try {
+      const info = await lstat(current);
+      if (info.isSymbolicLink()) throw new Error(`destination_contains_symbolic_link:${path.relative(root, current)}`);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") break;
+      throw error;
+    }
+  }
+}
+
 export function validateDownloadUrl(provider: AssetProviderId, rawUrl: string): URL {
   const url = new URL(rawUrl);
   if (url.protocol !== "https:") throw new Error("download_url_must_use_https");
@@ -56,6 +78,27 @@ export function normalizedMaxBytes(value?: number): number {
   if (value === undefined) return DEFAULT_MAX_BYTES;
   if (!Number.isFinite(value) || value <= 0) throw new Error("maxBytes_must_be_positive");
   return Math.min(Math.floor(value), ABSOLUTE_MAX_BYTES);
+}
+
+async function fetchTrusted(provider: AssetProviderId, initialUrl: URL): Promise<Response> {
+  let current = validateDownloadUrl(provider, initialUrl.toString());
+
+  for (let redirects = 0; redirects <= MAX_DOWNLOAD_REDIRECTS; redirects += 1) {
+    const response = await fetch(current, {
+      redirect: "manual",
+      headers: { "User-Agent": DOWNLOAD_USER_AGENT }
+    });
+
+    if (response.status < 300 || response.status >= 400) return response;
+    if (redirects === MAX_DOWNLOAD_REDIRECTS) throw new Error("download_redirect_limit_exceeded");
+
+    const location = response.headers.get("location");
+    if (!location) throw new Error(`download_redirect_missing_location:${response.status}`);
+    const next = new URL(location, current);
+    current = validateDownloadUrl(provider, next.toString());
+  }
+
+  throw new Error("download_redirect_limit_exceeded");
 }
 
 function candidateAllowed(provider: AssetProviderId, file: ProviderFile, maxBytes: number): InstallCandidate {
@@ -142,7 +185,10 @@ export async function installAssetFile(request: AssetInstallRequest): Promise<{
   const filename = filenameFromUrl(sourceUrl);
   const target = safeProjectPath(request.projectRoot, path.join(destinationDir, filename));
   const targetDir = path.dirname(target);
+
+  await assertNoLinkComponents(request.projectRoot, targetDir);
   await mkdir(targetDir, { recursive: true });
+  await assertNoLinkComponents(request.projectRoot, targetDir);
 
   if (!request.overwrite && await fileExists(target)) throw new Error("destination_file_exists");
 
@@ -152,7 +198,7 @@ export async function installAssetFile(request: AssetInstallRequest): Promise<{
   let bytes = 0;
 
   try {
-    const response = await fetch(sourceUrl, { headers: { "User-Agent": DOWNLOAD_USER_AGENT } });
+    const response = await fetchTrusted(request.provider, sourceUrl);
     if (!response.ok || !response.body) throw new Error(`download_failed:${response.status}`);
 
     const contentLength = Number(response.headers.get("content-length") ?? "0");
@@ -182,6 +228,7 @@ export async function installAssetFile(request: AssetInstallRequest): Promise<{
     throw new Error(`download_hash_mismatch:${md5}:${candidate.md5}`);
   }
 
+  await assertNoLinkComponents(request.projectRoot, targetDir);
   if (request.overwrite) await rm(target, { force: true });
   await rename(temp, target);
 
