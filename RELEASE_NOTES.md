@@ -1,5 +1,89 @@
 # Release notes
 
+## v1.4.0
+
+V1.4 expands both sides of the resource stack: high-quality live 3D/PBR discovery and reusable gameplay-code discovery.
+
+### ambientCG v3 live provider
+
+- Adds `ambientcg` to unified search and `search_live_assets`.
+- Uses the current ambientCG v3 API rather than the retired v2 API.
+- Covers materials/PBR textures, HDRIs, terrain, decals, atlases, plain images, brushes, Substance resources and 3D models.
+- Maps ambientCG assets as CC0 based on the provider's official license and preserves canonical source metadata.
+- Adds query fallback so theme-driven searches such as `road environment` can fall back to `road`, which is important because ambientCG v3 treats multiple query terms as logical AND.
+- Adds ambientCG to 3D art/environment candidates in `recommend_stack`.
+
+Automatic installation is intentionally **not** enabled for ambientCG yet; live discovery and trusted acquisition remain separate concerns.
+
+### GitHub reusable game-code live provider
+
+- Adds `githubcode` as a first-class live provider instead of keeping GitHub code only behind a separate compatibility tool.
+- Searches non-archived, non-fork repositories with a minimum star floor and current GitHub REST API versioning.
+- Preserves detected SPDX repository license metadata and maps known licenses through the existing conservative license engine.
+- Repositories with no detected explicit license fail closed as `NO-LICENSE`.
+- Repository-level license detection is explicitly not treated as clearance for dependencies or bundled media/assets.
+
+The legacy `search_open_source_projects` MCP tool remains available for compatibility.
+
+### Gameplay-code stack planning
+
+`recommend_stack` now creates required code slots when the game description explicitly asks for:
+
+- vehicle/driving systems;
+- inventory/loot/crafting;
+- combat/weapon systems;
+- multiplayer/network synchronization;
+- save/persistence;
+- enemy/NPC AI;
+- procedural generation;
+- dialogue/conversation systems.
+
+For Godot, these slots search the official Godot Asset Library plus GitHub code. Other engines use GitHub code discovery while the verified starter rule remains conservative: an unsupported engine does not receive an arbitrary GitHub repository as a silently substituted starter.
+
+### Verified game-font expansion
+
+The Google Fonts verified catalog expands from 2 to 15 game-oriented families, including:
+
+- pixel/retro: Press Start 2P, Pixelify Sans, Silkscreen, VT323;
+- sci-fi/technical: Orbitron, Oxanium, Rajdhani, Chakra Petch, Audiowide;
+- military: Black Ops One;
+- horror: Creepster;
+- fantasy/classical: Cinzel;
+- CJK/localization: Noto Sans SC, Noto Serif SC, DotGothic16.
+
+Each curated family now retains its own exact Google Fonts repository `OFL.txt` provenance rather than only pointing at the top-level OFL directory.
+
+### Search intent improvements
+
+V1.4 adds deterministic recognition for additional Chinese/English intent including:
+
+- CJK / 中文 / 汉字;
+- fantasy / 奇幻;
+- horror / 恐怖;
+- military / 军事;
+- networking / PVP / 联网 / 多人;
+- save / persistence / 存档;
+- enemy/NPC AI / 行为树;
+- procedural generation / 随机生成 / 地图生成;
+- dialogue / 对话系统.
+
+### Freesound boundary
+
+Freesound remains a discovery source, not a default commercial live provider. Its individual sounds have per-item Creative Commons licenses, but use of the free Freesound API has separate non-commercial API terms. A separate commercial API agreement would be required before making it part of the default commercial live-provider path.
+
+### Release engineering
+
+- package/runtime version: `1.4.0`;
+- npm lockfile refreshed by npm itself;
+- new provider behavior uses fixed-fixture unit tests rather than depending on ambientCG/GitHub network availability during CI;
+- existing Node 20/22 validation, npm tarball clean-install and MCP binary smoke tests remain required.
+
+### Compatibility
+
+V1.4 is additive. Existing MCP tool names, verified catalogs, live providers, installation boundaries and attribution workflows remain available.
+
+---
+
 ## v1.3.0
 
 V1.3 turns two major V1.2 discovery routes into first-class live providers.
