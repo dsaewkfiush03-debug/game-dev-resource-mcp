@@ -41,7 +41,8 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   kenney: "verified-catalog",
   quaternius: "verified-catalog",
   godotdemos: "verified-catalog",
-  gameicons: "verified-catalog",
+  gameicons: "live-api",
+  tablericons: "live-api",
   phaser: "verified-catalog",
   googlefonts: "verified-catalog",
   openverse: "live-api",
@@ -92,6 +93,7 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
   if (asset.attribution === false) { score += 2; reasons.push("no-asset-attribution-required"); }
   if (asset.shareAlike === false) { score += 1; reasons.push("no-share-alike"); }
   if (asset.licenseSource) { score += 1; reasons.push("license-source-present"); }
+  if (asset.creator) { score += 1; reasons.push("creator-provenance-present"); }
 
   return { score, matchReasons: Array.from(new Set(reasons)) };
 }
