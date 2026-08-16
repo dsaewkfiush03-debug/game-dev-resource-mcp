@@ -26,7 +26,7 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kenney", "quaternius", "godotdemos", "gameicons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
+const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 
 server.registerTool("find_game_assets", {
@@ -58,11 +58,11 @@ server.registerTool("search_game_assets", {
 server.registerTool("search_live_assets", {
   description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
   inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
-}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "githubcode", "openverse", "godotassetlib"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
+}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "githubcode", "openverse", "godotassetlib", "gameicons", "tablericons"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
 
 server.registerTool("get_asset_files", {
   description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
-  inputSchema: z.object({ provider: z.enum(["polyhaven"]).default("polyhaven"), assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), limit: z.number().int().min(1).max(200).default(100) })
+  inputSchema: z.object({ provider: z.enum(["polyhaven", "gameicons", "tablericons"]).default("polyhaven"), assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), limit: z.number().int().min(1).max(200).default(100) })
 }, async ({ provider, assetId, format, resolution, limit }) => { const adapter = getProvider(provider); if (!adapter.getFiles) return text({ provider, assetId, error: "file_lookup_not_supported" }); let files = await adapter.getFiles(assetId); if (format) files = files.filter(file => file.format?.toLowerCase() === format.toLowerCase()); if (resolution) files = files.filter(file => file.resolution?.toLowerCase() === resolution.toLowerCase()); return text({ provider: adapter.name, assetId, mirrored: false, files: files.slice(0, limit) }); });
 
 server.registerTool("plan_asset_install", {
