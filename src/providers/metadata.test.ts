@@ -16,9 +16,11 @@ test("Quaternius catalog filters animated characters", async () => {
   assert.ok(results.every(item => item.animated === true));
 });
 
-test("Godot demos filter by engine and shader type", async () => {
+test("Godot demos filter by engine and shader type without assuming a fixed catalog size", async () => {
   const results = await godotDemosProvider.search({ query: "", engines: ["godot"], assetTypes: ["shader"], limit: 50 });
-  assert.deepEqual(results.map(item => item.id), ["godot-compute-demos"]);
-  assert.equal(results[0]?.license, "MIT");
-  assert.equal(results[0]?.attribution, true);
+  assert.ok(results.some(item => item.id === "godot-compute-demos"));
+  assert.ok(results.every(item => item.engine?.includes("godot")));
+  assert.ok(results.every(item => item.assetTypes?.includes("shader")));
+  assert.ok(results.every(item => item.license === "MIT"));
+  assert.ok(results.every(item => item.attribution === true));
 });
