@@ -153,8 +153,8 @@ function inferDimension(text: string, explicit?: "2D" | "3D"): "2D" | "3D" | und
 
 function artProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
   if (dimension === "2D") return ["kenney"];
-  if (dimension === "3D") return ["quaternius", "kenney", "polyhaven", "ambientcg"];
-  return ["kenney", "quaternius", "polyhaven", "ambientcg"];
+  if (dimension === "3D") return ["quaternius", "kaykit", "kenney", "polyhaven", "ambientcg"];
+  return ["kenney", "quaternius", "kaykit", "polyhaven", "ambientcg"];
 }
 
 function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
@@ -258,10 +258,10 @@ export function buildStackPlan(options: RecommendStackOptions): {
     add({ id: "dialogue-system", label: "Dialogue / conversation system", required: true, rationale: "Dialogue or narrative conversation tooling is explicitly requested.", queries: buildCodeQueries("dialogue conversation", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
   }
 
-  add({ id: "ui", label: "UI", required: true, rationale: "A production game needs menus, panels and HUD elements.", queries: buildQueries("ui", styles, gameGenres), providers: ["kenney", "gameicons"], dimensions: ["2D"] });
+  add({ id: "ui", label: "UI", required: true, rationale: "A production game needs menus, panels and HUD elements.", queries: buildQueries("ui", styles, gameGenres), providers: ["kenney", "gameicons", "tablericons"], dimensions: ["2D"] });
 
   const iconTheme = themes.includes("vehicle") ? "vehicle" : themes.includes("combat") ? "combat" : themes.includes("inventory") || gameGenres.includes("survival") ? "resource" : gameGenres.includes("rpg") ? "rpg" : undefined;
-  add({ id: "icons", label: "Icons", required: false, rationale: "Icons improve HUD, inventory, skills and status communication.", queries: buildQueries("icon", [], gameGenres, iconTheme), providers: ["gameicons", "kenney"], dimensions: ["2D"] });
+  add({ id: "icons", label: "Icons", required: false, rationale: "Icons improve HUD, inventory, skills and status communication.", queries: buildQueries("icon", [], gameGenres, iconTheme), providers: ["gameicons", "tablericons", "kenney"], dimensions: ["2D"] });
 
   const sfxTheme = styles.includes("sci-fi") ? "sci-fi" : themes.includes("combat") ? "impact" : "interface";
   add({ id: "sfx", label: "Sound effects", required: true, rationale: "Interaction and gameplay feedback require sound effects.", queries: unique([`${sfxTheme} sounds`, "game sound effect", "sounds", "audio"]), providers: ["kenney", "openverse"], dimensions: ["audio"] });
@@ -349,7 +349,9 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
     "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path.",
     "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor.",
     "ambientCG search uses the current v3 API and treats ambientCG assets as CC0 according to the provider license page.",
-    "GitHub code results use repository-level detected SPDX licenses only; dependencies and bundled media require separate license review."
+    "KayKit official pack repositories are treated as CC0 based on the official asset collection/license files; individual repository provenance is retained.",
+    "GitHub code results use repository-level detected SPDX licenses only; dependencies and bundled media require separate license review.",
+    "When reliable provider metadata exists, popularity and update freshness are small ranking signals; they never override license filtering."
   ];
   if (inferred.engine && !["godot", "phaser", "web"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
