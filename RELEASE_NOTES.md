@@ -1,5 +1,51 @@
 # Release notes
 
+## v1.8.0
+
+V1.8 strengthens the two places where whole-game agents need better building blocks: broad coherent 3D art packs and concrete reusable starter/game references.
+
+### Quaternius reverified expansion
+
+- Expands the structured Quaternius catalog from a small selected set to 35+ high-value CC0 packs.
+- Adds modern-city/road coverage through Downtown City MegaKit, Modular Streets and public-transport resources.
+- Adds universal humanoid base characters, modular fantasy outfits and both Universal Animation Library generations.
+- Adds fantasy props/medieval village, sci-fi essentials/modular sci-fi, zombie apocalypse, ultimate space, toon shooter, cyberpunk, fantasy RTS, platformer, pirate, survival, vehicle, interior and nature coverage.
+- Records the actual V1.8 source/license review date as 2026-08-16.
+
+### Concrete Godot starter/game references
+
+The verified Godot demo provider no longer exposes only five broad collection links. It now also indexes concrete official projects such as:
+
+- Dodge the Creeps;
+- 2D Platformer / Physics Platformer / Role Playing Game / Pong / Isometric;
+- finite-state-machine and 2D navigation/AStar examples;
+- 3D Platformer / Squash the Creeps / Truck Town;
+- 3D character, navigation, voxel, waypoints, procedural-material and particle examples.
+
+These remain repository-level MIT code/demo references. They are discovery/starter candidates, not a new permission to automatically clone or execute third-party repositories.
+
+### Phaser starter boundary
+
+- Adds the official `phaserjs/create-game` project generator as a verified MIT starter/tool candidate.
+- Keeps `phaserjs/examples` outside the commercial-safe catalog because MIT source-code licensing does not automatically clear the bundled example media.
+
+### Expansion-safe tests
+
+Legacy tests that assumed a provider would permanently return exactly one result were replaced with semantic assertions: the expected canonical resource must remain present and all returned records must satisfy the requested metadata/license constraints. This allows safe catalog growth without weakening license tests.
+
+### Release engineering
+
+- package/runtime version: `1.8.0`;
+- npm lockfile refreshed by npm itself;
+- offline v1.8 tests cover Quaternius scale/license/freshness, concrete Godot starters/systems and the Phaser starter boundary;
+- Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.8 is additive. Existing provider IDs, MCP tool names, installation boundaries and attribution workflows are unchanged.
+
+---
+
 ## v1.7.0
 
 V1.7 expands the highest-value static catalog and introduces explicit verification-freshness tracking so the registry can grow without silently becoming stale.
