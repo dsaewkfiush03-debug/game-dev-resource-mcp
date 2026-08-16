@@ -23,7 +23,10 @@ test("Chinese pixel road-survival description expands into art and gameplay-code
   }
 
   const starter = slots.find(slot => slot.id === "starter");
-  assert.deepEqual(starter?.providers, ["godotassetlib", "godotdemos"]);
+  assert.equal(starter?.providers[0], "godotdemos", "verified whole-project demos should be preferred before live starter discovery");
+  assert.ok(starter?.providers.includes("godotdemos"));
+  assert.ok(starter?.providers.includes("godotassetlib"));
+  assert.deepEqual(starter?.reuseScopes, ["whole-project", "code-only"]);
   assert.ok(starter?.queries.includes("godot 2d starter"));
 
   const environment = slots.find(slot => slot.id === "environment");
@@ -39,7 +42,9 @@ test("Chinese pixel road-survival description expands into art and gameplay-code
 
   for (const id of ["vehicle-system", "combat-system", "inventory-system"] as const) {
     const slot = slots.find(item => item.id === id);
-    assert.deepEqual(slot?.providers, ["godotassetlib", "githubcode"]);
+    assert.ok(slot?.providers.includes("godotassetlib"));
+    assert.ok(slot?.providers.includes("godotdemos"));
+    assert.ok(slot?.providers.includes("githubcode"));
     assert.deepEqual(slot?.dimensions, ["code"]);
   }
 });
@@ -65,7 +70,9 @@ test("explicit networking save AI procedural and dialogue requirements create co
   for (const id of ["networking", "save-system", "ai-system", "procedural-generation", "dialogue-system"] as const) {
     const slot = slots.find(item => item.id === id);
     assert.equal(slot?.required, true);
-    assert.deepEqual(slot?.providers, ["godotassetlib", "githubcode"]);
+    assert.ok(slot?.providers.includes("godotassetlib"));
+    assert.ok(slot?.providers.includes("godotdemos"));
+    assert.ok(slot?.providers.includes("githubcode"));
     assert.ok(slot?.queries.some(query => query.includes("godot")));
   }
 });
@@ -83,6 +90,7 @@ test("Phaser description selects the verified Phaser starter provider", () => {
   assert.equal(inferred.engine, "phaser");
   const starter = slots.find(slot => slot.id === "starter");
   assert.deepEqual(starter?.providers, ["phaser"]);
+  assert.deepEqual(starter?.reuseScopes, ["whole-project", "code-only"]);
   assert.ok(starter?.queries.some(query => query.includes("phaser")));
 });
 
