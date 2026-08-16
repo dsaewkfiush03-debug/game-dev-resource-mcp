@@ -22,6 +22,7 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Preserve creator/attribution metadata for per-item resources where the upstream source exposes it.
 - Filter by commercial-use posture and license obligations.
 - Filter by engine, 2D/3D/audio/font/code, style, format, asset type, genre and animation state.
+- Audit static verified-catalog freshness and surface stale, needs-review and untracked records with `audit_resource_verification`.
 - Generate project-level `THIRD_PARTY_ASSETS.md` and `CREDITS.md` content.
 - Resolve official provider-hosted files where supported.
 - Safely install an explicitly selected Poly Haven file or individual Game Icons/Tabler SVG with host/path, size and filesystem checks.
@@ -145,6 +146,7 @@ If a requested engine has no verified starter provider, the starter slot remains
 | `plan_asset_install` | Plan a safe installation without writing to disk. |
 | `install_asset_file` | Download one explicitly selected verified file into a local project. |
 | `list_asset_providers` | List provider modes. |
+| `audit_resource_verification` | Audit freshness of maintained verified catalogs and surface stale/untracked records. |
 | `search_open_source_projects` | Compatibility tool for targeted GitHub repository search. |
 | `inspect_repository` | Inspect repository metadata and detected license. |
 | `check_license` | Classify common licenses conservatively. |
@@ -162,7 +164,7 @@ If a requested engine has no verified starter provider, the starter slot remains
 | GitHub Open-Source Code | Live API | Inventory, combat, networking, AI, save, procedural and other code | Detected repository SPDX license; fail closed when unknown/missing | No |
 | Game Icons | Live API/index | Individual game/UI SVG icons | Conservatively CC BY 3.0 with creator attribution metadata | Yes, exact official-repo SVG only |
 | Tabler Icons | Live API/index | Individual outline/filled SVG icons | MIT | Yes, exact official-repo SVG only |
-| Kenney | Verified catalog | 2D, 3D, UI, vehicles, audio | CC0 | No |
+| Kenney | Verified catalog | 60+ structured packs across 2D, 3D, cities/roads, UI/VFX and audio | CC0, reverified 2026-08-16 | No |
 | Quaternius | Verified catalog | 3D characters, vehicles, environments | CC0 | No |
 | Google Fonts | Verified catalog | 15 game-oriented fonts including CJK/Chinese | SIL OFL 1.1 with per-family license provenance | No |
 | Godot demos | Verified catalog | Code, shaders, starter demos | MIT at repository level | No |
@@ -173,6 +175,15 @@ Game Icons and Tabler Icons are indexed from their official GitHub repository tr
 The broader source registry also contains marketplaces and community libraries such as OpenGameArt, itch.io, Sketchfab, Fab, Unity Asset Store, Freesound and others. Those are **discovery sources**, not blanket commercial-use approvals.
 
 Freesound is intentionally not a default live provider for commercial workflows: using the free Freesound API has separate non-commercial API terms even though individual sounds have their own Creative Commons licenses. A commercial API agreement would need to be handled separately.
+
+
+## Verification freshness
+
+Verified static catalogs can carry `verificationStatus` and `verifiedAt` metadata. `audit_resource_verification` scans maintained verified catalogs and reports `current`, `stale`, `needs-review` and `untracked` entries.
+
+A stale record is **not automatically unusable**: it means the project's cached source/license verification is old enough to recheck. The audit never upgrades or downgrades upstream license rights. Legacy catalogs without a real review date remain visibly `untracked` rather than receiving fabricated fresh dates.
+
+See [`docs/verification.md`](docs/verification.md).
 
 ## Search model
 
