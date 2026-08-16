@@ -1,7 +1,26 @@
 import { searchAllAssets, type ProviderSearchError, type RankedAsset } from "./search.js";
 import type { AssetDimension, AssetProviderId } from "./providers/types.js";
 
-export type StackSlotId = "starter" | "environment" | "vehicle" | "character" | "weapon" | "ui" | "icons" | "sfx" | "music" | "font" | "shader";
+export type StackSlotId =
+  | "starter"
+  | "environment"
+  | "vehicle"
+  | "character"
+  | "weapon"
+  | "ui"
+  | "icons"
+  | "sfx"
+  | "music"
+  | "font"
+  | "shader"
+  | "vehicle-system"
+  | "inventory-system"
+  | "combat-system"
+  | "networking"
+  | "save-system"
+  | "ai-system"
+  | "procedural-generation"
+  | "dialogue-system";
 
 export interface RecommendStackOptions {
   description: string;
@@ -89,6 +108,11 @@ const THEME_KEYWORDS: Array<[string, string[]]> = [
   ["combat", ["combat", "weapon", "gun", "battle", "战斗", "武器", "枪", "枪械"]],
   ["character", ["character", "player", "hero", "角色", "人物", "主角"]],
   ["inventory", ["inventory", "loot", "crafting", "背包", "物资", "搜刮", "制作"]],
+  ["networking", ["multiplayer", "networking", "networked", "pvp", "pve", "联机", "联网", "多人", "服务器", "同步"]],
+  ["save", ["save system", "save game", "persistence", "persistent", "存档", "持久化"]],
+  ["ai", ["enemy ai", "npc ai", "artificial intelligence", "behavior tree", "behaviour tree", "敌人ai", "敌人 ai", "npc ai", "行为树"]],
+  ["procedural", ["procedural", "procgen", "procedural generation", "程序化", "随机生成", "地图生成"]],
+  ["dialogue", ["dialogue", "dialog system", "conversation system", "对话系统", "对话", "剧情系统"]],
   ["nature", ["nature", "forest", "vegetation", "自然", "森林", "植被"]],
   ["space", ["space", "spaceship", "太空", "宇宙", "飞船"]],
   ["cjk", ["cjk", "chinese", "中文", "汉字", "简体中文", "繁体中文"]]
@@ -138,6 +162,10 @@ function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProvider
   return dimension === "2D" || dimension === undefined ? [...base, "openverse"] : base;
 }
 
+function codeProviders(engine: string | undefined): AssetProviderId[] {
+  return engine === "godot" ? ["godotassetlib", "githubcode"] : ["githubcode"];
+}
+
 function filterAllowedProviders(slotProviders: AssetProviderId[], requested?: AssetProviderId[]): AssetProviderId[] {
   if (!requested?.length) return slotProviders;
   return slotProviders.filter(provider => requested.includes(provider));
@@ -156,6 +184,17 @@ function buildQueries(base: string, styles: string[], genres: string[], theme?: 
   ]);
 }
 
+function buildCodeQueries(feature: string, engine?: string): string[] {
+  return unique([
+    [engine, feature, "system"].filter(Boolean).join(" "),
+    [engine, feature, "plugin"].filter(Boolean).join(" "),
+    [engine, feature, "addon"].filter(Boolean).join(" "),
+    [feature, "game system"].join(" "),
+    [feature, "library"].join(" "),
+    feature
+  ]);
+}
+
 export function buildStackPlan(options: RecommendStackOptions): {
   inferred: StackRecommendationResult["inferred"];
   slots: StackSlotPlan[];
@@ -170,6 +209,7 @@ export function buildStackPlan(options: RecommendStackOptions): {
   const slots: StackSlotPlan[] = [];
   const add = (slot: StackSlotPlan) => slots.push({ ...slot, providers: filterAllowedProviders(slot.providers, options.providers) });
   const artDims: AssetDimension[] | undefined = dimension ? [dimension] : undefined;
+  const gameplayCodeProviders = codeProviders(engine);
 
   if (engine) {
     const providers: AssetProviderId[] = engine === "godot" ? ["godotassetlib", "godotdemos"] : engine === "phaser" || engine === "web" ? ["phaser"] : [];
@@ -182,6 +222,7 @@ export function buildStackPlan(options: RecommendStackOptions): {
 
   if (themes.includes("vehicle") || gameGenres.includes("racing")) {
     add({ id: "vehicle", label: "Vehicles", required: true, rationale: "The game description explicitly depends on vehicles/driving.", queries: buildQueries("vehicle", styles, gameGenres), providers: artProviders(dimension), dimensions: artDims });
+    add({ id: "vehicle-system", label: "Vehicle / driving system", required: true, rationale: "Vehicle gameplay needs reusable driving or vehicle-controller code, not only vehicle art.", queries: buildCodeQueries("vehicle driving", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
   }
 
   if (themes.includes("character") || gameGenres.some(genre => ["rpg", "platformer", "survival", "shooter", "adventure"].includes(genre))) {
@@ -190,6 +231,31 @@ export function buildStackPlan(options: RecommendStackOptions): {
 
   if (themes.includes("combat") || gameGenres.includes("shooter")) {
     add({ id: "weapon", label: "Weapons / combat art", required: true, rationale: "Combat is explicitly present in the game description.", queries: buildQueries("weapon", styles, gameGenres), providers: artProviders(dimension), dimensions: artDims });
+    add({ id: "combat-system", label: "Combat system", required: true, rationale: "Combat requires reusable gameplay code for damage, weapons or combat flow.", queries: buildCodeQueries("combat weapon", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("inventory")) {
+    add({ id: "inventory-system", label: "Inventory / loot system", required: true, rationale: "Loot, inventory or crafting is explicitly present in the game description.", queries: buildCodeQueries("inventory loot", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("networking")) {
+    add({ id: "networking", label: "Networking / multiplayer", required: true, rationale: "The game explicitly requires multiplayer or network synchronization.", queries: buildCodeQueries("multiplayer networking", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("save")) {
+    add({ id: "save-system", label: "Save / persistence system", required: true, rationale: "Persistent progress or save-game behavior is explicitly requested.", queries: buildCodeQueries("save persistence", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("ai")) {
+    add({ id: "ai-system", label: "Enemy / NPC AI", required: true, rationale: "Enemy or NPC behavior is explicitly part of the game design.", queries: buildCodeQueries("enemy npc ai", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("procedural")) {
+    add({ id: "procedural-generation", label: "Procedural generation", required: true, rationale: "Procedural or random world/content generation is explicitly requested.", queries: buildCodeQueries("procedural generation", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
+  }
+
+  if (themes.includes("dialogue")) {
+    add({ id: "dialogue-system", label: "Dialogue / conversation system", required: true, rationale: "Dialogue or narrative conversation tooling is explicitly requested.", queries: buildCodeQueries("dialogue conversation", engine), providers: gameplayCodeProviders, dimensions: ["code"] });
   }
 
   add({ id: "ui", label: "UI", required: true, rationale: "A production game needs menus, panels and HUD elements.", queries: buildQueries("ui", styles, gameGenres), providers: ["kenney", "gameicons"], dimensions: ["2D"] });
@@ -282,7 +348,8 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
     "Only primary recommendations are counted in the license summary; alternatives retain their own license metadata.",
     "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path.",
     "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor.",
-    "ambientCG search uses the current v3 API and treats ambientCG assets as CC0 according to the provider license page."
+    "ambientCG search uses the current v3 API and treats ambientCG assets as CC0 according to the provider license page.",
+    "GitHub code results use repository-level detected SPDX licenses only; dependencies and bundled media require separate license review."
   ];
   if (inferred.engine && !["godot", "phaser", "web"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
