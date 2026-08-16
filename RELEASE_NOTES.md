@@ -1,5 +1,54 @@
 # Release notes
 
+## v1.7.0
+
+V1.7 expands the highest-value static catalog and introduces explicit verification-freshness tracking so the registry can grow without silently becoming stale.
+
+### Major Kenney verified-catalog expansion
+
+- Expands Kenney from roughly two dozen selected packs to 60+ structured packs.
+- Adds broad 3D coverage for factory/industrial, platformer, modular dungeon/cave/space, city commercial/industrial/suburban/roads, modular buildings, racing, nature, fantasy and more.
+- Adds broad 2D coverage for pixel/1-bit platformers, roguelike modern city/caves, top-down shooters/tanks, isometric vehicles, town/farm, RPG and production-support assets.
+- Adds input prompts, mobile controls, light/VFX masks, skyboxes and development textures in addition to the existing UI/audio catalog.
+- Keeps Kenney's source-level CC0 posture and records the actual V1.7 review date as 2026-08-16.
+
+### Verification freshness metadata
+
+Static verified-catalog entries may now carry:
+
+```text
+verificationStatus: verified | needs-review
+verifiedAt: YYYY-MM-DD
+```
+
+The V1.7 review date is also applied to the curated Google Fonts catalog, Godot official demo collections and Phaser official starters because those sources were explicitly rechecked during this project cycle. Legacy catalogs that have not received a real review remain untracked rather than receiving fabricated timestamps.
+
+### `audit_resource_verification`
+
+Adds an MCP audit tool for maintained verified catalogs. It reports:
+
+- `current`;
+- `stale`;
+- `needs-review`;
+- `untracked`.
+
+The stale threshold defaults to 365 days and can be changed by the caller. Provider-level summaries and an `attention` list make future maintenance work visible to agents.
+
+Freshness is evidence quality, not a replacement license. A stale CC0/MIT/OFL record does not automatically become forbidden; it means the canonical source/license should be rechecked before relying on cached metadata for release decisions.
+
+### Release engineering
+
+- package/runtime version: `1.7.0`;
+- npm lockfile refreshed by npm itself;
+- expanded Kenney coverage and verification assessments are covered by deterministic tests;
+- existing Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.7 is additive. Existing provider IDs, search tools, stack planning, installation and attribution workflows remain available.
+
+---
+
 ## v1.5.0
 
 V1.5 turns icon discovery from a small category-level catalog into a per-icon resource layer and extends the safe installer to exact official SVG files.

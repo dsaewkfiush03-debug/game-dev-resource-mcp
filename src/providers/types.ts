@@ -1,5 +1,6 @@
 export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "kaykit" | "godotdemos" | "gameicons" | "tablericons" | "phaser" | "googlefonts" | "openverse" | "godotassetlib" | "ambientcg" | "githubcode";
 export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
+export type VerificationStatus = "verified" | "needs-review";
 
 export interface ProviderSearchOptions {
   query: string;
@@ -25,6 +26,8 @@ export interface ProviderAsset {
   attributionText?: string;
   popularity?: number;
   updatedAt?: string;
+  verificationStatus?: VerificationStatus;
+  verifiedAt?: string;
   categories: string[];
   tags: string[];
   engine?: string[];

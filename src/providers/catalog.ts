@@ -1,4 +1,4 @@
-import type { AssetProvider, AssetProviderId, ProviderAsset, ProviderSearchOptions, AssetDimension } from "./types.js";
+import type { AssetProvider, AssetProviderId, ProviderAsset, ProviderSearchOptions, AssetDimension, VerificationStatus } from "./types.js";
 
 export interface VerifiedCatalogEntry {
   id: string;
@@ -6,6 +6,8 @@ export interface VerifiedCatalogEntry {
   sourceUrl: string;
   licenseSource?: string;
   description?: string;
+  verificationStatus?: VerificationStatus;
+  verifiedAt?: string;
   categories: string[];
   tags: string[];
   engine?: string[];
@@ -28,6 +30,11 @@ export interface CatalogLicenseProfile {
   shareAlike: boolean;
 }
 
+export interface CatalogVerificationProfile {
+  verificationStatus: VerificationStatus;
+  verifiedAt: string;
+}
+
 function valuesMatch(entryValues: string[] | undefined, wanted: string[]): boolean {
   if (wanted.length === 0) return true;
   const values = (entryValues ?? []).map(value => value.toLowerCase());
@@ -42,7 +49,8 @@ export function createVerifiedCatalogProvider(
   id: AssetProviderId,
   name: string,
   license: CatalogLicenseProfile,
-  entries: VerifiedCatalogEntry[]
+  entries: VerifiedCatalogEntry[],
+  verification?: CatalogVerificationProfile
 ): AssetProvider {
   return {
     id,
@@ -95,6 +103,8 @@ export function createVerifiedCatalogProvider(
           ...entry,
           provider: id,
           ...license,
+          verificationStatus: entry.verificationStatus ?? verification?.verificationStatus,
+          verifiedAt: entry.verifiedAt ?? verification?.verifiedAt,
           licenseSource: entry.licenseSource ?? license.licenseSource,
           retrievedAt
         }));
@@ -106,7 +116,8 @@ export function createCc0CatalogProvider(
   id: AssetProviderId,
   name: string,
   licenseSource: string,
-  entries: VerifiedCatalogEntry[]
+  entries: VerifiedCatalogEntry[],
+  verification?: CatalogVerificationProfile
 ): AssetProvider {
   return createVerifiedCatalogProvider(id, name, {
     license: "CC0-1.0",
@@ -116,5 +127,5 @@ export function createCc0CatalogProvider(
     redistribution: true,
     attribution: false,
     shareAlike: false
-  }, entries);
+  }, entries, verification);
 }
