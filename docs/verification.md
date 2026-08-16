@@ -60,9 +60,15 @@ Audit Kenney and Google Fonts verification freshness with a 180-day threshold.
 
 ## Current rollout
 
-V1.7 begins tracked verification dates for catalogs that were explicitly rechecked during this release, including the expanded Kenney catalog, the curated Google Fonts game catalog, Godot official demo collections and Phaser official starters.
+The 2026-08-16 maintenance cycle now tracks explicit review dates for:
 
-Other older static catalogs may initially appear as `untracked` until they receive a real re-verification pass.
+- the expanded 60+ Kenney catalog;
+- the curated Google Fonts game catalog;
+- Godot official demo collections and the V1.8 concrete starter/system references;
+- Phaser official starter templates and the `create-game` generator;
+- the V1.8-expanded Quaternius catalog of 35+ structured CC0 packs.
+
+Catalogs without a real source/license review event remain `untracked` rather than receiving a synthetic fresh date.
 
 ## Maintainer workflow
 

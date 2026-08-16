@@ -17,6 +17,7 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Search live CC0 materials/HDRIs/3D assets from Poly Haven and ambientCG.
 - Search openly licensed images/audio through Openverse with per-item creator/license metadata.
 - Search the Godot Asset Library live for addons/projects with per-item licenses.
+- Search concrete verified Godot starter/game/system demos such as 2D RPG/platformer, 3D platformer, Truck Town, navigation and voxel references.
 - Search GitHub live for reusable game systems and conservatively classify detected repository licenses.
 - Search thousands of individual Game Icons and Tabler Icons SVGs instead of only category pages.
 - Preserve creator/attribution metadata for per-item resources where the upstream source exposes it.
@@ -165,17 +166,16 @@ If a requested engine has no verified starter provider, the starter slot remains
 | Game Icons | Live API/index | Individual game/UI SVG icons | Conservatively CC BY 3.0 with creator attribution metadata | Yes, exact official-repo SVG only |
 | Tabler Icons | Live API/index | Individual outline/filled SVG icons | MIT | Yes, exact official-repo SVG only |
 | Kenney | Verified catalog | 60+ structured packs across 2D, 3D, cities/roads, UI/VFX and audio | CC0, reverified 2026-08-16 | No |
-| Quaternius | Verified catalog | 3D characters, vehicles, environments | CC0 | No |
+| Quaternius | Verified catalog | 35+ structured 3D packs: city/roads, characters/animation, vehicles, fantasy, sci-fi, survival, space and environments | CC0, reverified 2026-08-16 | No |
 | Google Fonts | Verified catalog | 15 game-oriented fonts including CJK/Chinese | SIL OFL 1.1 with per-family license provenance | No |
-| Godot demos | Verified catalog | Code, shaders, starter demos | MIT at repository level | No |
-| Phaser starters | Verified catalog | Web-game starter templates | MIT code templates | No |
+| Godot demos | Verified catalog | Concrete 2D/3D starter games plus navigation, AI, vehicle, voxel, shader and system references | MIT at repository level, reverified 2026-08-16 | No |
+| Phaser starters | Verified catalog | Official web-game templates plus `create-game` project generator | MIT code/templates, reverified 2026-08-16 | No |
 
 Game Icons and Tabler Icons are indexed from their official GitHub repository trees. This means searches operate on individual SVG filenames/metadata rather than five broad category links.
 
 The broader source registry also contains marketplaces and community libraries such as OpenGameArt, itch.io, Sketchfab, Fab, Unity Asset Store, Freesound and others. Those are **discovery sources**, not blanket commercial-use approvals.
 
 Freesound is intentionally not a default live provider for commercial workflows: using the free Freesound API has separate non-commercial API terms even though individual sounds have their own Creative Commons licenses. A commercial API agreement would need to be handled separately.
-
 
 ## Verification freshness
 
