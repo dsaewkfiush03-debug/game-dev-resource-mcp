@@ -54,6 +54,8 @@ export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().
     provider: "githubcode",
     sourceUrl,
     description: repo.description ?? undefined,
+    popularity: repo.stargazers_count,
+    updatedAt: repo.updated_at,
     categories: ["Code", "GitHub"],
     tags,
     engine: inferredEngines(repo),

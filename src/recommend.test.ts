@@ -44,6 +44,19 @@ test("Chinese pixel road-survival description expands into art and gameplay-code
   }
 });
 
+test("3D planning includes KayKit and Tabler in appropriate slots", () => {
+  const { slots } = buildStackPlan({ description: "Godot 3D low-poly survival RPG with characters and combat" });
+  const environment = slots.find(slot => slot.id === "environment");
+  const character = slots.find(slot => slot.id === "character");
+  const ui = slots.find(slot => slot.id === "ui");
+  const icons = slots.find(slot => slot.id === "icons");
+
+  assert.ok(environment?.providers.includes("kaykit"));
+  assert.ok(character?.providers.includes("kaykit"));
+  assert.ok(ui?.providers.includes("tablericons"));
+  assert.ok(icons?.providers.includes("tablericons"));
+});
+
 test("explicit networking save AI procedural and dialogue requirements create code slots", () => {
   const { inferred, slots } = buildStackPlan({
     description: "Godot 多人联网 PVP 生存游戏，需要存档、敌人 AI、程序化地图生成和对话系统"

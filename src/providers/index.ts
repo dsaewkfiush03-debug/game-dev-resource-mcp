@@ -4,6 +4,7 @@ import { githubCodeProvider } from "./githubcode.js";
 import { godotAssetLibraryProvider } from "./godotassetlib.js";
 import { godotDemosProvider } from "./godotdemos.js";
 import { googleFontsProvider } from "./googlefonts.js";
+import { kayKitProvider } from "./kaykit.js";
 import { kenneyProvider } from "./kenney.js";
 import { openverseProvider } from "./openverse.js";
 import { phaserProvider } from "./phaser.js";
@@ -16,6 +17,7 @@ const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   polyhaven: polyHavenProvider,
   ambientcg: ambientCgProvider,
   githubcode: githubCodeProvider,
+  kaykit: kayKitProvider,
   kenney: kenneyProvider,
   quaternius: quaterniusProvider,
   godotdemos: godotDemosProvider,
@@ -35,7 +37,7 @@ export function listProviders(): Array<{ id: AssetProviderId; name: string; mode
   return Object.values(PROVIDERS).map(provider => ({
     id: provider.id,
     name: provider.name,
-    mode: ["polyhaven", "ambientcg", "openverse", "godotassetlib", "githubcode", "gameicons", "tablericons"].includes(provider.id) ? "live-api" : "verified-catalog"
+    mode: ["polyhaven", "ambientcg", "openverse", "godotassetlib", "githubcode", "kaykit", "gameicons", "tablericons"].includes(provider.id) ? "live-api" : "verified-catalog"
   }));
 }
 

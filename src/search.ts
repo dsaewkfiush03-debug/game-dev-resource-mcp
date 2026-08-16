@@ -38,6 +38,7 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   polyhaven: "live-api",
   ambientcg: "live-api",
   githubcode: "live-api",
+  kaykit: "live-api",
   kenney: "verified-catalog",
   quaternius: "verified-catalog",
   godotdemos: "verified-catalog",
@@ -67,6 +68,23 @@ function dimensionMatches(asset: ProviderAsset, wanted: AssetDimension[] | undef
   return !wanted?.length || (asset.dimension !== undefined && wanted.includes(asset.dimension));
 }
 
+function popularityBonus(popularity?: number): number {
+  if (!Number.isFinite(popularity) || (popularity ?? 0) <= 0) return 0;
+  return Math.min(6, Math.floor(Math.log10((popularity ?? 0) + 1) * 2));
+}
+
+function freshnessBonus(updatedAt?: string, retrievedAt?: string): { bonus: number; ageDays?: number } {
+  if (!updatedAt || !retrievedAt) return { bonus: 0 };
+  const updated = Date.parse(updatedAt);
+  const retrieved = Date.parse(retrievedAt);
+  if (!Number.isFinite(updated) || !Number.isFinite(retrieved) || updated > retrieved) return { bonus: 0 };
+  const ageDays = Math.floor((retrieved - updated) / 86_400_000);
+  if (ageDays <= 365) return { bonus: 3, ageDays };
+  if (ageDays <= 1095) return { bonus: 2, ageDays };
+  if (ageDays <= 1825) return { bonus: 1, ageDays };
+  return { bonus: 0, ageDays };
+}
+
 export function scoreAsset(asset: ProviderAsset, query: string): { score: number; matchReasons: string[] } {
   const queryTokens = tokens(query);
   let score = 0;
@@ -94,6 +112,12 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
   if (asset.shareAlike === false) { score += 1; reasons.push("no-share-alike"); }
   if (asset.licenseSource) { score += 1; reasons.push("license-source-present"); }
   if (asset.creator) { score += 1; reasons.push("creator-provenance-present"); }
+
+  const popularity = popularityBonus(asset.popularity);
+  if (popularity > 0) { score += popularity; reasons.push(`popularity:${asset.popularity}`); }
+
+  const freshness = freshnessBonus(asset.updatedAt, asset.retrievedAt);
+  if (freshness.bonus > 0) { score += freshness.bonus; reasons.push(`freshness:${freshness.ageDays}d`); }
 
   return { score, matchReasons: Array.from(new Set(reasons)) };
 }

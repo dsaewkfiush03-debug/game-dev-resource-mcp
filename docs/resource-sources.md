@@ -1,35 +1,56 @@
 # Resource source map
 
-GameDev Resource MCP separates **source licensing**, **per-item licensing**, **API/service terms** and **automatic installation trust**. These are different questions.
+GameDev Resource MCP separates **source licensing**, **per-item licensing**, **API/service terms**, **search quality signals** and **automatic installation trust**. These are different questions.
 
 ## First-class direct providers
 
-V1.4 directly searches these provider adapters:
+V1.6 directly searches these provider adapters.
 
-### Live APIs
+### Live APIs / live official indexes
 
 - Poly Haven — CC0 HDRIs, textures and models; separately verified automatic file acquisition exists.
 - ambientCG — CC0 PBR materials, HDRIs, terrain, decals, atlases and models through the current v3 API.
 - Openverse — open images/audio with per-item creator/source/license metadata.
 - Godot Asset Library — Godot addons/projects with per-item license metadata.
 - GitHub Open-Source Code — repositories with detected SPDX license metadata; missing/unknown licenses fail closed.
+- KayKit — official CC0 3D pack repositories from the `KayKit-Game-Assets` GitHub organization, with repository popularity/update metadata.
+- Game Icons — individual SVGs from the official repository tree, with creator attribution provenance.
+- Tabler Icons — individual outline/filled SVGs from the official repository tree, MIT licensed.
 
 ### Verified catalogs
 
 - Kenney — CC0 game asset packs.
-- Quaternius — CC0 3D packs.
-- Game Icons — conservatively modeled as attribution-required game icons.
+- Quaternius — CC0 3D packs, including current city/environment coverage.
 - Google Fonts — curated game-font families with exact family OFL provenance, including CJK choices.
 - Godot official demos — MIT repository-level code examples.
 - Phaser official starters — MIT starter templates.
 
 A direct provider does **not** imply automatic installation. Search trust, license trust and acquisition trust remain separate layers.
 
+## Quality-aware ranking
+
+When a provider exposes reliable quality metadata, V1.6 can use small ranking bonuses for:
+
+- repository/resource popularity;
+- recent update activity relative to retrieval time.
+
+These signals are intentionally bounded. They only reorder results that have already passed the normal license and structured metadata filters.
+
+They do **not**:
+
+- make an unknown license commercially usable;
+- bypass attribution/share-alike policy;
+- reject older resources purely because of age;
+- replace source/provenance verification.
+
+An older exact-match CC0/MIT resource remains eligible. Freshness and popularity are tie-break/quality signals, not legal or compatibility judgments.
+
 ## Tier A — uniform or explicitly verified source licensing
 
 The broader registry also contains sources/ecosystems with a known source-level posture, including:
 
 - ambientCG — CC0.
+- KayKit — CC0 asset collection; official repository provenance retained.
 - Tabler Icons — MIT.
 - Heroicons — MIT.
 - Feather Icons — MIT.
@@ -84,6 +105,7 @@ The source and provider layers can route/discover:
 - 3D models and environments
 - PBR materials and HDRIs
 - vehicles and characters
+- modern city/urban environment packs
 - weapons and props
 - UI and HUD assets
 - icon libraries
@@ -118,6 +140,8 @@ first-class provider result OR broad discovery source
 exact item/repository inspection when required
   ↓
 license + API/service-term check
+  ↓
+quality-aware ranking among eligible results
   ↓
 select resource
   ↓
