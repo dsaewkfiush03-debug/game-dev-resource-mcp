@@ -9,6 +9,7 @@ import { openverseProvider } from "./openverse.js";
 import { phaserProvider } from "./phaser.js";
 import { polyHavenProvider } from "./polyhaven.js";
 import { quaterniusProvider } from "./quaternius.js";
+import { tablerIconsProvider } from "./tablericons.js";
 import type { AssetProvider, AssetProviderId } from "./types.js";
 
 const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
@@ -19,6 +20,7 @@ const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   quaternius: quaterniusProvider,
   godotdemos: godotDemosProvider,
   gameicons: gameIconsProvider,
+  tablericons: tablerIconsProvider,
   phaser: phaserProvider,
   googlefonts: googleFontsProvider,
   openverse: openverseProvider,
@@ -33,7 +35,7 @@ export function listProviders(): Array<{ id: AssetProviderId; name: string; mode
   return Object.values(PROVIDERS).map(provider => ({
     id: provider.id,
     name: provider.name,
-    mode: ["polyhaven", "ambientcg", "openverse", "godotassetlib", "githubcode"].includes(provider.id) ? "live-api" : "verified-catalog"
+    mode: ["polyhaven", "ambientcg", "openverse", "godotassetlib", "githubcode", "gameicons", "tablericons"].includes(provider.id) ? "live-api" : "verified-catalog"
   }));
 }
 

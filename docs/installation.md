@@ -9,11 +9,13 @@ A provider can be searchable without being trusted for automatic downloads. Live
 | Provider | Search | Automatic install |
 |---|---|---|
 | Poly Haven | Yes | Yes, explicit allowlisted provider files only |
+| Game Icons | Yes | Yes, explicit SVG from the official `game-icons/icons` repository only |
+| Tabler Icons | Yes | Yes, explicit SVG from the official `tabler/tabler-icons` icon tree only |
 | ambientCG | Yes | No |
 | Openverse | Yes | No |
 | Godot Asset Library | Yes | No |
 | GitHub Open-Source Code | Yes | No |
-| Verified catalog providers | Yes | No |
+| Other verified catalog providers | Yes | No |
 
 ## Workflow
 
@@ -26,6 +28,8 @@ A provider can be searchable without being trusted for automatic downloads. Live
 
 `plan_asset_install` performs no writes.
 
+For Game Icons, preserve the returned `creator` / `attributionText` in project credits. Tabler Icons uses MIT and the license notice should be retained with redistributed substantial copies.
+
 ## Installer security boundaries
 
 `install_asset_file` currently enforces:
@@ -35,7 +39,8 @@ A provider can be searchable without being trusted for automatic downloads. Live
 - relative destination paths only;
 - pre-existing symbolic-link/junction component checks inside the destination path;
 - allowlisted HTTPS provider download hosts;
-- manual redirect handling with every redirect target revalidated against the same provider host allowlist;
+- provider-specific path prefixes on shared download hosts;
+- manual redirect handling with every redirect target revalidated against the same provider host/path allowlist;
 - at most three redirects;
 - default 128 MiB per-file size limit;
 - hard 1 GiB maximum;
@@ -50,13 +55,29 @@ A provider can be searchable without being trusted for automatic downloads. Live
 
 The installer checks destination link components before and after directory creation and again before final placement. This reduces the risk that a pre-existing symlink/junction under the project redirects writes outside the intended project tree.
 
+## Shared-host path restrictions
+
+`raw.githubusercontent.com` is a shared GitHub content host and is **not** trusted globally.
+
+The current rules require both the expected host and the expected provider repository path:
+
+```text
+Game Icons
+raw.githubusercontent.com/game-icons/icons/master/...
+
+Tabler Icons
+raw.githubusercontent.com/tabler/tabler-icons/main/icons/...
+```
+
+A URL under another GitHub repository fails validation even though the hostname is the same.
+
 ## Redirect policy
 
-Downloads use manual redirect handling. An initial allowlisted URL cannot redirect the installer to an arbitrary HTTPS host: every redirect target must independently pass `validateDownloadUrl` for the same provider.
+Downloads use manual redirect handling. An initial allowlisted URL cannot redirect the installer to an arbitrary HTTPS host or path: every redirect target must independently pass `validateDownloadUrl` for the same provider.
 
 ## Why ambientCG and other live providers are not auto-installed yet
 
-Search metadata and license confidence are different from acquisition confidence. Before enabling automatic installation for another provider, the project must verify stable official file endpoints, redirect/CDN behavior, size/integrity metadata where available, and a narrow host allowlist.
+Search metadata and license confidence are different from acquisition confidence. Before enabling automatic installation for another provider, the project must verify stable official file endpoints, redirect/CDN behavior, size/integrity metadata where available, and a narrow host/path allowlist.
 
 ## Trust model
 

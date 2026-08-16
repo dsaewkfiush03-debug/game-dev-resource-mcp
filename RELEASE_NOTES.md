@@ -1,5 +1,74 @@
 # Release notes
 
+## v1.5.0
+
+V1.5 turns icon discovery from a small category-level catalog into a per-icon resource layer and extends the safe installer to exact official SVG files.
+
+### Game Icons live per-icon provider
+
+- Replaces five broad Game Icons category entries with the official `game-icons/icons` Git tree.
+- Indexes individual SVG paths and derives searchable icon names/tags from filenames.
+- Preserves the author directory as structured `creator` metadata.
+- Adds `creatorUrl` and `attributionText` so CC BY attribution can flow into downstream project credits.
+- Keeps the conservative CC BY 3.0 commercial-use model used by the project.
+- Exposes an exact official raw SVG file through `get_asset_files` after the asset ID has been validated against the indexed repository tree.
+
+### Tabler Icons live provider
+
+- Adds `tablericons` as a first-class live provider using the official `tabler/tabler-icons` repository.
+- Indexes both outline and filled SVG trees.
+- Preserves variant metadata (`outline` / `filled`) as searchable style/tags.
+- Uses the repository MIT license and creator provenance.
+- Exposes exact individual SVG files for safe installation.
+
+### Structured creator provenance
+
+`ProviderAsset` now supports:
+
+- `creator`
+- `creatorUrl`
+- `attributionText`
+
+Openverse also populates these fields when supplied by the upstream API. Its User-Agent now uses the shared runtime `VERSION` instead of a stale hard-coded version.
+
+### Safe icon installation
+
+Automatic installation now supports:
+
+- Poly Haven verified provider files;
+- individual Game Icons SVGs;
+- individual Tabler Icons SVGs.
+
+`raw.githubusercontent.com` is not trusted as a whole. The installer applies provider-specific path rules:
+
+```text
+Game Icons: /game-icons/icons/master/...
+Tabler Icons: /tabler/tabler-icons/main/icons/...
+```
+
+A file from another repository is rejected even when it uses the same raw GitHub hostname. Existing redirect revalidation, size limits, project-root containment and symlink/junction protections remain active.
+
+### Deterministic validation
+
+CI does not require live icon repository access for unit tests. Fixed tree-item fixtures validate:
+
+- Game Icons creator/license mapping;
+- Tabler outline/filled mapping;
+- Openverse structured creator attribution;
+- exact raw GitHub path allowlisting.
+
+### Release engineering
+
+- package/runtime version: `1.5.0`;
+- npm lockfile refreshed by npm itself;
+- Node 20/22 validation, packed-tarball clean install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.5 is additive at the MCP-tool level. The `gameicons` provider ID is preserved, but it now returns individual live-indexed icons instead of five static collection entries.
+
+---
+
 ## v1.4.0
 
 V1.4 expands both sides of the resource stack: high-quality live 3D/PBR discovery and reusable gameplay-code discovery.
