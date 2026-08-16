@@ -1,7 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import path from "node:path";
-import { normalizedMaxBytes, planAssetInstall, safeProjectPath, validateDownloadUrl } from "./install.js";
+import os from "node:os";
+import { mkdir, mkdtemp, rm, symlink } from "node:fs/promises";
+import { assertNoLinkComponents, normalizedMaxBytes, planAssetInstall, safeProjectPath, validateDownloadUrl } from "./install.js";
 
 const root = path.resolve("/tmp/game-dev-resource-mcp-test-project");
 
@@ -39,4 +41,20 @@ test("catalog-only providers return a manual install plan instead of guessing do
   assert.equal(plan.autoInstallSupported, false);
   assert.equal(plan.reason, "provider_does_not_expose_verified_file_urls");
   assert.deepEqual(plan.candidates, []);
+});
+
+test("installer containment rejects pre-existing symbolic-link path components", { skip: process.platform === "win32" }, async () => {
+  const project = await mkdtemp(path.join(os.tmpdir(), "game-dev-resource-mcp-links-"));
+  const outside = await mkdtemp(path.join(os.tmpdir(), "game-dev-resource-mcp-outside-"));
+  try {
+    await mkdir(path.join(project, "assets"), { recursive: true });
+    await symlink(outside, path.join(project, "assets", "vendor"), "dir");
+    await assert.rejects(
+      () => assertNoLinkComponents(project, path.join(project, "assets", "vendor", "polyhaven")),
+      /destination_contains_symbolic_link/
+    );
+  } finally {
+    await rm(project, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
 });
