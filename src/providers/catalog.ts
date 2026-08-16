@@ -56,6 +56,19 @@ export interface CatalogReuseDefaults {
   componentLicenses?: ComponentLicense[];
 }
 
+const PROVIDER_REUSE_DEFAULTS: Partial<Record<AssetProviderId, CatalogReuseDefaults>> = {
+  godotdemos: {
+    reuseScope: "whole-project",
+    bundledAssetStatus: "same-license",
+    bundledAssetNotes: "The Godot demo repository states that demos are distributed under the repository MIT license. Preserve the MIT notice when reusing a demo."
+  },
+  phaser: {
+    reuseScope: "code-only",
+    bundledAssetStatus: "needs-review",
+    bundledAssetNotes: "Phaser starter repositories are useful code/templates, but example images/logos are not blanket-approved by this project. Replace or independently verify bundled media before shipping."
+  }
+};
+
 function valuesMatch(entryValues: string[] | undefined, wanted: string[]): boolean {
   if (wanted.length === 0) return true;
   const values = (entryValues ?? []).map(value => value.toLowerCase());
@@ -74,6 +87,7 @@ export function createVerifiedCatalogProvider(
   verification?: CatalogVerificationProfile,
   reuseDefaults?: CatalogReuseDefaults
 ): AssetProvider {
+  const effectiveDefaults = reuseDefaults ?? PROVIDER_REUSE_DEFAULTS[id];
   return {
     id,
     name,
@@ -97,8 +111,8 @@ export function createVerifiedCatalogProvider(
 
       return entries
         .filter(entry => {
-          const effectiveReuseScope = entry.reuseScope ?? reuseDefaults?.reuseScope;
-          const effectiveBundledAssetStatus = entry.bundledAssetStatus ?? reuseDefaults?.bundledAssetStatus;
+          const effectiveReuseScope = entry.reuseScope ?? effectiveDefaults?.reuseScope;
+          const effectiveBundledAssetStatus = entry.bundledAssetStatus ?? effectiveDefaults?.bundledAssetStatus;
           const haystack = [
             entry.name,
             entry.description ?? "",
@@ -130,17 +144,17 @@ export function createVerifiedCatalogProvider(
         })
         .slice(0, Math.max(1, Math.min(limit, 100)))
         .map(entry => ({
-          ...reuseDefaults,
+          ...effectiveDefaults,
           ...entry,
           provider: id,
           ...license,
           verificationStatus: entry.verificationStatus ?? verification?.verificationStatus,
           verifiedAt: entry.verifiedAt ?? verification?.verifiedAt,
           licenseSource: entry.licenseSource ?? license.licenseSource,
-          reuseScope: entry.reuseScope ?? reuseDefaults?.reuseScope,
-          bundledAssetStatus: entry.bundledAssetStatus ?? reuseDefaults?.bundledAssetStatus,
-          bundledAssetNotes: entry.bundledAssetNotes ?? reuseDefaults?.bundledAssetNotes,
-          componentLicenses: entry.componentLicenses ?? reuseDefaults?.componentLicenses,
+          reuseScope: entry.reuseScope ?? effectiveDefaults?.reuseScope,
+          bundledAssetStatus: entry.bundledAssetStatus ?? effectiveDefaults?.bundledAssetStatus,
+          bundledAssetNotes: entry.bundledAssetNotes ?? effectiveDefaults?.bundledAssetNotes,
+          componentLicenses: entry.componentLicenses ?? effectiveDefaults?.componentLicenses,
           retrievedAt
         }));
     }
