@@ -15,14 +15,18 @@ const server = new McpServer({ name: "game-dev-resource-mcp", version: VERSION }
 function text(data: unknown) { return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }; }
 
 async function githubJson(path: string) {
-  const headers: Record<string, string> = { Accept: "application/vnd.github+json", "User-Agent": `game-dev-resource-mcp/${VERSION}` };
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "User-Agent": `game-dev-resource-mcp/${VERSION}`,
+    "X-GitHub-Api-Version": "2026-03-10"
+  };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`https://api.github.com${path}`, { headers });
   if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "ambientcg", "kenney", "quaternius", "godotdemos", "gameicons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
+const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kenney", "quaternius", "godotdemos", "gameicons", "phaser", "googlefonts", "openverse", "godotassetlib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 
 server.registerTool("find_game_assets", {
@@ -54,7 +58,7 @@ server.registerTool("search_game_assets", {
 server.registerTool("search_live_assets", {
   description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
   inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
-}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "openverse", "godotassetlib"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
+}, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "githubcode", "openverse", "godotassetlib"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
 
 server.registerTool("get_asset_files", {
   description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
