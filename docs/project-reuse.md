@@ -4,6 +4,8 @@ GameDev Resource MCP treats **source-code licensing** and **whole-project reuse*
 
 A repository can have a permissive code license while bundled art, audio, fonts, logos, sample media, dependencies or imported source files have different terms. V1.9 makes that boundary explicit instead of asking the coding agent to infer it.
 
+The initial maintained project-provider review in V1.9 was performed on 2026-08-16. Freshness metadata records that review event; it does not replace the upstream license text.
+
 ## Reuse scopes
 
 Each maintained project/starter candidate may expose a `reuseScope`:
