@@ -1,9 +1,10 @@
 import type { LicenseRule } from "../types.js";
 import { checkLicense } from "../licenses.js";
+import { VERSION } from "../version.js";
 import type { AssetDimension, AssetProvider, ProviderAsset, ProviderSearchOptions } from "./types.js";
 
 const API_BASE = "https://api.openverse.org/v1";
-const USER_AGENT = "game-dev-resource-mcp/1.3.0 (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)";
+const USER_AGENT = `game-dev-resource-mcp/${VERSION} (+https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp)`;
 
 interface OpenverseTag { name?: string }
 interface OpenverseItem {
@@ -71,7 +72,8 @@ export function mapOpenverseItem(item: OpenverseItem, dimension: "2D" | "audio",
   const tags = Array.from(new Set((item.tags ?? []).map(tag => tag.name?.trim().toLowerCase()).filter((value): value is string => Boolean(value))));
   const source = item.source?.trim();
   const creator = item.creator?.trim();
-  const description = [creator ? `Creator: ${creator}.` : "", source ? `Indexed source: ${source}.` : "", item.attribution?.trim() ?? ""].filter(Boolean).join(" ");
+  const attributionText = item.attribution?.trim();
+  const description = [creator ? `Creator: ${creator}.` : "", source ? `Indexed source: ${source}.` : "", attributionText ?? ""].filter(Boolean).join(" ");
 
   return {
     id: item.id ?? `${dimension}-${item.title ?? "untitled"}`,
@@ -79,6 +81,9 @@ export function mapOpenverseItem(item: OpenverseItem, dimension: "2D" | "audio",
     provider: "openverse",
     sourceUrl: item.foreign_landing_url || item.url || `https://openverse.org/search/?q=${encodeURIComponent(item.title ?? "")}`,
     description: description || undefined,
+    creator: creator || undefined,
+    creatorUrl: item.creator_url?.trim() || undefined,
+    attributionText: attributionText || undefined,
     categories: [dimension === "audio" ? "Audio" : "2D", ...(item.category ? [item.category] : []), ...(source ? [source] : [])],
     tags,
     dimension,
