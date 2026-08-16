@@ -1,4 +1,14 @@
-import type { AssetProvider, AssetProviderId, ProviderAsset, ProviderSearchOptions, AssetDimension, VerificationStatus } from "./types.js";
+import type {
+  AssetProvider,
+  AssetProviderId,
+  ProviderAsset,
+  ProviderSearchOptions,
+  AssetDimension,
+  VerificationStatus,
+  ReuseScope,
+  BundledAssetStatus,
+  ComponentLicense
+} from "./types.js";
 
 export interface VerifiedCatalogEntry {
   id: string;
@@ -18,6 +28,10 @@ export interface VerifiedCatalogEntry {
   gameGenres?: string[];
   resolution?: string;
   animated?: boolean;
+  reuseScope?: ReuseScope;
+  bundledAssetStatus?: BundledAssetStatus;
+  bundledAssetNotes?: string;
+  componentLicenses?: ComponentLicense[];
 }
 
 export interface CatalogLicenseProfile {
@@ -35,6 +49,13 @@ export interface CatalogVerificationProfile {
   verifiedAt: string;
 }
 
+export interface CatalogReuseDefaults {
+  reuseScope?: ReuseScope;
+  bundledAssetStatus?: BundledAssetStatus;
+  bundledAssetNotes?: string;
+  componentLicenses?: ComponentLicense[];
+}
+
 function valuesMatch(entryValues: string[] | undefined, wanted: string[]): boolean {
   if (wanted.length === 0) return true;
   const values = (entryValues ?? []).map(value => value.toLowerCase());
@@ -50,7 +71,8 @@ export function createVerifiedCatalogProvider(
   name: string,
   license: CatalogLicenseProfile,
   entries: VerifiedCatalogEntry[],
-  verification?: CatalogVerificationProfile
+  verification?: CatalogVerificationProfile,
+  reuseDefaults?: CatalogReuseDefaults
 ): AssetProvider {
   return {
     id,
@@ -65,6 +87,8 @@ export function createVerifiedCatalogProvider(
         formats = [],
         assetTypes = [],
         gameGenres = [],
+        reuseScopes = [],
+        bundledAssetStatuses = [],
         animated,
         limit = 20
       } = options;
@@ -73,6 +97,8 @@ export function createVerifiedCatalogProvider(
 
       return entries
         .filter(entry => {
+          const effectiveReuseScope = entry.reuseScope ?? reuseDefaults?.reuseScope;
+          const effectiveBundledAssetStatus = entry.bundledAssetStatus ?? reuseDefaults?.bundledAssetStatus;
           const haystack = [
             entry.name,
             entry.description ?? "",
@@ -84,7 +110,9 @@ export function createVerifiedCatalogProvider(
             ...(entry.formats ?? []),
             ...(entry.assetTypes ?? []),
             ...(entry.gameGenres ?? []),
-            entry.resolution ?? ""
+            entry.resolution ?? "",
+            effectiveReuseScope ?? "",
+            effectiveBundledAssetStatus ?? ""
           ].join(" ").toLowerCase();
 
           const queryMatches = !q || q.split(/\s+/).every(token => haystack.includes(token));
@@ -96,16 +124,23 @@ export function createVerifiedCatalogProvider(
             && valuesMatch(entry.formats, formats)
             && valuesMatch(entry.assetTypes, assetTypes)
             && valuesMatch(entry.gameGenres, gameGenres)
+            && (reuseScopes.length === 0 || (effectiveReuseScope ? reuseScopes.includes(effectiveReuseScope) : false))
+            && (bundledAssetStatuses.length === 0 || (effectiveBundledAssetStatus ? bundledAssetStatuses.includes(effectiveBundledAssetStatus) : false))
             && exactOptionalMatch(entry.animated, animated);
         })
         .slice(0, Math.max(1, Math.min(limit, 100)))
         .map(entry => ({
+          ...reuseDefaults,
           ...entry,
           provider: id,
           ...license,
           verificationStatus: entry.verificationStatus ?? verification?.verificationStatus,
           verifiedAt: entry.verifiedAt ?? verification?.verifiedAt,
           licenseSource: entry.licenseSource ?? license.licenseSource,
+          reuseScope: entry.reuseScope ?? reuseDefaults?.reuseScope,
+          bundledAssetStatus: entry.bundledAssetStatus ?? reuseDefaults?.bundledAssetStatus,
+          bundledAssetNotes: entry.bundledAssetNotes ?? reuseDefaults?.bundledAssetNotes,
+          componentLicenses: entry.componentLicenses ?? reuseDefaults?.componentLicenses,
           retrievedAt
         }));
     }
@@ -117,7 +152,8 @@ export function createCc0CatalogProvider(
   name: string,
   licenseSource: string,
   entries: VerifiedCatalogEntry[],
-  verification?: CatalogVerificationProfile
+  verification?: CatalogVerificationProfile,
+  reuseDefaults?: CatalogReuseDefaults
 ): AssetProvider {
   return createVerifiedCatalogProvider(id, name, {
     license: "CC0-1.0",
@@ -127,5 +163,5 @@ export function createCc0CatalogProvider(
     redistribution: true,
     attribution: false,
     shareAlike: false
-  }, entries, verification);
+  }, entries, verification, reuseDefaults);
 }
