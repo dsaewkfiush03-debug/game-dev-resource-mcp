@@ -1,0 +1,123 @@
+name: Finalize v1.8 docs
+
+on:
+  push:
+    branches: [agent/quaternius-starters-v180]
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/quaternius-starters-v180
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Update v1.8 documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          text = text.replace(
+              '- Search the Godot Asset Library live for addons/projects with per-item licenses.\n',
+              '- Search the Godot Asset Library live for addons/projects with per-item licenses.\n- Search concrete verified Godot starter/game/system demos such as 2D RPG/platformer, 3D platformer, Truck Town, navigation and voxel references.\n'
+          )
+          text = text.replace(
+              '| Quaternius | Verified catalog | 3D characters, vehicles, environments | CC0 | No |',
+              '| Quaternius | Verified catalog | 35+ structured 3D packs: city/roads, characters/animation, vehicles, fantasy, sci-fi, survival, space and environments | CC0, reverified 2026-08-16 | No |'
+          )
+          text = text.replace(
+              '| Godot demos | Verified catalog | Code, shaders, starter demos | MIT at repository level | No |',
+              '| Godot demos | Verified catalog | Concrete 2D/3D starter games plus navigation, AI, vehicle, voxel, shader and system references | MIT at repository level, reverified 2026-08-16 | No |'
+          )
+          text = text.replace(
+              '| Phaser starters | Verified catalog | Web-game starter templates | MIT code templates | No |',
+              '| Phaser starters | Verified catalog | Official web-game templates plus `create-game` project generator | MIT code/templates, reverified 2026-08-16 | No |'
+          )
+          readme.write_text(text)
+
+          notes = Path('RELEASE_NOTES.md')
+          existing = notes.read_text()
+          section = '''## v1.8.0
+
+V1.8 strengthens the two places where whole-game agents need better building blocks: broad coherent 3D art packs and concrete reusable starter/game references.
+
+### Quaternius reverified expansion
+
+- Expands the structured Quaternius catalog from a small selected set to 35+ high-value CC0 packs.
+- Adds current modern-city/road coverage through Downtown City MegaKit and modular streets/public transport resources.
+- Adds current universal humanoid base characters, modular fantasy outfits and both Universal Animation Library generations.
+- Adds fantasy props/medieval village, sci-fi essentials/modular sci-fi, zombie apocalypse, ultimate space, toon shooter, cyberpunk, fantasy RTS, platformer, pirate, survival, vehicle, interior and nature coverage.
+- Records the actual V1.8 source/license review date as 2026-08-16.
+
+### Concrete Godot starter/game references
+
+The verified Godot demo provider no longer exposes only five broad collection links. It now also indexes concrete official projects such as:
+
+- Dodge the Creeps;
+- 2D Platformer / Physics Platformer / Role Playing Game / Pong / Isometric;
+- finite-state-machine and 2D navigation/AStar examples;
+- 3D Platformer / Squash the Creeps / Truck Town;
+- 3D character, navigation, voxel, waypoints, procedural-material and particle examples.
+
+These remain repository-level MIT code/demo references. They are discovery/starter candidates, not a new permission to automatically clone or execute third-party repositories.
+
+### Phaser starter boundary
+
+- Adds the official `phaserjs/create-game` project generator as a verified MIT starter/tool candidate.
+- Keeps `phaserjs/examples` outside the commercial-safe catalog because MIT source-code licensing does not automatically clear the bundled example media.
+
+### Expansion-safe tests
+
+Legacy tests that assumed a provider would permanently return exactly one result were replaced with semantic assertions: the expected canonical resource must remain present and all returned records must satisfy the requested metadata/license constraints. This allows safe catalog growth without weakening license tests.
+
+### Release engineering
+
+- package/runtime version: `1.8.0`;
+- npm lockfile refreshed by npm itself;
+- offline v1.8 tests cover Quaternius scale/license/freshness, concrete Godot starters/systems and the Phaser starter boundary;
+- Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.8 is additive. Existing provider IDs, MCP tool names, installation boundaries and attribution workflows are unchanged.
+
+---
+
+'''
+          if '## v1.8.0' not in existing:
+              notes.write_text(existing.replace('# Release notes\n\n', '# Release notes\n\n' + section, 1))
+
+          sources = Path('docs/resource-sources.md')
+          s = sources.read_text()
+          s = s.replace('V1.4 directly searches these provider adapters:', 'V1.8 directly searches these provider adapters:')
+          s = s.replace('- Quaternius — CC0 3D packs.', '- Quaternius — 35+ structured CC0 3D packs spanning cities/roads, characters/animation, vehicles, fantasy, sci-fi, survival, space and environments; reverified 2026-08-16.')
+          s = s.replace('- Godot official demos — MIT repository-level code examples.', '- Godot official demos — MIT repository-level collections plus concrete 2D/3D starter games, navigation/AI, vehicle, voxel and rendering/system examples.')
+          s = s.replace('- Phaser official starters — MIT starter templates.', '- Phaser official starters — MIT starter templates plus the official `phaserjs/create-game` generator; mixed-license example media remains excluded.')
+          sources.write_text(s)
+
+          verification = Path('docs/verification.md')
+          v = verification.read_text()
+          marker = '## Current reverified catalogs (2026-08-16)\n'
+          if marker not in v:
+              v += '''\n## Current reverified catalogs (2026-08-16)\n\nThe 2026-08-16 maintenance cycle explicitly rechecked Kenney, Google Fonts, Godot official demos/starters, Phaser official starters and Quaternius. Quaternius was also expanded to 35+ structured packs during this review. Catalogs without an actual review event remain untracked rather than receiving synthetic freshness.\n'''
+              verification.write_text(v)
+          PY
+      - name: Commit docs and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git rm .github/workflows/finalize-docs-v180.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md RELEASE_NOTES.md docs/resource-sources.md docs/verification.md
+          git commit -m "Document v1.8 provider and starter expansion"
+          git push origin HEAD:agent/quaternius-starters-v180
