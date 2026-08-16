@@ -1,7 +1,7 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "1.8.0",
-  "description": "License-aware game development resource discovery, stack recommendation and safe asset installation for AI coding agents via MCP.",
+  "version": "1.9.0",
+  "description": "License-aware game development resource discovery, reusable project selection, stack recommendation and safe asset installation for AI coding agents via MCP.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -16,6 +16,8 @@
     "mcp",
     "game-development",
     "game-assets",
+    "open-source-games",
+    "reusable-projects",
     "quaternius",
     "kaykit",
     "kenney",
@@ -30,6 +32,7 @@
     "game-code",
     "godot",
     "phaser",
+    "raylib",
     "starter",
     "codex",
     "claude-code",
@@ -46,7 +49,7 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts src/providers/catalog.test.ts src/providers/metadata.test.ts src/providers/v06.test.ts src/providers/v07.test.ts src/providers/v08.test.ts src/providers/v13.test.ts src/providers/v14.test.ts src/providers/v15.test.ts src/providers/v16.test.ts src/search.test.ts src/install.test.ts src/recommend.test.ts src/registry-expanded.test.ts src/providers/v17.test.ts src/providers/v18.test.ts src/verification.test.ts src/version.test.ts",
+    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts src/providers/catalog.test.ts src/providers/metadata.test.ts src/providers/v06.test.ts src/providers/v07.test.ts src/providers/v08.test.ts src/providers/v13.test.ts src/providers/v14.test.ts src/providers/v15.test.ts src/providers/v16.test.ts src/search.test.ts src/install.test.ts src/recommend.test.ts src/registry-expanded.test.ts src/providers/v17.test.ts src/providers/v18.test.ts src/providers/v19.test.ts src/verification.test.ts src/version.test.ts",
     "validate": "npm run check && npm test && npm run build"
   },
   "engines": {
