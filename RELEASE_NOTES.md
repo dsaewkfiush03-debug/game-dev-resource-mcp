@@ -1,5 +1,54 @@
 # Release notes
 
+## v1.9.0
+
+V1.9 adds a project-reuse safety layer so agents can start from verified open-source starters and complete-game references without treating a repository code license as blanket permission for every bundled asset.
+
+### Reuse-scope model
+
+Project records can now expose `reuseScope` as `whole-project`, `code-only`, `reference-only` or `asset-only`.
+
+`bundledAssetStatus` separately records whether project media is absent, covered by the same license, separately licensed or still needs review. Search and ranking can filter on both fields, and whole-project candidates with a verified bundled-asset posture receive only a small bounded ranking bonus.
+
+### `find_reusable_projects`
+
+Adds a dedicated MCP tool for verified starter/project discovery. It defaults to the maintained Godot, Phaser and Raylib project providers and returns explicit guidance about what may be reused.
+
+Project discovery does not clone repositories, execute code, install packages, extract archives or weaken the existing safe-install boundary.
+
+### Raylib verified project provider
+
+Adds the official Raylib game template as a `whole-project` zlib starter and selected references from the official `raysan5/raylib-games` collection.
+
+The collection's upstream README explicitly licenses **game sources** under zlib/libpng terms, so complete-game references are conservatively modeled as `code-only` with bundled media marked `needs-review`.
+
+### Godot and Phaser project boundaries
+
+- Official Godot demos are modeled as `whole-project` / `same-license` because the upstream demo repository states that its demos are distributed under MIT.
+- Official Phaser starters remain `code-only` / `needs-review` because template repositories include example media and this project does not infer asset rights from the code repository license.
+
+### Stack planning
+
+`recommend_stack` now recognizes Raylib and gives the starter slot explicit reusable-project semantics. Godot gameplay-code slots can use concrete official demos in addition to the Asset Library and GitHub code discovery.
+
+### Agent safety rules
+
+`AGENTS.md` now forbids upgrading `code-only` or `reference-only` results to `whole-project` using model judgment, popularity or a permissive SPDX identifier. A new `docs/project-reuse.md` documents the full adoption workflow.
+
+### Release engineering
+
+- package/runtime version: `1.9.0`;
+- npm lockfile refreshed by npm itself;
+- deterministic V1.9 tests cover Raylib scope separation, Godot whole-project metadata, Phaser code-only metadata, whole-project filtering and Raylib starter planning;
+- existing Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.9 is additive. Existing MCP tool names, provider IDs, installation allowlists and attribution workflows remain available.
+
+---
+
+
 ## v1.8.0
 
 V1.8 strengthens the two places where whole-game agents need better building blocks: broad coherent 3D art packs and concrete reusable starter/game references.

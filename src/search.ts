@@ -1,6 +1,6 @@
 import { checkLicense } from "./licenses.js";
 import { getProvider, listProviders, type AssetProviderId, type ProviderAsset } from "./providers/index.js";
-import type { AssetDimension } from "./providers/types.js";
+import type { AssetDimension, BundledAssetStatus, ReuseScope } from "./providers/types.js";
 
 export type ProviderMode = "live-api" | "verified-catalog";
 
@@ -14,6 +14,8 @@ export interface UnifiedSearchOptions {
   formats?: string[];
   assetTypes?: string[];
   gameGenres?: string[];
+  reuseScopes?: ReuseScope[];
+  bundledAssetStatuses?: BundledAssetStatus[];
   animated?: boolean;
   commercialOnly?: boolean;
   allowAttribution?: boolean;
@@ -45,6 +47,7 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   gameicons: "live-api",
   tablericons: "live-api",
   phaser: "verified-catalog",
+  raylib: "verified-catalog",
   googlefonts: "verified-catalog",
   openverse: "live-api",
   godotassetlib: "live-api"
@@ -68,6 +71,10 @@ function dimensionMatches(asset: ProviderAsset, wanted: AssetDimension[] | undef
   return !wanted?.length || (asset.dimension !== undefined && wanted.includes(asset.dimension));
 }
 
+function enumMatches<T extends string>(value: T | undefined, wanted: T[] | undefined): boolean {
+  return !wanted?.length || (value !== undefined && wanted.includes(value));
+}
+
 function popularityBonus(popularity?: number): number {
   if (!Number.isFinite(popularity) || (popularity ?? 0) <= 0) return 0;
   return Math.min(6, Math.floor(Math.log10((popularity ?? 0) + 1) * 2));
@@ -85,6 +92,15 @@ function freshnessBonus(updatedAt?: string, retrievedAt?: string): { bonus: numb
   return { bonus: 0, ageDays };
 }
 
+function reuseBonus(asset: ProviderAsset): number {
+  if (asset.reuseScope === "whole-project") {
+    if (asset.bundledAssetStatus === "same-license" || asset.bundledAssetStatus === "none") return 4;
+    return 2;
+  }
+  if (asset.reuseScope === "code-only") return 1;
+  return 0;
+}
+
 export function scoreAsset(asset: ProviderAsset, query: string): { score: number; matchReasons: string[] } {
   const queryTokens = tokens(query);
   let score = 0;
@@ -96,7 +112,9 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
     ...(asset.formats ?? []),
     ...(asset.assetTypes ?? []),
     ...(asset.gameGenres ?? []),
-    asset.resolution ?? ""
+    asset.resolution ?? "",
+    asset.reuseScope ?? "",
+    asset.bundledAssetStatus ?? ""
   ];
 
   for (const token of queryTokens) {
@@ -112,6 +130,13 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
   if (asset.shareAlike === false) { score += 1; reasons.push("no-share-alike"); }
   if (asset.licenseSource) { score += 1; reasons.push("license-source-present"); }
   if (asset.creator) { score += 1; reasons.push("creator-provenance-present"); }
+
+  const reuse = reuseBonus(asset);
+  if (reuse > 0) {
+    score += reuse;
+    reasons.push(`reuse-scope:${asset.reuseScope}`);
+    if (asset.bundledAssetStatus) reasons.push(`bundled-assets:${asset.bundledAssetStatus}`);
+  }
 
   const popularity = popularityBonus(asset.popularity);
   if (popularity > 0) { score += popularity; reasons.push(`popularity:${asset.popularity}`); }
@@ -137,6 +162,8 @@ export function rankAssets(assets: ProviderAsset[], query: string, options: Unif
     .filter(asset => valuesContain(asset.formats, options.formats))
     .filter(asset => valuesContain(asset.assetTypes, options.assetTypes))
     .filter(asset => valuesContain(asset.gameGenres, options.gameGenres))
+    .filter(asset => enumMatches(asset.reuseScope, options.reuseScopes))
+    .filter(asset => enumMatches(asset.bundledAssetStatus, options.bundledAssetStatuses))
     .filter(asset => options.animated === undefined || asset.animated === options.animated)
     .map(asset => {
       const licenseRule = checkLicense(asset.license);
@@ -166,6 +193,8 @@ export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{
       formats: options.formats ?? [],
       assetTypes: options.assetTypes ?? [],
       gameGenres: options.gameGenres ?? [],
+      reuseScopes: options.reuseScopes ?? [],
+      bundledAssetStatuses: options.bundledAssetStatuses ?? [],
       animated: options.animated,
       limit: perProviderLimit
     });
