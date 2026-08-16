@@ -25,6 +25,24 @@ test("validateDownloadUrl accepts Poly Haven official download host", () => {
   assert.equal(url.hostname, "dl.polyhaven.org");
 });
 
+test("validateDownloadUrl accepts only exact Game Icons raw repository paths", () => {
+  const url = validateDownloadUrl("gameicons", "https://raw.githubusercontent.com/game-icons/icons/master/delapouite/car-wheel.svg");
+  assert.equal(url.hostname, "raw.githubusercontent.com");
+  assert.throws(
+    () => validateDownloadUrl("gameicons", "https://raw.githubusercontent.com/evil/repo/master/car-wheel.svg"),
+    /untrusted_download_path/
+  );
+});
+
+test("validateDownloadUrl accepts only exact Tabler raw icon paths", () => {
+  const url = validateDownloadUrl("tablericons", "https://raw.githubusercontent.com/tabler/tabler-icons/main/icons/outline/car.svg");
+  assert.equal(url.hostname, "raw.githubusercontent.com");
+  assert.throws(
+    () => validateDownloadUrl("tablericons", "https://raw.githubusercontent.com/tabler/tabler-icons/main/packages/evil.svg"),
+    /untrusted_download_path/
+  );
+});
+
 test("validateDownloadUrl rejects insecure or untrusted hosts", () => {
   assert.throws(() => validateDownloadUrl("polyhaven", "http://dl.polyhaven.org/file.zip"), /download_url_must_use_https/);
   assert.throws(() => validateDownloadUrl("polyhaven", "https://example.com/file.zip"), /untrusted_download_host/);
