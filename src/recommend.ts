@@ -63,6 +63,9 @@ const STYLE_KEYWORDS: Array<[string, string[]]> = [
   ["low-poly", ["low poly", "low-poly", "低多边形", "低模"]],
   ["sci-fi", ["sci-fi", "scifi", "science fiction", "科幻"]],
   ["medieval", ["medieval", "中世纪"]],
+  ["fantasy", ["fantasy", "奇幻", "魔幻"]],
+  ["horror", ["horror", "恐怖"]],
+  ["military", ["military", "军事", "军用"]],
   ["retro", ["retro", "复古"]],
   ["stylized", ["stylized", "风格化"]],
   ["realistic", ["realistic", "写实"]]
@@ -87,7 +90,8 @@ const THEME_KEYWORDS: Array<[string, string[]]> = [
   ["character", ["character", "player", "hero", "角色", "人物", "主角"]],
   ["inventory", ["inventory", "loot", "crafting", "背包", "物资", "搜刮", "制作"]],
   ["nature", ["nature", "forest", "vegetation", "自然", "森林", "植被"]],
-  ["space", ["space", "spaceship", "太空", "宇宙", "飞船"]]
+  ["space", ["space", "spaceship", "太空", "宇宙", "飞船"]],
+  ["cjk", ["cjk", "chinese", "中文", "汉字", "简体中文", "繁体中文"]]
 ];
 
 function normalized(input: string): string {
@@ -125,8 +129,8 @@ function inferDimension(text: string, explicit?: "2D" | "3D"): "2D" | "3D" | und
 
 function artProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
   if (dimension === "2D") return ["kenney"];
-  if (dimension === "3D") return ["quaternius", "kenney", "polyhaven"];
-  return ["kenney", "quaternius", "polyhaven"];
+  if (dimension === "3D") return ["quaternius", "kenney", "polyhaven", "ambientcg"];
+  return ["kenney", "quaternius", "polyhaven", "ambientcg"];
 }
 
 function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProviderId[] {
@@ -146,6 +150,7 @@ function buildQueries(base: string, styles: string[], genres: string[], theme?: 
     [strongestStyle, theme, base].filter(Boolean).join(" "),
     [strongestGenre, theme, base].filter(Boolean).join(" "),
     [theme, base].filter(Boolean).join(" "),
+    theme ?? "",
     [strongestStyle, base].filter(Boolean).join(" "),
     base
   ]);
@@ -197,7 +202,8 @@ export function buildStackPlan(options: RecommendStackOptions): {
 
   add({ id: "music", label: "Music / jingles", required: false, rationale: "Music is optional for a first playable build but useful for presentation and pacing.", queries: unique([[styles[0], gameGenres[0], "game music"].filter(Boolean).join(" "), "game music", "music", "jingle"]), providers: ["kenney", "openverse"], dimensions: ["audio"] });
 
-  add({ id: "font", label: "Font", required: true, rationale: "A distributable game should use a font with explicit embedding/redistribution terms.", queries: buildQueries("font", styles, gameGenres), providers: ["googlefonts"], dimensions: ["font"] });
+  const fontTheme = themes.includes("cjk") ? "cjk" : undefined;
+  add({ id: "font", label: "Font", required: true, rationale: "A distributable game should use a font with explicit embedding/redistribution terms.", queries: buildQueries("font", styles, gameGenres, fontTheme), providers: ["googlefonts"], dimensions: ["font"] });
 
   if (engine === "godot" && (styles.includes("sci-fi") || dimension === "3D")) {
     add({ id: "shader", label: "Shader / GPU examples", required: false, rationale: "Godot 3D or sci-fi presentation can benefit from official/community shader and compute resources with explicit licenses.", queries: ["shader", "compute", "visual effect"], providers: ["godotassetlib", "godotdemos"], dimensions: ["code"] });
@@ -275,7 +281,8 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
     "Recommendations are retrieval results, not legal clearance. Verify original license/provenance before shipping.",
     "Only primary recommendations are counted in the license summary; alternatives retain their own license metadata.",
     "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path.",
-    "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor."
+    "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor.",
+    "ambientCG search uses the current v3 API and treats ambientCG assets as CC0 according to the provider license page."
   ];
   if (inferred.engine && !["godot", "phaser", "web"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
