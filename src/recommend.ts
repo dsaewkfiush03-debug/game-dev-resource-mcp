@@ -1,5 +1,5 @@
 import { searchAllAssets, type ProviderSearchError, type RankedAsset } from "./search.js";
-import type { AssetDimension, AssetProviderId } from "./providers/types.js";
+import type { AssetDimension, AssetProviderId, ReuseScope } from "./providers/types.js";
 
 export type StackSlotId =
   | "starter"
@@ -43,6 +43,7 @@ export interface StackSlotPlan {
   queries: string[];
   providers: AssetProviderId[];
   dimensions?: AssetDimension[];
+  reuseScopes?: ReuseScope[];
 }
 
 export interface StackSlotRecommendation {
@@ -138,6 +139,7 @@ function inferEngine(text: string, explicit?: string): string | undefined {
   if (explicit?.trim()) return explicit.trim().toLowerCase();
   if (includesAny(text, ["godot"])) return "godot";
   if (includesAny(text, ["phaser"])) return "phaser";
+  if (includesAny(text, ["raylib"])) return "raylib";
   if (includesAny(text, ["unity"])) return "unity";
   if (includesAny(text, ["unreal", "ue5", "虚幻"])) return "unreal";
   if (includesAny(text, ["web game", "browser game", "网页游戏", "html5"])) return "web";
@@ -163,7 +165,16 @@ function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProvider
 }
 
 function codeProviders(engine: string | undefined): AssetProviderId[] {
-  return engine === "godot" ? ["godotassetlib", "githubcode"] : ["githubcode"];
+  if (engine === "godot") return ["godotassetlib", "godotdemos", "githubcode"];
+  if (engine === "raylib") return ["raylib", "githubcode"];
+  return ["githubcode"];
+}
+
+function starterProviders(engine: string): AssetProviderId[] {
+  if (engine === "godot") return ["godotdemos", "godotassetlib"];
+  if (engine === "phaser" || engine === "web") return ["phaser"];
+  if (engine === "raylib") return ["raylib"];
+  return [];
 }
 
 function filterAllowedProviders(slotProviders: AssetProviderId[], requested?: AssetProviderId[]): AssetProviderId[] {
@@ -212,9 +223,18 @@ export function buildStackPlan(options: RecommendStackOptions): {
   const gameplayCodeProviders = codeProviders(engine);
 
   if (engine) {
-    const providers: AssetProviderId[] = engine === "godot" ? ["godotassetlib", "godotdemos"] : engine === "phaser" || engine === "web" ? ["phaser"] : [];
-    const starterQuery = engine === "godot" && dimension ? `${engine} ${dimension.toLowerCase()} starter` : `${engine} starter`;
-    add({ id: "starter", label: "Starter / framework", required: true, rationale: `A ${engine} project needs a reusable starting point or implementation reference.`, queries: unique([starterQuery, `${engine} starter`, `${engine} template`, `${engine} code`]), providers, dimensions: ["code"] });
+    const providers = starterProviders(engine);
+    const starterQuery = dimension ? `${engine} ${dimension.toLowerCase()} starter` : `${engine} starter`;
+    add({
+      id: "starter",
+      label: "Starter / reusable project",
+      required: true,
+      rationale: `A ${engine} project benefits from a verified reusable starting point before assembling lower-level resources.`,
+      queries: unique([starterQuery, `${engine} starter`, `${engine} template`, `${engine} complete game`, `${engine} code`]),
+      providers,
+      dimensions: ["code"],
+      reuseScopes: ["whole-project", "code-only"]
+    });
   }
 
   const environmentTheme = themes.includes("road") ? "road" : themes.includes("nature") ? "nature" : themes.includes("space") ? "space" : undefined;
@@ -293,6 +313,7 @@ async function searchSlot(slot: StackSlotPlan, options: RecommendStackOptions): 
       query,
       providers: slot.providers,
       dimensions: slot.dimensions,
+      reuseScopes: slot.reuseScopes,
       commercialOnly: options.commercialOnly ?? true,
       allowAttribution: options.allowAttribution ?? true,
       allowShareAlike: options.allowShareAlike ?? false,
@@ -345,6 +366,8 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
 
   const notes = [
     "Recommendations are retrieval results, not legal clearance. Verify original license/provenance before shipping.",
+    "Project-level reuseScope is operational guidance: whole-project means the maintained catalog has a project-wide reuse basis; code-only means bundled media must not be assumed reusable; reference-only means inspect before copying.",
+    "bundledAssetStatus is separate from repository/source-code licensing and should be checked before adopting a starter as a shipping project.",
     "Only primary recommendations are counted in the license summary; alternatives retain their own license metadata.",
     "Automatic installation is a separate explicit step and remains limited to providers with a verified acquisition path.",
     "Openverse results retain per-item creator/source/license metadata; do not treat Openverse itself as the asset licensor.",
@@ -353,7 +376,7 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
     "GitHub code results use repository-level detected SPDX licenses only; dependencies and bundled media require separate license review.",
     "When reliable provider metadata exists, popularity and update freshness are small ranking signals; they never override license filtering."
   ];
-  if (inferred.engine && !["godot", "phaser", "web"].includes(inferred.engine)) {
+  if (inferred.engine && !["godot", "phaser", "web", "raylib"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
   }
 
