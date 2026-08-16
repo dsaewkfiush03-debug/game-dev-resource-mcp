@@ -17,7 +17,7 @@ const base = (overrides: Partial<ProviderAsset>): ProviderAsset => ({
   redistribution: true,
   attribution: false,
   shareAlike: false,
-  retrievedAt: "2026-08-12T00:00:00.000Z",
+  retrievedAt: "2026-08-16T00:00:00.000Z",
   ...overrides
 });
 
@@ -29,7 +29,7 @@ test("name and tag matches outrank description-only matches", () => {
 
 test("commercial-only filtering removes unknown commercial rights", () => {
   const safe = base({ id: "safe", name: "Safe Car" });
-  const unknown = base({ id: "unknown", name: "Unknown Car", commercialUse: "unknown" });
+  const unknown = base({ id: "unknown", name: "Unknown Car", commercialUse: "unknown", popularity: 100000, updatedAt: "2026-08-15T00:00:00Z" });
   const results = rankAssets([unknown, safe], "car", { query: "car", commercialOnly: true });
   assert.deepEqual(results.map(item => item.id), ["safe"]);
 });
@@ -42,6 +42,24 @@ test("share-alike assets are excluded by default", () => {
 
   const allowedResults = rankAssets([shareAlike, cc0], "car", { query: "car", allowShareAlike: true });
   assert.equal(allowedResults.length, 2);
+});
+
+test("popularity and freshness are bounded ranking signals", () => {
+  const established = base({ id: "established", name: "Vehicle Pack", popularity: 1000, updatedAt: "2026-07-01T00:00:00Z" });
+  const plain = base({ id: "plain", name: "Vehicle Pack" });
+  const ranked = rankAssets([plain, established], "vehicle");
+  assert.equal(ranked[0].id, "established");
+  assert.ok(ranked[0].matchReasons.some(reason => reason.startsWith("popularity:")));
+  assert.ok(ranked[0].matchReasons.some(reason => reason.startsWith("freshness:")));
+  assert.ok(scoreAsset(established, "vehicle").score - scoreAsset(plain, "vehicle").score <= 9);
+});
+
+test("old resources remain eligible even when they receive no freshness bonus", () => {
+  const old = base({ id: "old", name: "Vehicle Pack", updatedAt: "2015-01-01T00:00:00Z" });
+  const results = rankAssets([old], "vehicle");
+  assert.equal(results.length, 1);
+  assert.equal(results[0].id, "old");
+  assert.equal(results[0].matchReasons.some(reason => reason.startsWith("freshness:")), false);
 });
 
 test("ranking returns explanation and provider mode", () => {
