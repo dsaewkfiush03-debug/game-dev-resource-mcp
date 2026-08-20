@@ -1,5 +1,52 @@
 # Release notes
 
+## v1.14.0
+
+V1.14 removes the last known maintained-suite starter-depth limitation by making verified catalogs support accurate per-entry license profiles instead of forcing every entry to inherit one provider-wide license.
+
+### Mixed-license verified catalogs
+
+- A verified catalog entry can now provide a complete `licenseProfile` override.
+- Entries without an override retain the provider default exactly as before.
+- Internal `licenseProfile` configuration is not leaked into provider result objects.
+- This allows one trusted catalog to contain resources with different verified licenses without flattening or relabeling them.
+
+### Third Unreal starter
+
+Adds `CobraCodeDev/TP_2DSideScrollerBP` as a verified Unreal Engine 5 Blueprint starter.
+
+- repository license: CC0-1.0;
+- upstream README identifies it as an Unreal Engine 5 2D side-scroller Blueprint template and describes its art assets as public domain;
+- repository contains a real `.uproject` plus Config/Content structure;
+- maintained reuse posture remains `code-only` / `needs-review` so Unreal Engine/runtime and downstream imported content stay separate concerns.
+
+The entry is stored with its own CC0 profile rather than being incorrectly labeled MIT by the community-starter provider default.
+
+### Coverage verification
+
+The V1.14 Unreal-only live benchmark on 2026-08-20 completed with:
+
+- 4/4 complete Unreal scenarios;
+- 37/37 required slots covered (100%);
+- 37/37 required slots with at least three candidates (100% depth-3);
+- 0 unsupported required slots;
+- 0 provider errors.
+
+V1.13's full 39-scenario benchmark had already reached 100% depth-3 for every required category/group except Unreal starter depth. V1.14 closes that specifically measured gap without changing license policy.
+
+### Release engineering
+
+- package/runtime/lockfile version: `1.14.0`;
+- deterministic tests verify provider-default licenses, per-entry overrides and mixed MIT/CC0 Unreal results;
+- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.14 is additive. Existing verified catalogs behave identically unless an entry explicitly declares its own license profile.
+
+---
+
+
 ## v1.13.0
 
 V1.13 hardens the 39-scenario full coverage benchmark and improves recommendation depth without weakening license filters.

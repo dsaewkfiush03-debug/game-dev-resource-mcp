@@ -216,3 +216,20 @@ Group depth-3 coverage was 100% for generic, Godot, Phaser, Raylib and Unity, an
 The remaining four shallow starter occurrences are not hidden or reclassified. Unreal currently has two maintained verified community starters in the uniform-MIT catalog. A third reviewed Unreal template uses CC0; the catalog must first support per-entry license profiles before that differently licensed candidate can be added accurately.
 
 This snapshot demonstrates retrieval depth under the maintained 39 scenarios at one point in time. It is not a permanent guarantee that live upstream indexes or APIs will return identical results in future runs.
+
+## V1.14 Unreal depth closure
+
+V1.13's full 39-scenario snapshot left only four shallow required occurrences, all in Unreal starter depth. V1.14 addressed the data-model limitation rather than relabeling a differently licensed candidate.
+
+After adding per-entry catalog license profiles and a reviewed CC0 Unreal starter, a live Unreal-only benchmark on 2026-08-20 reported:
+
+```text
+Unreal scenarios              4/4 complete
+required-slot coverage        37/37 = 100%
+depth-3 coverage              37/37 = 100%
+unsupported required slots    0
+provider errors               0
+```
+
+This closes the specific weak group identified by the V1.13 full suite. It does not change the benchmark integrity rule: a candidate with a different license must be represented accurately before it can count toward coverage depth.
+
