@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildStackPlan } from "./recommend.js";
+import { buildStackPlan, recommendStack } from "./recommend.js";
 
 test("Chinese pixel road-survival description expands into art and gameplay-code slots", () => {
   const { inferred, slots } = buildStackPlan({
@@ -112,4 +112,19 @@ test("provider restrictions are honored during stack planning", () => {
   assert.deepEqual(starter?.providers, []);
   assert.deepEqual(slots.find(slot => slot.id === "font")?.providers, ["googlefonts"]);
   assert.deepEqual(slots.find(slot => slot.id === "ui")?.providers, ["kenney"]);
+});
+
+test("fallback queries deepen static recommendations while keeping the first specific match primary", async () => {
+  const result = await recommendStack({
+    description: "Godot 2D pixel road survival game with vehicles and characters",
+    providers: ["kenney", "googlefonts"],
+    perSlotLimit: 3
+  });
+
+  for (const slotId of ["vehicle", "character"] as const) {
+    const recommendation = result.recommendations.find(item => item.slot.id === slotId);
+    assert.ok(recommendation?.primary, `missing ${slotId} primary`);
+    assert.ok((recommendation?.alternatives.length ?? 0) >= 2, `${slotId} should be filled to depth 3 from later fallbacks`);
+    assert.equal(new Set([recommendation!.primary!.id, ...recommendation!.alternatives.map(item => item.id)]).size, 3);
+  }
 });

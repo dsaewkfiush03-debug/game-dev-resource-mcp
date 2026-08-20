@@ -7,6 +7,8 @@ const API_VERSION = "2026-03-10";
 const USER_AGENT = `game-dev-resource-mcp/${VERSION}`;
 const SEARCH_CACHE_TTL_MS = 10 * 60 * 1000;
 const SEARCH_ERROR_CACHE_TTL_MS = 30 * 1000;
+const MAX_RATE_WAIT_MS = 75_000;
+const RATE_RESET_PADDING_MS = 1500;
 const GENERIC_CODE_QUERY_TOKENS = new Set(["system", "plugin", "addon", "game", "library"]);
 
 interface GithubRepoRaw {
@@ -30,8 +32,16 @@ interface SearchCacheEntry {
   promise: Promise<GithubSearchResponse>;
 }
 
+export interface GithubRateLimitSnapshot {
+  resource?: string;
+  remaining?: number;
+  resetEpochSeconds?: number;
+  retryAfterSeconds?: number;
+}
+
 const searchCache = new Map<string, SearchCacheEntry>();
 let searchQueue: Promise<void> = Promise.resolve();
+let searchRateState: GithubRateLimitSnapshot | undefined;
 
 function boolOrUnknown(value: boolean | "depends"): boolean | "unknown" {
   return value === "depends" ? "unknown" : value;
@@ -52,6 +62,16 @@ export function normalizeGithubCodeQuery(query: string): string {
     .filter(Boolean)
     .filter(token => !GENERIC_CODE_QUERY_TOKENS.has(token));
   return Array.from(new Set(tokens)).join(" ");
+}
+
+export function githubRateLimitDelayMs(snapshot: GithubRateLimitSnapshot, nowMs = Date.now()): number {
+  if ((snapshot.retryAfterSeconds ?? 0) > 0) {
+    return Math.ceil((snapshot.retryAfterSeconds ?? 0) * 1000 + RATE_RESET_PADDING_MS);
+  }
+  if (snapshot.remaining === 0 && (snapshot.resetEpochSeconds ?? 0) > 0) {
+    return Math.max(0, Math.ceil((snapshot.resetEpochSeconds ?? 0) * 1000 - nowMs + RATE_RESET_PADDING_MS));
+  }
+  return 0;
 }
 
 export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().toISOString()): ProviderAsset | undefined {
@@ -94,28 +114,74 @@ export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().
   };
 }
 
-async function githubJson(path: string): Promise<unknown> {
+function parseNumber(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function rateSnapshot(response: Response): GithubRateLimitSnapshot {
+  return {
+    resource: response.headers.get("x-ratelimit-resource") ?? undefined,
+    remaining: parseNumber(response.headers.get("x-ratelimit-remaining")),
+    resetEpochSeconds: parseNumber(response.headers.get("x-ratelimit-reset")),
+    retryAfterSeconds: parseNumber(response.headers.get("retry-after"))
+  };
+}
+
+function rateMetadata(snapshot: GithubRateLimitSnapshot): string {
+  return [
+    snapshot.resource ? `resource=${snapshot.resource}` : "",
+    snapshot.remaining !== undefined ? `remaining=${snapshot.remaining}` : "",
+    snapshot.resetEpochSeconds !== undefined ? `reset=${snapshot.resetEpochSeconds}` : "",
+    snapshot.retryAfterSeconds !== undefined ? `retry-after=${snapshot.retryAfterSeconds}` : ""
+  ].filter(Boolean).join(" ");
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function waitForKnownSearchBudget(): Promise<void> {
+  if (!searchRateState) return;
+  const delay = githubRateLimitDelayMs(searchRateState);
+  if (delay <= 0) return;
+  if (delay > MAX_RATE_WAIT_MS) {
+    throw new Error(`GitHub Search rate limit reset is ${delay}ms away, exceeding the bounded wait window.`);
+  }
+  await sleep(delay);
+  searchRateState = undefined;
+}
+
+async function githubSearchJson(path: string): Promise<unknown> {
   const headers: Record<string, string> = {
     Accept: "application/vnd.github+json",
     "User-Agent": USER_AGENT,
     "X-GitHub-Api-Version": API_VERSION
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
-  const response = await fetch(`${API_BASE}${path}`, { headers });
-  if (!response.ok) {
-    const remaining = response.headers.get("x-ratelimit-remaining");
-    const reset = response.headers.get("x-ratelimit-reset");
-    const resource = response.headers.get("x-ratelimit-resource");
-    const retryAfter = response.headers.get("retry-after");
-    const metadata = [
-      resource ? `resource=${resource}` : "",
-      remaining ? `remaining=${remaining}` : "",
-      reset ? `reset=${reset}` : "",
-      retryAfter ? `retry-after=${retryAfter}` : ""
-    ].filter(Boolean).join(" ");
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await waitForKnownSearchBudget();
+    const response = await fetch(`${API_BASE}${path}`, { headers });
+    const snapshot = rateSnapshot(response);
+    searchRateState = snapshot;
+
+    if (response.ok) return response.json();
+
+    const retryableLimit = response.status === 429 || (response.status === 403 && (snapshot.remaining === 0 || snapshot.retryAfterSeconds !== undefined));
+    const delay = githubRateLimitDelayMs(snapshot);
+    if (attempt < 2 && retryableLimit && delay > 0 && delay <= MAX_RATE_WAIT_MS) {
+      await sleep(delay);
+      searchRateState = undefined;
+      continue;
+    }
+
+    const metadata = rateMetadata(snapshot);
     throw new Error(`GitHub API ${response.status}${metadata ? ` (${metadata})` : ""}: ${await response.text()}`);
   }
-  return response.json();
+
+  throw new Error("GitHub Search request exhausted its bounded retry path.");
 }
 
 async function enqueueSearch<T>(work: () => Promise<T>): Promise<T> {
@@ -141,7 +207,7 @@ function cachedRepositorySearch(path: string): Promise<GithubSearchResponse> {
   };
   entry.promise = enqueueSearch(async () => {
     try {
-      return await githubJson(path) as GithubSearchResponse;
+      return await githubSearchJson(path) as GithubSearchResponse;
     } catch (error) {
       entry.expiresAt = Date.now() + SEARCH_ERROR_CACHE_TTL_MS;
       throw error;

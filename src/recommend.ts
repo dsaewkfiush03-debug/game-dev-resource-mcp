@@ -325,6 +325,9 @@ async function searchSlot(slot: StackSlotPlan, options: RecommendStackOptions): 
 
   const errors: ProviderSearchError[] = [];
   const limit = Math.max(1, Math.min(options.perSlotLimit ?? 3, 10));
+  const collected: RankedAsset[] = [];
+  const seen = new Set<string>();
+  let firstSuccessfulQuery = "";
   let lastQuery = slot.queries[0] ?? "";
 
   for (const query of slot.queries) {
@@ -341,15 +344,25 @@ async function searchSlot(slot: StackSlotPlan, options: RecommendStackOptions): 
       perProviderLimit: Math.max(limit * 3, 10)
     });
     errors.push(...result.errors);
-    if (result.results.length > 0) {
-      return {
-        slot,
-        queryUsed: query,
-        primary: result.results[0],
-        alternatives: result.results.slice(1, limit),
-        providerErrors: errors
-      };
+    if (result.results.length > 0 && !firstSuccessfulQuery) firstSuccessfulQuery = query;
+    for (const asset of result.results) {
+      const key = `${asset.provider}:${asset.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      collected.push(asset);
+      if (collected.length >= limit) break;
     }
+    if (collected.length >= limit) break;
+  }
+
+  if (collected.length > 0) {
+    return {
+      slot,
+      queryUsed: firstSuccessfulQuery || lastQuery,
+      primary: collected[0],
+      alternatives: collected.slice(1, limit),
+      providerErrors: errors
+    };
   }
 
   return {

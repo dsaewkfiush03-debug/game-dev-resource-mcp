@@ -1,5 +1,53 @@
 # Release notes
 
+## v1.13.0
+
+V1.13 hardens the 39-scenario full coverage benchmark and improves recommendation depth without weakening license filters.
+
+### Full-suite reliability
+
+- GitHub Code now reads Search rate-limit headers and waits for an explicit reset window when `remaining=0` or `Retry-After` is present.
+- Rate-limit waiting is bounded; the provider does not spin on unrestricted retries.
+- A safer reset padding and bounded retry path remove the remaining full-suite Search-window edge errors.
+
+### Recommendation depth
+
+- `recommend_stack` no longer stops after the first fallback query that returns only one candidate.
+- It preserves the first/specific query result as primary, then continues broader fallbacks only until `perSlotLimit` is filled.
+- Candidates are deduplicated by provider + resource ID.
+- This improves real choice depth without changing commercial-use, attribution, share-alike or unknown-license policy.
+
+### Full 39-scenario benchmark
+
+A timestamped full live run on 2026-08-20 completed with:
+
+- 39/39 complete scenarios;
+- 357/357 required slots covered (100%);
+- 353/357 required slots with at least three candidates (98.9% depth-3);
+- 0 unsupported required slots;
+- 0 provider errors.
+
+All required slot categories except `starter` reached 100% depth-3. Starter depth-3 was 85.7% (24/28), with the remaining four shallow occurrences concentrated in Unreal scenarios.
+
+The project deliberately did **not** add a third Unreal starter merely to obtain a 100% benchmark score. A reviewed candidate exists under CC0, while the current `communitystarters` provider uses a uniform MIT license profile; adding that candidate without first supporting per-entry license profiles would misclassify its license.
+
+### Measurement integrity
+
+The 98.9% result is retained as the honest V1.13 full-suite snapshot. Benchmark depth is not permission to broaden rights, relabel licenses or hide shallow categories.
+
+### Release engineering
+
+- package/runtime/lockfile version: `1.13.0`;
+- deterministic tests cover rate-limit delay semantics and fallback depth accumulation;
+- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.13 is additive. Existing provider IDs, adoption rules, safe-install allowlists and attribution workflows remain unchanged.
+
+---
+
+
 ## v1.12.0
 
 V1.12 is the first benchmark-driven expansion release: it separates retrieval failures from real resource gaps, removes avoidable GitHub API pressure, improves gameplay-code search depth and adds conservatively verified Unity/Unreal starter coverage.

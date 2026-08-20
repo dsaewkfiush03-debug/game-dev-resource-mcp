@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mapAmbientCgAsset } from "./ambientcg.js";
-import { mapGithubCodeRepo, normalizeGithubCodeQuery } from "./githubcode.js";
+import { githubRateLimitDelayMs, mapGithubCodeRepo, normalizeGithubCodeQuery } from "./githubcode.js";
 import { googleFontsProvider } from "./googlefonts.js";
 
 test("ambientCG material maps to CC0 3D PBR metadata", () => {
@@ -35,6 +35,13 @@ test("GitHub code provider canonicalizes fallback query noise", () => {
   assert.equal(normalizeGithubCodeQuery("godot inventory loot plugin"), "godot inventory loot");
   assert.equal(normalizeGithubCodeQuery("GODOT inventory loot addon library"), "godot inventory loot");
   assert.equal(normalizeGithubCodeQuery("combat weapon game system"), "combat weapon");
+});
+
+test("GitHub Search rate-limit delay waits for reset or Retry-After without inventing a delay", () => {
+  const now = 1_000_000;
+  assert.equal(githubRateLimitDelayMs({ remaining: 12, resetEpochSeconds: 2000 }, now), 0);
+  assert.equal(githubRateLimitDelayMs({ remaining: 0, resetEpochSeconds: 1002 }, now), 3500);
+  assert.equal(githubRateLimitDelayMs({ remaining: 0, retryAfterSeconds: 3 }, now), 4500);
 });
 
 test("GitHub code provider maps a detected MIT repository conservatively", () => {
