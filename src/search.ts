@@ -1,4 +1,6 @@
 import { checkLicense } from "./licenses.js";
+import { canonicalEngine, providerSupportsDimensions, providerSupportsEngines } from "./provider-capabilities.js";
+import { detectSearchConcepts, planSearchQuery, type SearchQueryPlan } from "./query-plan.js";
 import { getProvider, listProviders, type AssetProviderId, type ProviderAsset } from "./providers/index.js";
 import type { AssetDimension, BundledAssetStatus, ReuseScope } from "./providers/types.js";
 
@@ -22,6 +24,9 @@ export interface UnifiedSearchOptions {
   allowShareAlike?: boolean;
   limit?: number;
   perProviderLimit?: number;
+  semanticSearch?: boolean;
+  maxQueryVariants?: number;
+  minResultsBeforeFallback?: number;
 }
 
 export interface RankedAsset extends ProviderAsset {
@@ -34,6 +39,22 @@ export interface RankedAsset extends ProviderAsset {
 export interface ProviderSearchError {
   provider: AssetProviderId;
   message: string;
+}
+
+export interface SearchAttempt {
+  query: string;
+  level: "exact" | "semantic" | "broad";
+  reason: string;
+  returnedAssets: number;
+  cumulativeRelevantResults: number;
+}
+
+export interface SearchDiagnostics {
+  fallbackUsed: boolean;
+  attemptedQueries: SearchAttempt[];
+  prunedProviders: AssetProviderId[];
+  concepts: SearchQueryPlan["concepts"];
+  suggestedQueries: string[];
 }
 
 const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
@@ -59,13 +80,21 @@ function tokens(input: string): string[] {
 }
 
 function contains(value: string | undefined, token: string): boolean {
-  return (value ?? "").toLowerCase().includes(token);
+  return (value ?? "").toLowerCase().includes(token.toLowerCase());
 }
 
 function valuesContain(values: string[] | undefined, wanted: string[] | undefined): boolean {
   if (!wanted?.length) return true;
   const normalized = (values ?? []).map(value => value.toLowerCase());
   return wanted.every(filter => normalized.some(value => value.includes(filter.toLowerCase())));
+}
+
+function engineMatches(asset: ProviderAsset, wanted: string[] | undefined): boolean {
+  if (!wanted?.length) return true;
+  if (asset.dimension !== "code" && (!asset.engine || asset.engine.length === 0)) return true;
+  if (!asset.engine?.length) return false;
+  const actual = asset.engine.map(canonicalEngine);
+  return wanted.map(canonicalEngine).every(filter => actual.includes(filter) || actual.includes("generic"));
 }
 
 function dimensionMatches(asset: ProviderAsset, wanted: AssetDimension[] | undefined): boolean {
@@ -102,6 +131,35 @@ function reuseBonus(asset: ProviderAsset): number {
   return 0;
 }
 
+function semanticMatch(asset: ProviderAsset, term: string): { score: number; reason?: string } {
+  if (contains(asset.name, term)) return { score: 7, reason: `name:${term}` };
+  if (asset.tags.some(tag => contains(tag, term))) return { score: 5, reason: `tag:${term}` };
+  if (asset.categories.some(category => contains(category, term))) return { score: 4, reason: `category:${term}` };
+  const metadata = [
+    ...(asset.engine ?? []),
+    asset.dimension ?? "",
+    ...(asset.style ?? []),
+    ...(asset.formats ?? []),
+    ...(asset.assetTypes ?? []),
+    ...(asset.gameGenres ?? []),
+    asset.resolution ?? ""
+  ];
+  if (metadata.some(value => contains(value, term))) return { score: 4, reason: `metadata:${term}` };
+  if (contains(asset.description, term)) return { score: 2, reason: `description:${term}` };
+  return { score: 0 };
+}
+
+function hasQueryRelevance(reasons: string[]): boolean {
+  return reasons.some(reason =>
+    reason.startsWith("name:")
+    || reason.startsWith("tag:")
+    || reason.startsWith("category:")
+    || reason.startsWith("metadata:")
+    || reason.startsWith("description:")
+    || reason.startsWith("semantic:")
+  );
+}
+
 export function scoreAsset(asset: ProviderAsset, query: string): { score: number; matchReasons: string[] } {
   const queryTokens = tokens(query);
   let score = 0;
@@ -124,6 +182,18 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
     if (asset.categories.some(category => contains(category, token))) { score += 4; reasons.push(`category:${token}`); }
     if (metadata.some(value => contains(value, token))) { score += 4; reasons.push(`metadata:${token}`); }
     if (contains(asset.description, token)) { score += 2; reasons.push(`description:${token}`); }
+  }
+
+  for (const concept of detectSearchConcepts(query)) {
+    let best = { score: 0, reason: undefined as string | undefined };
+    for (const term of concept.expansions) {
+      const match = semanticMatch(asset, term);
+      if (match.score > best.score) best = match;
+    }
+    if (best.score > 0 && best.reason) {
+      score += best.score;
+      reasons.push(`semantic:${concept.id}:${best.reason}`);
+    }
   }
 
   if (asset.commercialUse === true) { score += 5; reasons.push("commercial-use-confirmed"); }
@@ -152,12 +222,13 @@ export function rankAssets(assets: ProviderAsset[], query: string, options: Unif
   const commercialOnly = options.commercialOnly ?? true;
   const allowAttribution = options.allowAttribution ?? true;
   const allowShareAlike = options.allowShareAlike ?? false;
+  const queryRequired = query.trim().length > 0;
 
   return assets
     .filter(asset => !commercialOnly || asset.commercialUse === true)
     .filter(asset => allowAttribution || asset.attribution === false)
     .filter(asset => allowShareAlike || asset.shareAlike === false)
-    .filter(asset => valuesContain(asset.engine, options.engines))
+    .filter(asset => engineMatches(asset, options.engines))
     .filter(asset => dimensionMatches(asset, options.dimensions))
     .filter(asset => valuesContain(asset.style, options.styles))
     .filter(asset => valuesContain(asset.formats, options.formats))
@@ -171,45 +242,97 @@ export function rankAssets(assets: ProviderAsset[], query: string, options: Unif
       const ranked = scoreAsset(asset, query);
       return { ...asset, ...ranked, licenseRisk: licenseRule?.risk ?? "unknown", providerMode: MODE_BY_PROVIDER[asset.provider] };
     })
+    .filter(asset => !queryRequired || hasQueryRelevance(asset.matchReasons))
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
+}
+
+function dedupeErrors(errors: ProviderSearchError[]): ProviderSearchError[] {
+  const seen = new Set<string>();
+  return errors.filter(error => {
+    const key = `${error.provider}:${error.message}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{
   results: RankedAsset[];
   errors: ProviderSearchError[];
   searchedProviders: AssetProviderId[];
+  diagnostics: SearchDiagnostics;
 }> {
   const available = listProviders().map(provider => provider.id);
-  const searchedProviders = options.providers?.length ? options.providers : available;
+  const requestedProviders = options.providers?.length ? options.providers : available;
+  const searchedProviders = requestedProviders.filter(provider =>
+    providerSupportsDimensions(provider, options.dimensions)
+    && providerSupportsEngines(provider, options.engines)
+  );
+  const prunedProviders = requestedProviders.filter(provider => !searchedProviders.includes(provider));
   const perProviderLimit = Math.max(1, Math.min(options.perProviderLimit ?? 50, 100));
+  const resultLimit = Math.max(1, Math.min(options.limit ?? 20, 100));
+  const targetBeforeStop = Math.max(1, Math.min(options.minResultsBeforeFallback ?? Math.min(3, resultLimit), resultLimit));
+  const semanticSearch = options.semanticSearch ?? true;
+  const plan = planSearchQuery(options.query, semanticSearch ? Math.max(1, Math.min(options.maxQueryVariants ?? 6, 10)) : 1);
+  const variants = semanticSearch ? plan.variants : plan.variants.slice(0, 1);
 
-  const settled = await Promise.allSettled(searchedProviders.map(async providerId => {
-    const provider = getProvider(providerId);
-    const results = await provider.search({
-      query: options.query,
-      categories: options.categories ?? [],
-      engines: options.engines ?? [],
-      dimensions: options.dimensions ?? [],
-      styles: options.styles ?? [],
-      formats: options.formats ?? [],
-      assetTypes: options.assetTypes ?? [],
-      gameGenres: options.gameGenres ?? [],
-      reuseScopes: options.reuseScopes ?? [],
-      bundledAssetStatuses: options.bundledAssetStatuses ?? [],
-      animated: options.animated,
-      limit: perProviderLimit
-    });
-    return { providerId, results };
-  }));
-
-  const assets: ProviderAsset[] = [];
+  const assets = new Map<string, ProviderAsset>();
   const errors: ProviderSearchError[] = [];
-  settled.forEach((result, index) => {
-    const provider = searchedProviders[index];
-    if (result.status === "fulfilled") assets.push(...result.value.results);
-    else errors.push({ provider, message: result.reason instanceof Error ? result.reason.message : String(result.reason) });
-  });
+  const attempts: SearchAttempt[] = [];
+  let ranked: RankedAsset[] = [];
 
-  const ranked = rankAssets(assets, options.query, options).slice(0, Math.max(1, Math.min(options.limit ?? 20, 100)));
-  return { results: ranked, errors, searchedProviders };
+  for (const variant of variants) {
+    const settled = await Promise.allSettled(searchedProviders.map(async providerId => {
+      const provider = getProvider(providerId);
+      const results = await provider.search({
+        query: variant.query,
+        categories: options.categories ?? [],
+        engines: options.engines ?? [],
+        dimensions: options.dimensions ?? [],
+        styles: options.styles ?? [],
+        formats: options.formats ?? [],
+        assetTypes: options.assetTypes ?? [],
+        gameGenres: options.gameGenres ?? [],
+        reuseScopes: options.reuseScopes ?? [],
+        bundledAssetStatuses: options.bundledAssetStatuses ?? [],
+        animated: options.animated,
+        limit: perProviderLimit
+      });
+      return { providerId, results };
+    }));
+
+    let returnedAssets = 0;
+    settled.forEach((result, index) => {
+      const provider = searchedProviders[index];
+      if (result.status === "fulfilled") {
+        returnedAssets += result.value.results.length;
+        for (const asset of result.value.results) assets.set(`${asset.provider}:${asset.id}`, asset);
+      } else {
+        errors.push({ provider, message: result.reason instanceof Error ? result.reason.message : String(result.reason) });
+      }
+    });
+
+    ranked = rankAssets(Array.from(assets.values()), options.query, options).slice(0, resultLimit);
+    attempts.push({
+      query: variant.query,
+      level: variant.level,
+      reason: variant.reason,
+      returnedAssets,
+      cumulativeRelevantResults: ranked.length
+    });
+    if (ranked.length >= targetBeforeStop) break;
+  }
+
+  return {
+    results: ranked,
+    errors: dedupeErrors(errors),
+    searchedProviders,
+    diagnostics: {
+      fallbackUsed: attempts.length > 1,
+      attemptedQueries: attempts,
+      prunedProviders,
+      concepts: plan.concepts,
+      suggestedQueries: plan.suggestions
+    }
+  };
 }
