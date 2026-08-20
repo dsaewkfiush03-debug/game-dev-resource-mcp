@@ -161,7 +161,7 @@ V1.11 adds a maintained coverage benchmark so provider expansion can be driven b
 - required slots with no configured providers stay in the denominator.
 - live-provider errors are reported separately from persistent catalog gaps.
 
-Benchmark scores never override or relax license rules. In the V1.12 live 12-scenario smoke snapshot (2026-08-20), required-slot coverage reached 100%, depth-3 coverage 85.7%, all 12 scenarios were complete, unsupported required slots were 0 and provider errors were 0. This is a smoke snapshot, not a claim that the 39-scenario full suite is perfect. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
+Benchmark scores never override or relax license rules. In the V1.13 timestamped 39-scenario full run (2026-08-20), required-slot coverage was 100%, depth-3 coverage 98.9%, all 39 scenarios were complete, unsupported required slots were 0 and provider errors were 0. The only shallow required category was Unreal starter depth; the project intentionally did not misclassify a differently licensed candidate merely to obtain a 100% score. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
 
 ## MCP tools
 

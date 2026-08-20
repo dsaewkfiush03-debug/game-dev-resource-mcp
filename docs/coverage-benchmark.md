@@ -198,3 +198,22 @@ provider errors          0
 Group depth-3 coverage in that snapshot was 88.0% Godot, 94.4% Phaser, 70.6% Raylib, 95.2% Unity, 80.0% Unreal and 83.3% generic.
 
 These numbers are a timestamped **smoke-suite live measurement**. They do not imply that the 39-scenario full suite has 100% coverage, that every result is aesthetically ideal, or that live provider results cannot change.
+
+## V1.13 full-suite snapshot
+
+V1.13 ran the complete 39-scenario suite after adding rate-aware GitHub Search pacing and fallback depth filling. The timestamped live result on 2026-08-20 was:
+
+```text
+scenarios                  39/39 complete
+required-slot coverage     357/357 = 100%
+depth-3 coverage           353/357 = 98.9%
+unsupported required slots 0
+provider errors            0
+```
+
+Group depth-3 coverage was 100% for generic, Godot, Phaser, Raylib and Unity, and 89.2% for Unreal. Every required slot category except `starter` reached 100% depth-3. Starter depth-3 was 85.7% (24/28).
+
+The remaining four shallow starter occurrences are not hidden or reclassified. Unreal currently has two maintained verified community starters in the uniform-MIT catalog. A third reviewed Unreal template uses CC0; the catalog must first support per-entry license profiles before that differently licensed candidate can be added accurately.
+
+This snapshot demonstrates retrieval depth under the maintained 39 scenarios at one point in time. It is not a permanent guarantee that live upstream indexes or APIs will return identical results in future runs.
+
