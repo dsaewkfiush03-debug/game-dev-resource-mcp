@@ -4,6 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
 import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
+import { runCoverageBenchmark } from "./coverage.js";
 import { installAssetFile, planAssetInstall } from "./install.js";
 import { checkLicense } from "./licenses.js";
 import { recommendStack } from "./recommend.js";
@@ -33,6 +34,7 @@ const projectProviderId = z.enum(["godotdemos", "phaser", "raylib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 const reuseScope = z.enum(["whole-project", "code-only", "reference-only", "asset-only"]);
 const bundledAssetStatus = z.enum(["none", "same-license", "separately-licensed", "needs-review"]);
+const coverageGroup = z.enum(["godot", "phaser", "raylib", "unity", "unreal", "generic"]);
 
 server.registerTool("find_game_assets", {
   description: "Search all supported providers, filter by license, project-reuse safety and game-development metadata, and return ranked results with explainable reasons.",
@@ -107,6 +109,17 @@ server.registerTool("recommend_stack", {
     perSlotLimit: z.number().int().min(1).max(10).default(3)
   })
 }, async options => text(await recommendStack(options)));
+
+server.registerTool("benchmark_resource_coverage", {
+  description: "Run a live resource-coverage benchmark across representative game concepts. Reports required-slot coverage, depth-3 candidate coverage, unsupported provider gaps, provider errors and the weakest resource slots. Smoke uses 12 balanced scenarios; full uses all 39 scenarios.",
+  inputSchema: z.object({
+    suite: z.enum(["smoke", "full"]).default("smoke"),
+    scenarioIds: z.array(z.string().min(1)).optional(),
+    groups: z.array(coverageGroup).optional(),
+    perSlotLimit: z.number().int().min(3).max(10).default(3),
+    concurrency: z.number().int().min(1).max(4).default(2)
+  })
+}, async options => text(await runCoverageBenchmark(options)));
 
 server.registerTool("search_game_assets", {
   description: "Search the local registry of game-development resource sources.",
