@@ -95,8 +95,8 @@ test("Phaser description selects the verified Phaser starter provider", () => {
 });
 
 test("unsupported engine keeps a required starter gap instead of silently substituting another engine", () => {
-  const { inferred, slots } = buildStackPlan({ description: "3D sci-fi survival game", engine: "unity" });
-  assert.equal(inferred.engine, "unity");
+  const { inferred, slots } = buildStackPlan({ description: "3D sci-fi survival game", engine: "defold" });
+  assert.equal(inferred.engine, "defold");
   const starter = slots.find(slot => slot.id === "starter");
   assert.equal(starter?.required, true);
   assert.deepEqual(starter?.providers, []);
