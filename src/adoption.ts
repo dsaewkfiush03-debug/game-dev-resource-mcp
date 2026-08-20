@@ -52,7 +52,7 @@ export interface AdoptionResourceNeed {
 }
 
 export interface AdoptionToolCall {
-  tool: "find_game_assets" | "generate_project_attribution" | "inspect_repository";
+  tool: "find_game_assets" | "generate_project_attribution";
   reason: string;
   arguments: Record<string, unknown>;
 }
@@ -108,6 +108,12 @@ function decide(reuseScope: ReuseScope | undefined, bundledAssetStatus: BundledA
   return "manual-review-before-adoption";
 }
 
+function adoptionCanProceed(decision: AdoptionDecision): boolean {
+  return decision === "adopt-project-base"
+    || decision === "adopt-project-with-component-obligations"
+    || decision === "reuse-code-only";
+}
+
 function allowedReuse(decision: AdoptionDecision): string[] {
   switch (decision) {
     case "adopt-project-base":
@@ -127,9 +133,9 @@ function allowedReuse(decision: AdoptionDecision): string[] {
         "Port or adapt the reusable gameplay logic into the target project."
       ];
     case "reference-only":
-      return ["Study architecture and behavior as an implementation reference."];
+      return ["Study architecture and behavior as an implementation reference; do not proceed to direct adoption without further review."];
     case "not-a-project-base":
-      return ["Use only the asset/media scope explicitly described by the resource record."];
+      return ["Use only the asset/media scope explicitly described by the resource record; do not treat it as a project skeleton."];
     default:
       return ["Perform manual license/component review before adopting project content."];
   }
@@ -138,12 +144,14 @@ function allowedReuse(decision: AdoptionDecision): string[] {
 function policyActions(candidate: ProviderAsset, decision: AdoptionDecision): AdoptionAction[] {
   const actions: AdoptionAction[] = [];
 
-  if (decision === "adopt-project-base") {
+  if (decision === "adopt-project-base" || decision === "adopt-project-with-component-obligations") {
     actions.push({
       action: "keep",
       targetType: "system",
       target: "verified project structure and reusable gameplay systems",
-      reason: "The maintained project record supports whole-project starter use under the stated obligations.",
+      reason: decision === "adopt-project-base"
+        ? "The maintained project record supports whole-project starter use under the stated obligations."
+        : "The project may be used as a base while separately licensed components retain their own obligations.",
       source: "policy"
     });
   }
@@ -166,6 +174,28 @@ function policyActions(candidate: ProviderAsset, decision: AdoptionDecision): Ad
         source: "policy"
       }
     );
+  }
+
+  if (decision === "reference-only") {
+    actions.push({
+      action: "review",
+      targetType: "system",
+      target: "all components intended for direct copying",
+      reason: "Reference-only metadata permits implementation study but does not establish direct-copy clearance.",
+      required: true,
+      source: "policy"
+    });
+  }
+
+  if (decision === "manual-review-before-adoption") {
+    actions.push({
+      action: "review",
+      targetType: "notice",
+      target: "project-wide and component license boundaries",
+      reason: "Maintained metadata is insufficient to approve project adoption automatically.",
+      required: true,
+      source: "policy"
+    });
   }
 
   if (candidate.bundledAssetStatus === "needs-review") {
@@ -263,9 +293,11 @@ function resourceNeeds(candidate: ProviderAsset, stackOptions: RecommendStackOpt
   return { inferred: stack.inferred, needs };
 }
 
-function nextToolCalls(candidate: ProviderAsset, needs: AdoptionResourceNeed[]): AdoptionToolCall[] {
+function nextToolCalls(candidate: ProviderAsset, needs: AdoptionResourceNeed[], decision: AdoptionDecision): AdoptionToolCall[] {
+  if (!adoptionCanProceed(decision)) return [];
+
   const calls: AdoptionToolCall[] = [];
-  for (const need of needs.filter(item => item.required && item.coverage === "verify-or-source")) {
+  for (const need of needs.filter(item => item.required && item.coverage === "verify-or-source" && item.providers.length > 0)) {
     calls.push({
       tool: "find_game_assets",
       reason: `Find or verify the required ${need.label} slot after adopting the project base.`,
@@ -353,7 +385,7 @@ export function buildProjectAdoptionPlan(
     actions,
     licenseObligations: licenseObligations(candidate),
     resourceNeeds: needs,
-    nextToolCalls: nextToolCalls(candidate, needs),
+    nextToolCalls: nextToolCalls(candidate, needs, decision),
     warnings: [
       "This is a conservative technical adoption plan, not legal clearance.",
       "A resourceNeed marked verify-or-source means the selected candidate does not explicitly declare that slot in maintained metadata; inspect the project before assuming it is absent.",
