@@ -1,0 +1,39 @@
+name: Measure post-fix coverage v1.12
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/benchmark-driven-expansion-v1120
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Run post-fix smoke benchmark
+        shell: bash
+        run: |
+          npx tsx -e 'import { writeFileSync } from "node:fs"; import { runCoverageBenchmark } from "./src/coverage.ts"; (async () => { const r=await runCoverageBenchmark({suite:"smoke",perSlotLimit:3,concurrency:1}); const out={generatedAt:r.generatedAt,requiredSlotCoveragePercent:r.requiredSlotCoveragePercent,depth3CoveragePercent:r.depth3CoveragePercent,completeScenarioPercent:r.completeScenarioPercent,unsupportedRequiredSlots:r.unsupportedRequiredSlots,providerErrorCount:r.providerErrorCount,providerErrors:r.providerErrors,weakSlots:r.weakSlots,groupMetrics:r.groupMetrics}; writeFileSync("coverage-after-reliability-v1120.json",JSON.stringify(out,null,2)); console.log("POST_FIX="+JSON.stringify(out)); })().catch(e=>{console.error(e);process.exit(1);});'
+      - name: Commit measurement and remove workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f coverage-after-reliability-v1120.json ]; then git add -- coverage-after-reliability-v1120.json; fi
+          git rm .github/workflows/measure-reliability-v1120.yml
+          git commit -m "Capture temporary post-fix v1.12 coverage measurement"
+          git push origin HEAD:agent/benchmark-driven-expansion-v1120
