@@ -11,11 +11,22 @@ import type {
   AdoptionHint
 } from "./types.js";
 
+export interface CatalogLicenseProfile {
+  license: string;
+  licenseSource: string;
+  commercialUse: true;
+  modification: true;
+  redistribution: true;
+  attribution: boolean;
+  shareAlike: boolean;
+}
+
 export interface VerifiedCatalogEntry {
   id: string;
   name: string;
   sourceUrl: string;
   licenseSource?: string;
+  licenseProfile?: CatalogLicenseProfile;
   description?: string;
   verificationStatus?: VerificationStatus;
   verifiedAt?: string;
@@ -34,16 +45,6 @@ export interface VerifiedCatalogEntry {
   bundledAssetNotes?: string;
   componentLicenses?: ComponentLicense[];
   adoptionHints?: AdoptionHint[];
-}
-
-export interface CatalogLicenseProfile {
-  license: string;
-  licenseSource: string;
-  commercialUse: true;
-  modification: true;
-  redistribution: true;
-  attribution: boolean;
-  shareAlike: boolean;
 }
 
 export interface CatalogVerificationProfile {
@@ -154,21 +155,25 @@ export function createVerifiedCatalogProvider(
             && exactOptionalMatch(entry.animated, animated);
         })
         .slice(0, Math.max(1, Math.min(limit, 100)))
-        .map(entry => ({
-          ...effectiveDefaults,
-          ...entry,
-          provider: id,
-          ...license,
-          verificationStatus: entry.verificationStatus ?? verification?.verificationStatus,
-          verifiedAt: entry.verifiedAt ?? verification?.verifiedAt,
-          licenseSource: entry.licenseSource ?? license.licenseSource,
-          reuseScope: entry.reuseScope ?? effectiveDefaults?.reuseScope,
-          bundledAssetStatus: entry.bundledAssetStatus ?? effectiveDefaults?.bundledAssetStatus,
-          bundledAssetNotes: entry.bundledAssetNotes ?? effectiveDefaults?.bundledAssetNotes,
-          componentLicenses: entry.componentLicenses ?? effectiveDefaults?.componentLicenses,
-          adoptionHints: entry.adoptionHints ?? effectiveDefaults?.adoptionHints,
-          retrievedAt
-        }));
+        .map(entry => {
+          const effectiveLicense = entry.licenseProfile ?? license;
+          const { licenseProfile: _licenseProfile, ...entryData } = entry;
+          return {
+            ...effectiveDefaults,
+            ...entryData,
+            provider: id,
+            ...effectiveLicense,
+            verificationStatus: entry.verificationStatus ?? verification?.verificationStatus,
+            verifiedAt: entry.verifiedAt ?? verification?.verifiedAt,
+            licenseSource: entry.licenseSource ?? effectiveLicense.licenseSource,
+            reuseScope: entry.reuseScope ?? effectiveDefaults?.reuseScope,
+            bundledAssetStatus: entry.bundledAssetStatus ?? effectiveDefaults?.bundledAssetStatus,
+            bundledAssetNotes: entry.bundledAssetNotes ?? effectiveDefaults?.bundledAssetNotes,
+            componentLicenses: entry.componentLicenses ?? effectiveDefaults?.componentLicenses,
+            adoptionHints: entry.adoptionHints ?? effectiveDefaults?.adoptionHints,
+            retrievedAt
+          };
+        });
     }
   };
 }
