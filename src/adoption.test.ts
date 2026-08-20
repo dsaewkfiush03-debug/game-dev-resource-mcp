@@ -92,6 +92,30 @@ test("separately licensed whole-project candidates require component obligations
 
   assert.equal(plan.decision, "adopt-project-with-component-obligations");
   assert.ok(plan.licenseObligations.some(item => item.scope === "music" && item.license === "CC-BY-4.0"));
+  assert.ok(plan.actions.some(action => action.action === "keep" && action.targetType === "system"));
+  assert.ok(plan.actions.some(action => action.targetType === "notice" && action.required));
+  assert.ok(plan.nextToolCalls.some(call => call.tool === "generate_project_attribution"));
+});
+
+test("reference-only decisions do not emit adoption follow-up calls", () => {
+  const plan = buildProjectAdoptionPlan(fixture({
+    reuseScope: "reference-only",
+    bundledAssetStatus: "needs-review"
+  }), "raylib 2D arcade game");
+
+  assert.equal(plan.decision, "reference-only");
+  assert.equal(plan.nextToolCalls.length, 0);
+  assert.ok(plan.actions.some(action => action.action === "review" && action.required));
+});
+
+test("whole-project records with unresolved bundled assets fail closed before adoption", () => {
+  const plan = buildProjectAdoptionPlan(fixture({
+    reuseScope: "whole-project",
+    bundledAssetStatus: "needs-review"
+  }), "raylib 2D arcade game");
+
+  assert.equal(plan.decision, "manual-review-before-adoption");
+  assert.equal(plan.nextToolCalls.length, 0);
   assert.ok(plan.actions.some(action => action.targetType === "notice" && action.required));
 });
 
