@@ -1,0 +1,143 @@
+name: Patch depth optimization v1.13
+
+on:
+  push:
+    branches: [agent/full-benchmark-v1130]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/full-benchmark-v1130
+      - name: Patch depth and rate-limit behavior
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/providers/githubcode.ts')
+          s = p.read_text()
+          s = s.replace('const RATE_RESET_PADDING_MS = 350;', 'const RATE_RESET_PADDING_MS = 1500;')
+          s = s.replace('for (let attempt = 0; attempt < 2; attempt += 1) {', 'for (let attempt = 0; attempt < 3; attempt += 1) {')
+          s = s.replace('if (attempt === 0 && retryableLimit && delay > 0 && delay <= MAX_RATE_WAIT_MS) {', 'if (attempt < 2 && retryableLimit && delay > 0 && delay <= MAX_RATE_WAIT_MS) {')
+          p.write_text(s)
+
+          p = Path('src/recommend.ts')
+          s = p.read_text()
+          old = '''async function searchSlot(slot: StackSlotPlan, options: RecommendStackOptions): Promise<StackSlotRecommendation> {
+  if (slot.providers.length === 0) {
+    return { slot, queryUsed: slot.queries[0] ?? "", alternatives: [], providerErrors: [], gap: "No currently supported provider matches this slot/engine constraint." };
+  }
+
+  const errors: ProviderSearchError[] = [];
+  const limit = Math.max(1, Math.min(options.perSlotLimit ?? 3, 10));
+  let lastQuery = slot.queries[0] ?? "";
+
+  for (const query of slot.queries) {
+    lastQuery = query;
+    const result = await searchAllAssets({
+      query,
+      providers: slot.providers,
+      dimensions: slot.dimensions,
+      reuseScopes: slot.reuseScopes,
+      commercialOnly: options.commercialOnly ?? true,
+      allowAttribution: options.allowAttribution ?? true,
+      allowShareAlike: options.allowShareAlike ?? false,
+      limit,
+      perProviderLimit: Math.max(limit * 3, 10)
+    });
+    errors.push(...result.errors);
+    if (result.results.length > 0) {
+      return {
+        slot,
+        queryUsed: query,
+        primary: result.results[0],
+        alternatives: result.results.slice(1, limit),
+        providerErrors: errors
+      };
+    }
+  }
+
+  return {
+    slot,
+    queryUsed: lastQuery,
+    alternatives: [],
+    providerErrors: errors,
+    gap: "No result passed the current provider, metadata and license filters."
+  };
+}'''
+          new = '''async function searchSlot(slot: StackSlotPlan, options: RecommendStackOptions): Promise<StackSlotRecommendation> {
+  if (slot.providers.length === 0) {
+    return { slot, queryUsed: slot.queries[0] ?? "", alternatives: [], providerErrors: [], gap: "No currently supported provider matches this slot/engine constraint." };
+  }
+
+  const errors: ProviderSearchError[] = [];
+  const limit = Math.max(1, Math.min(options.perSlotLimit ?? 3, 10));
+  const collected: RankedAsset[] = [];
+  const seen = new Set<string>();
+  let firstSuccessfulQuery = "";
+  let lastQuery = slot.queries[0] ?? "";
+
+  for (const query of slot.queries) {
+    lastQuery = query;
+    const result = await searchAllAssets({
+      query,
+      providers: slot.providers,
+      dimensions: slot.dimensions,
+      reuseScopes: slot.reuseScopes,
+      commercialOnly: options.commercialOnly ?? true,
+      allowAttribution: options.allowAttribution ?? true,
+      allowShareAlike: options.allowShareAlike ?? false,
+      limit,
+      perProviderLimit: Math.max(limit * 3, 10)
+    });
+    errors.push(...result.errors);
+    if (result.results.length > 0 && !firstSuccessfulQuery) firstSuccessfulQuery = query;
+    for (const asset of result.results) {
+      const key = `${asset.provider}:${asset.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      collected.push(asset);
+      if (collected.length >= limit) break;
+    }
+    if (collected.length >= limit) break;
+  }
+
+  if (collected.length > 0) {
+    return {
+      slot,
+      queryUsed: firstSuccessfulQuery || lastQuery,
+      primary: collected[0],
+      alternatives: collected.slice(1, limit),
+      providerErrors: errors
+    };
+  }
+
+  return {
+    slot,
+    queryUsed: lastQuery,
+    alternatives: [],
+    providerErrors: errors,
+    gap: "No result passed the current provider, metadata and license filters."
+  };
+}'''
+          if old not in s:
+              raise SystemExit('searchSlot block not found')
+          p.write_text(s.replace(old, new, 1))
+          PY
+      - name: Commit and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/providers/githubcode.ts src/recommend.ts
+          git rm .github/workflows/patch-depth-v1130.yml
+          git commit -m "Fill recommendation depth across fallback queries"
+          git push origin HEAD:agent/full-benchmark-v1130
