@@ -7,7 +7,8 @@ import type {
   VerificationStatus,
   ReuseScope,
   BundledAssetStatus,
-  ComponentLicense
+  ComponentLicense,
+  AdoptionHint
 } from "./types.js";
 
 export interface VerifiedCatalogEntry {
@@ -32,6 +33,7 @@ export interface VerifiedCatalogEntry {
   bundledAssetStatus?: BundledAssetStatus;
   bundledAssetNotes?: string;
   componentLicenses?: ComponentLicense[];
+  adoptionHints?: AdoptionHint[];
 }
 
 export interface CatalogLicenseProfile {
@@ -54,18 +56,27 @@ export interface CatalogReuseDefaults {
   bundledAssetStatus?: BundledAssetStatus;
   bundledAssetNotes?: string;
   componentLicenses?: ComponentLicense[];
+  adoptionHints?: AdoptionHint[];
 }
 
 const PROVIDER_REUSE_DEFAULTS: Partial<Record<AssetProviderId, CatalogReuseDefaults>> = {
   godotdemos: {
     reuseScope: "whole-project",
     bundledAssetStatus: "same-license",
-    bundledAssetNotes: "The Godot demo repository states that demos are distributed under the repository MIT license. Preserve the MIT notice when reusing a demo."
+    bundledAssetNotes: "The Godot demo repository states that demos are distributed under the repository MIT license. Preserve the MIT notice when reusing a demo.",
+    adoptionHints: [
+      { action: "keep", targetType: "system", target: "project structure and demonstrated gameplay systems", reason: "Official demo metadata supports whole-project reuse under the repository MIT license." },
+      { action: "review", targetType: "dependency", target: "external services, plugins or dependencies introduced after adoption", reason: "The demo license does not automatically clear dependencies added by the adopting project.", required: true }
+    ]
   },
   phaser: {
     reuseScope: "code-only",
     bundledAssetStatus: "needs-review",
-    bundledAssetNotes: "Phaser starter repositories are useful code/templates, but example images/logos are not blanket-approved by this project. Replace or independently verify bundled media before shipping."
+    bundledAssetNotes: "Phaser starter repositories are useful code/templates, but example images/logos are not blanket-approved by this project. Replace or independently verify bundled media before shipping.",
+    adoptionHints: [
+      { action: "keep", targetType: "system", target: "starter source structure and build configuration", reason: "The maintained Phaser starter is intended as a reusable code skeleton under MIT." },
+      { action: "replace", targetType: "asset-category", target: "example images, logos and bundled presentation media", reason: "Bundled media is not blanket-cleared by this catalog entry.", required: true }
+    ]
   }
 };
 
@@ -155,6 +166,7 @@ export function createVerifiedCatalogProvider(
           bundledAssetStatus: entry.bundledAssetStatus ?? effectiveDefaults?.bundledAssetStatus,
           bundledAssetNotes: entry.bundledAssetNotes ?? effectiveDefaults?.bundledAssetNotes,
           componentLicenses: entry.componentLicenses ?? effectiveDefaults?.componentLicenses,
+          adoptionHints: entry.adoptionHints ?? effectiveDefaults?.adoptionHints,
           retrievedAt
         }));
     }

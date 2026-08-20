@@ -3,6 +3,8 @@ export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
 export type VerificationStatus = "verified" | "needs-review";
 export type ReuseScope = "whole-project" | "code-only" | "reference-only" | "asset-only";
 export type BundledAssetStatus = "none" | "same-license" | "separately-licensed" | "needs-review";
+export type AdoptionHintAction = "keep" | "replace" | "review" | "remove";
+export type AdoptionHintTarget = "path" | "system" | "asset-category" | "dependency" | "notice";
 
 export interface ComponentLicense {
   scope: string;
@@ -12,6 +14,14 @@ export interface ComponentLicense {
   attribution: boolean | "unknown";
   shareAlike: boolean | "unknown";
   notes?: string;
+}
+
+export interface AdoptionHint {
+  action: AdoptionHintAction;
+  targetType: AdoptionHintTarget;
+  target: string;
+  reason: string;
+  required?: boolean;
 }
 
 export interface ProviderSearchOptions {
@@ -56,6 +66,7 @@ export interface ProviderAsset {
   bundledAssetStatus?: BundledAssetStatus;
   bundledAssetNotes?: string;
   componentLicenses?: ComponentLicense[];
+  adoptionHints?: AdoptionHint[];
   license: string;
   licenseSource: string;
   commercialUse: boolean | "unknown";

@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 import * as z from "zod/v4";
+import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
 import { installAssetFile, planAssetInstall } from "./install.js";
 import { checkLicense } from "./licenses.js";
@@ -28,6 +29,7 @@ async function githubJson(path: string) {
 }
 
 const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "raylib", "googlefonts", "openverse", "godotassetlib"]);
+const projectProviderId = z.enum(["godotdemos", "phaser", "raylib"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 const reuseScope = z.enum(["whole-project", "code-only", "reference-only", "asset-only"]);
 const bundledAssetStatus = z.enum(["none", "same-license", "separately-licensed", "needs-review"]);
@@ -76,6 +78,19 @@ server.registerTool("find_reusable_projects", {
     }
   });
 });
+
+server.registerTool("plan_project_adoption", {
+  description: "Turn one verified reusable project into a conservative adoption manifest: decide project-base vs code-only use, carry path/system hints, list license obligations, identify target resource gaps and emit recommended next MCP calls. This tool never clones or executes the project.",
+  inputSchema: z.object({
+    provider: projectProviderId,
+    projectId: z.string().min(1),
+    targetDescription: z.string().min(3),
+    engine: z.string().optional(),
+    dimension: z.enum(["2D", "3D"]).optional(),
+    styles: z.array(z.string()).default([]),
+    gameGenres: z.array(z.string()).default([])
+  })
+}, async options => text(await planProjectAdoption(options)));
 
 server.registerTool("recommend_stack", {
   description: "Turn a game description into a deterministic resource stack: infer practical asset/code slots, prefer verified reusable starters where available, return primary recommendations, alternatives, license summary and unresolved gaps.",
