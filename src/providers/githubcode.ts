@@ -8,7 +8,7 @@ const USER_AGENT = `game-dev-resource-mcp/${VERSION}`;
 const SEARCH_CACHE_TTL_MS = 10 * 60 * 1000;
 const SEARCH_ERROR_CACHE_TTL_MS = 30 * 1000;
 const MAX_RATE_WAIT_MS = 75_000;
-const RATE_RESET_PADDING_MS = 350;
+const RATE_RESET_PADDING_MS = 1500;
 const GENERIC_CODE_QUERY_TOKENS = new Set(["system", "plugin", "addon", "game", "library"]);
 
 interface GithubRepoRaw {
@@ -161,7 +161,7 @@ async function githubSearchJson(path: string): Promise<unknown> {
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
 
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     await waitForKnownSearchBudget();
     const response = await fetch(`${API_BASE}${path}`, { headers });
     const snapshot = rateSnapshot(response);
@@ -171,7 +171,7 @@ async function githubSearchJson(path: string): Promise<unknown> {
 
     const retryableLimit = response.status === 429 || (response.status === 403 && (snapshot.remaining === 0 || snapshot.retryAfterSeconds !== undefined));
     const delay = githubRateLimitDelayMs(snapshot);
-    if (attempt === 0 && retryableLimit && delay > 0 && delay <= MAX_RATE_WAIT_MS) {
+    if (attempt < 2 && retryableLimit && delay > 0 && delay <= MAX_RATE_WAIT_MS) {
       await sleep(delay);
       searchRateState = undefined;
       continue;
