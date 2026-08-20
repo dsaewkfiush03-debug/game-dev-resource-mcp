@@ -24,6 +24,7 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Search openly licensed images/audio through Openverse with per-item creator/license metadata.
 - Search the Godot Asset Library live for addons/projects with per-item licenses.
 - Search concrete verified Godot, Phaser and Raylib starter/project references.
+- Search a conservative verified community starter catalog for Unity and Unreal; current entries are `code-only` / `needs-review`, not blanket whole-project clearance.
 - Search GitHub live for reusable game systems and conservatively classify detected repository licenses.
 - Search thousands of individual Game Icons and Tabler Icons SVGs instead of only category pages.
 - Audit verified-catalog freshness with `audit_resource_verification`.
@@ -86,7 +87,7 @@ generate_project_attribution
 
 For a single known asset/code need, call `find_game_assets` directly.
 
-See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
+See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/community-starters.md`](docs/community-starters.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
 
 ## Reusable project safety
 
@@ -160,7 +161,7 @@ V1.11 adds a maintained coverage benchmark so provider expansion can be driven b
 - required slots with no configured providers stay in the denominator.
 - live-provider errors are reported separately from persistent catalog gaps.
 
-Benchmark scores never override or relax license rules. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
+Benchmark scores never override or relax license rules. In the V1.12 live 12-scenario smoke snapshot (2026-08-20), required-slot coverage reached 100%, depth-3 coverage 85.7%, all 12 scenarios were complete, unsupported required slots were 0 and provider errors were 0. This is a smoke snapshot, not a claim that the 39-scenario full suite is perfect. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
 
 ## MCP tools
 
@@ -202,6 +203,7 @@ Benchmark scores never override or relax license rules. See [`docs/coverage-benc
 | Godot demos | Verified catalog | Concrete 2D/3D games and system demos | MIT; maintained entries `whole-project` / `same-license` | No |
 | Phaser starters | Verified catalog | Official web-game templates + `create-game` | MIT code/templates; conservatively `code-only` / `needs-review` media | No |
 | Raylib projects | Verified catalog | Official game template + complete-game source references | Template `whole-project`; game references `code-only` under source-specific zlib statement | No |
+| Verified Community Starters | Verified catalog | Unity and Unreal community project templates | Root MIT verified; conservatively `code-only` / `needs-review` for bundled media/dependencies | No |
 
 The broader source registry also contains marketplaces and community libraries such as OpenGameArt, itch.io, Sketchfab, Fab, Unity Asset Store, Freesound and others. Those are **discovery sources**, not blanket commercial-use approvals.
 

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mapKayKitRepository } from "./kaykit.js";
+import { kayKitRepositoryListPath, mapKayKitRepository } from "./kaykit.js";
 import { quaterniusProvider } from "./quaternius.js";
 
 test("KayKit official repository maps to CC0 3D pack metadata", () => {
@@ -31,7 +31,15 @@ test("KayKit official repository maps to CC0 3D pack metadata", () => {
   assert.ok(asset.licenseSource.endsWith("/LICENSE.txt"));
 });
 
-test("KayKit mapper rejects repositories outside the official organization", () => {
+test("KayKit indexing uses the owner repository-list endpoint instead of GitHub search", () => {
+  const path = kayKitRepositoryListPath();
+  assert.ok(path.startsWith("/users/KayKit-Game-Assets/repos?"));
+  assert.ok(path.includes("type=owner"));
+  assert.ok(path.includes("per_page=100"));
+  assert.ok(!path.includes("/search/"));
+});
+
+test("KayKit mapper rejects repositories outside the official owner account", () => {
   const asset = mapKayKitRepository({
     name: "KayKit-Fork",
     full_name: "random-user/KayKit-Fork",

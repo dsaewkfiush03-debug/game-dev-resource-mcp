@@ -167,6 +167,7 @@ function environmentProviders(dimension: "2D" | "3D" | undefined): AssetProvider
 function codeProviders(engine: string | undefined): AssetProviderId[] {
   if (engine === "godot") return ["godotassetlib", "godotdemos", "githubcode"];
   if (engine === "raylib") return ["raylib", "githubcode"];
+  if (engine === "unity" || engine === "unreal") return ["communitystarters", "githubcode"];
   return ["githubcode"];
 }
 
@@ -174,6 +175,7 @@ function starterProviders(engine: string): AssetProviderId[] {
   if (engine === "godot") return ["godotdemos", "godotassetlib"];
   if (engine === "phaser" || engine === "web") return ["phaser"];
   if (engine === "raylib") return ["raylib"];
+  if (engine === "unity" || engine === "unreal") return ["communitystarters"];
   return [];
 }
 
@@ -195,13 +197,31 @@ function buildQueries(base: string, styles: string[], genres: string[], theme?: 
   ]);
 }
 
-function buildCodeQueries(feature: string, engine?: string): string[] {
+export function buildCodeQueries(feature: string, engine?: string): string[] {
+  const key = feature.toLowerCase();
+  const broadTerms = key.includes("enemy npc ai")
+    ? ["behavior tree", "ai"]
+    : key.includes("inventory")
+      ? ["inventory", "inventory loot"]
+      : key.includes("combat")
+        ? ["combat", "weapon combat"]
+        : key.includes("vehicle")
+          ? ["vehicle controller", "driving"]
+          : key.includes("multiplayer")
+            ? ["multiplayer", "networking"]
+            : key.includes("save")
+              ? ["save", "persistence"]
+              : key.includes("procedural")
+                ? ["procedural generation", "procgen"]
+                : key.includes("dialogue")
+                  ? ["dialogue", "conversation"]
+                  : [feature];
+
   return unique([
-    [engine, feature, "system"].filter(Boolean).join(" "),
-    [engine, feature, "plugin"].filter(Boolean).join(" "),
-    [engine, feature, "addon"].filter(Boolean).join(" "),
-    [feature, "game system"].join(" "),
-    [feature, "library"].join(" "),
+    [engine, broadTerms[0]].filter(Boolean).join(" "),
+    [engine, broadTerms[1]].filter(Boolean).join(" "),
+    broadTerms[0],
+    broadTerms[1],
     feature
   ]);
 }
@@ -376,7 +396,7 @@ export async function recommendStack(options: RecommendStackOptions): Promise<St
     "GitHub code results use repository-level detected SPDX licenses only; dependencies and bundled media require separate license review.",
     "When reliable provider metadata exists, popularity and update freshness are small ranking signals; they never override license filtering."
   ];
-  if (inferred.engine && !["godot", "phaser", "web", "raylib"].includes(inferred.engine)) {
+  if (inferred.engine && !["godot", "phaser", "web", "raylib", "unity", "unreal"].includes(inferred.engine)) {
     notes.push(`No verified starter provider is currently registered for engine '${inferred.engine}', so the starter slot may remain unresolved.`);
   }
 

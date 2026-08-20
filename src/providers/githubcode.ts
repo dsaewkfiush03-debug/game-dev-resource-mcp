@@ -5,6 +5,9 @@ import type { AssetProvider, ProviderAsset, ProviderSearchOptions } from "./type
 const API_BASE = "https://api.github.com";
 const API_VERSION = "2026-03-10";
 const USER_AGENT = `game-dev-resource-mcp/${VERSION}`;
+const SEARCH_CACHE_TTL_MS = 10 * 60 * 1000;
+const SEARCH_ERROR_CACHE_TTL_MS = 30 * 1000;
+const GENERIC_CODE_QUERY_TOKENS = new Set(["system", "plugin", "addon", "game", "library"]);
 
 interface GithubRepoRaw {
   id?: number;
@@ -22,6 +25,13 @@ interface GithubRepoRaw {
 }
 
 interface GithubSearchResponse { items?: GithubRepoRaw[] }
+interface SearchCacheEntry {
+  expiresAt: number;
+  promise: Promise<GithubSearchResponse>;
+}
+
+const searchCache = new Map<string, SearchCacheEntry>();
+let searchQueue: Promise<void> = Promise.resolve();
 
 function boolOrUnknown(value: boolean | "depends"): boolean | "unknown" {
   return value === "depends" ? "unknown" : value;
@@ -31,6 +41,17 @@ function inferredEngines(repo: GithubRepoRaw): string[] {
   const text = [repo.full_name ?? "", repo.description ?? "", ...(repo.topics ?? [])].join(" ").toLowerCase();
   return ["godot", "unity", "unreal", "phaser", "bevy", "libgdx", "raylib", "babylon", "threejs", "pixi"]
     .filter(engine => text.includes(engine));
+}
+
+export function normalizeGithubCodeQuery(query: string): string {
+  const tokens = query
+    .toLowerCase()
+    .replace(/[^a-z0-9+.#_-]+/g, " ")
+    .split(/\s+/)
+    .map(token => token.trim())
+    .filter(Boolean)
+    .filter(token => !GENERIC_CODE_QUERY_TOKENS.has(token));
+  return Array.from(new Set(tokens)).join(" ");
 }
 
 export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().toISOString()): ProviderAsset | undefined {
@@ -81,8 +102,53 @@ async function githubJson(path: string): Promise<unknown> {
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`${API_BASE}${path}`, { headers });
-  if (!response.ok) throw new Error(`GitHub API ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    const remaining = response.headers.get("x-ratelimit-remaining");
+    const reset = response.headers.get("x-ratelimit-reset");
+    const resource = response.headers.get("x-ratelimit-resource");
+    const retryAfter = response.headers.get("retry-after");
+    const metadata = [
+      resource ? `resource=${resource}` : "",
+      remaining ? `remaining=${remaining}` : "",
+      reset ? `reset=${reset}` : "",
+      retryAfter ? `retry-after=${retryAfter}` : ""
+    ].filter(Boolean).join(" ");
+    throw new Error(`GitHub API ${response.status}${metadata ? ` (${metadata})` : ""}: ${await response.text()}`);
+  }
   return response.json();
+}
+
+async function enqueueSearch<T>(work: () => Promise<T>): Promise<T> {
+  let release!: () => void;
+  const predecessor = searchQueue;
+  searchQueue = new Promise<void>(resolve => { release = resolve; });
+  await predecessor;
+  try {
+    return await work();
+  } finally {
+    release();
+  }
+}
+
+function cachedRepositorySearch(path: string): Promise<GithubSearchResponse> {
+  const now = Date.now();
+  const existing = searchCache.get(path);
+  if (existing && existing.expiresAt > now) return existing.promise;
+
+  const entry: SearchCacheEntry = {
+    expiresAt: now + SEARCH_CACHE_TTL_MS,
+    promise: Promise.resolve({})
+  };
+  entry.promise = enqueueSearch(async () => {
+    try {
+      return await githubJson(path) as GithubSearchResponse;
+    } catch (error) {
+      entry.expiresAt = Date.now() + SEARCH_ERROR_CACHE_TTL_MS;
+      throw error;
+    }
+  });
+  searchCache.set(path, entry);
+  return entry.promise;
 }
 
 export const githubCodeProvider: AssetProvider = {
@@ -90,14 +156,18 @@ export const githubCodeProvider: AssetProvider = {
   name: "GitHub Open-Source Code",
   async search(options: ProviderSearchOptions): Promise<ProviderAsset[]> {
     const limit = Math.max(1, Math.min(options.limit ?? 20, 50));
+    const normalizedQuery = normalizeGithubCodeQuery(options.query);
     const terms = [
-      options.query.trim(),
-      ...(options.engines ?? []).map(value => value.trim()),
-      ...(options.assetTypes ?? []).filter(value => !["code", "library", "plugin", "starter"].includes(value.toLowerCase()))
+      normalizedQuery,
+      ...(options.engines ?? []).map(value => value.trim().toLowerCase()),
+      ...(options.assetTypes ?? [])
+        .map(value => value.trim().toLowerCase())
+        .filter(value => !["code", "library", "plugin", "starter", "system", "addon"].includes(value))
     ].filter(Boolean);
-    const qualifiers = [terms.join(" "), "archived:false", "fork:false", "stars:>=3"];
+    const canonicalTerms = Array.from(new Set(terms.join(" ").split(/\s+/).filter(Boolean))).join(" ");
+    const qualifiers = [canonicalTerms, "archived:false", "fork:false", "stars:>=3"];
     const path = `/search/repositories?q=${encodeURIComponent(qualifiers.join(" "))}&sort=stars&order=desc&per_page=${limit}`;
-    const data = await githubJson(path) as GithubSearchResponse;
+    const data = await cachedRepositorySearch(path);
     const retrievedAt = new Date().toISOString();
     return (data.items ?? [])
       .filter(repo => !repo.archived && !repo.fork)

@@ -1,4 +1,4 @@
-export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "kaykit" | "godotdemos" | "gameicons" | "tablericons" | "phaser" | "raylib" | "googlefonts" | "openverse" | "godotassetlib" | "ambientcg" | "githubcode";
+export type AssetProviderId = "polyhaven" | "kenney" | "quaternius" | "kaykit" | "godotdemos" | "gameicons" | "tablericons" | "phaser" | "raylib" | "communitystarters" | "googlefonts" | "openverse" | "godotassetlib" | "ambientcg" | "githubcode";
 export type AssetDimension = "2D" | "3D" | "audio" | "font" | "code" | "mixed";
 export type VerificationStatus = "verified" | "needs-review";
 export type ReuseScope = "whole-project" | "code-only" | "reference-only" | "asset-only";

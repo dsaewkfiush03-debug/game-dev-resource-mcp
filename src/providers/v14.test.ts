@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mapAmbientCgAsset } from "./ambientcg.js";
-import { mapGithubCodeRepo } from "./githubcode.js";
+import { mapGithubCodeRepo, normalizeGithubCodeQuery } from "./githubcode.js";
 import { googleFontsProvider } from "./googlefonts.js";
 
 test("ambientCG material maps to CC0 3D PBR metadata", () => {
@@ -28,6 +28,13 @@ test("ambientCG decal remains a 2D texture-class resource", () => {
   assert.equal(asset.dimension, "2D");
   assert.ok(asset.assetTypes?.includes("decal"));
   assert.ok(asset.assetTypes?.includes("texture"));
+});
+
+test("GitHub code provider canonicalizes fallback query noise", () => {
+  assert.equal(normalizeGithubCodeQuery("Godot inventory loot system"), "godot inventory loot");
+  assert.equal(normalizeGithubCodeQuery("godot inventory loot plugin"), "godot inventory loot");
+  assert.equal(normalizeGithubCodeQuery("GODOT inventory loot addon library"), "godot inventory loot");
+  assert.equal(normalizeGithubCodeQuery("combat weapon game system"), "combat weapon");
 });
 
 test("GitHub code provider maps a detected MIT repository conservatively", () => {

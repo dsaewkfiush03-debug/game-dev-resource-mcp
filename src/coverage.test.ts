@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { aggregateCoverageResults, runCoverageBenchmark, selectCoverageScenarios } from "./coverage.js";
+import { aggregateCoverageResults, aggregateProviderErrors, runCoverageBenchmark, selectCoverageScenarios } from "./coverage.js";
 import type { CoverageScenario } from "./coverage-scenarios.js";
 import type { StackRecommendationResult, StackSlotId } from "./recommend.js";
 import type { RankedAsset } from "./search.js";
@@ -108,8 +108,33 @@ test("provider errors are reported separately from permanent coverage metrics", 
     ]) }
   ]);
   assert.equal(summary.providerErrorCount, 2);
+  assert.equal(summary.providerErrors.length, 1);
+  assert.equal(summary.providerErrors[0]?.provider, "kenney");
+  assert.equal(summary.providerErrors[0]?.occurrences, 2);
   const environment = summary.slotMetrics.find(item => item.slot === "environment");
   assert.equal(environment?.providerErrorOccurrences, 1);
+});
+
+test("provider error diagnostics classify rate limits, HTTP failures, timeouts and network errors", () => {
+  const diagnostics = aggregateProviderErrors([
+    { provider: "githubcode", message: "GitHub API 403: rate limit exceeded" },
+    { provider: "githubcode", message: "GitHub API 403: You have exceeded a secondary rate limit" },
+    { provider: "githubcode", message: "GitHub API 500: internal server error" },
+    { provider: "openverse", message: "request timed out after 10 seconds" },
+    { provider: "openverse", message: "fetch failed: ECONNRESET" }
+  ]);
+
+  const github = diagnostics.find(item => item.provider === "githubcode");
+  assert.equal(github?.occurrences, 3);
+  assert.deepEqual(github?.categories.map(item => item.category), [
+    "http-403-rate-limit",
+    "http-403-secondary-rate-limit",
+    "http-500"
+  ]);
+
+  const openverse = diagnostics.find(item => item.provider === "openverse");
+  assert.equal(openverse?.occurrences, 2);
+  assert.deepEqual(openverse?.categories.map(item => item.category), ["network", "timeout"]);
 });
 
 test("runCoverageBenchmark supports deterministic injected recommendation engines", async () => {

@@ -48,6 +48,7 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   tablericons: "live-api",
   phaser: "verified-catalog",
   raylib: "verified-catalog",
+  communitystarters: "verified-catalog",
   googlefonts: "verified-catalog",
   openverse: "live-api",
   godotassetlib: "live-api"

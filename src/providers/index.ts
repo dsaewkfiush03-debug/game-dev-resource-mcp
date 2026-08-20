@@ -1,4 +1,5 @@
 import { ambientCgProvider } from "./ambientcg.js";
+import { communityStartersProvider } from "./communitystarters.js";
 import { gameIconsProvider } from "./gameicons.js";
 import { githubCodeProvider } from "./githubcode.js";
 import { godotAssetLibraryProvider } from "./godotassetlib.js";
@@ -26,6 +27,7 @@ const PROVIDERS: Record<AssetProviderId, AssetProvider> = {
   tablericons: tablerIconsProvider,
   phaser: phaserProvider,
   raylib: raylibProvider,
+  communitystarters: communityStartersProvider,
   googlefonts: googleFontsProvider,
   openverse: openverseProvider,
   godotassetlib: godotAssetLibraryProvider

@@ -166,3 +166,35 @@ provider error rate     -> low and explainable
 ```
 
 A score is a product/retrieval metric, not legal clearance and not proof that every returned asset is aesthetically suitable for a particular game.
+
+## V1.12 benchmark-driven improvement snapshot
+
+V1.12 used the smoke benchmark as an engineering input rather than a marketing score.
+
+The first raw run reported 74.8% required-slot coverage, 55.5% depth-3 coverage and 172 provider errors. Error diagnostics showed that 150 errors came from the GitHub Code provider and 22 from KayKit, all caused by GitHub API/routing limits rather than proven resource absence.
+
+After eliminating that measurement noise, the clean pre-expansion baseline was:
+
+```text
+required-slot coverage   93.3%
+depth-3 coverage         69.7%
+complete scenarios       58.3%
+unsupported slots        4
+provider errors          0
+```
+
+That clean baseline exposed the real gaps: AI retrieval, Unity/Unreal starters and shallow candidate depth in several gameplay-code/resource slots. V1.12 then improved GitHub query reuse/caching, broadened ecosystem code queries, corrected KayKit indexing, and added a conservative verified Unity/Unreal community starter catalog.
+
+The final live 12-scenario smoke snapshot on 2026-08-20 was:
+
+```text
+required-slot coverage   100%
+depth-3 coverage         85.7%
+complete scenarios       100% (12/12)
+unsupported slots        0
+provider errors          0
+```
+
+Group depth-3 coverage in that snapshot was 88.0% Godot, 94.4% Phaser, 70.6% Raylib, 95.2% Unity, 80.0% Unreal and 83.3% generic.
+
+These numbers are a timestamped **smoke-suite live measurement**. They do not imply that the 39-scenario full suite has 100% coverage, that every result is aesthetically ideal, or that live provider results cannot change.

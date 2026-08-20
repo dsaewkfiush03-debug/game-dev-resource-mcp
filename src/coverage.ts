@@ -1,4 +1,5 @@
 import { recommendStack, type RecommendStackOptions, type StackRecommendationResult, type StackSlotId } from "./recommend.js";
+import type { ProviderSearchError } from "./search.js";
 import {
   COVERAGE_SCENARIOS,
   COVERAGE_SMOKE_SCENARIO_IDS,
@@ -29,6 +30,16 @@ export interface CoverageSlotMetric {
   providerErrorOccurrences: number;
 }
 
+export interface CoverageProviderErrorMetric {
+  provider: string;
+  occurrences: number;
+  categories: Array<{
+    category: string;
+    occurrences: number;
+    sampleMessage: string;
+  }>;
+}
+
 export interface CoverageScenarioResult {
   id: string;
   label: string;
@@ -54,6 +65,7 @@ export interface CoverageScenarioResult {
     providers: string[];
   }>;
   providerErrorCount: number;
+  providerErrors: CoverageProviderErrorMetric[];
 }
 
 export interface CoverageBenchmarkResult {
@@ -69,6 +81,7 @@ export interface CoverageBenchmarkResult {
   completeScenarioPercent: number;
   unsupportedRequiredSlots: number;
   providerErrorCount: number;
+  providerErrors: CoverageProviderErrorMetric[];
   groupMetrics: Array<{
     group: CoverageScenarioGroup;
     scenarioCount: number;
@@ -94,6 +107,41 @@ function roundPercent(numerator: number, denominator: number): number {
 
 function candidateCount(recommendation: StackRecommendationResult["recommendations"][number]): number {
   return recommendation.primary ? 1 + recommendation.alternatives.length : 0;
+}
+
+function classifyProviderError(message: string): string {
+  const lower = message.toLowerCase();
+  const statusMatch = message.match(/\b(?:api|http)\s+(\d{3})\b/i);
+  const status = statusMatch?.[1];
+  if (lower.includes("secondary rate limit")) return status ? `http-${status}-secondary-rate-limit` : "secondary-rate-limit";
+  if (lower.includes("rate limit")) return status ? `http-${status}-rate-limit` : "rate-limit";
+  if (lower.includes("timeout") || lower.includes("timed out")) return "timeout";
+  if (lower.includes("fetch failed") || lower.includes("network") || lower.includes("econn")) return "network";
+  if (status) return `http-${status}`;
+  return message.trim().slice(0, 120) || "unknown";
+}
+
+export function aggregateProviderErrors(errors: ProviderSearchError[]): CoverageProviderErrorMetric[] {
+  const providers = new Map<string, Map<string, { occurrences: number; sampleMessage: string }>>();
+  for (const error of errors) {
+    const provider = String(error.provider);
+    const category = classifyProviderError(error.message);
+    const categories = providers.get(provider) ?? new Map<string, { occurrences: number; sampleMessage: string }>();
+    const current = categories.get(category) ?? { occurrences: 0, sampleMessage: error.message.slice(0, 300) };
+    current.occurrences += 1;
+    categories.set(category, current);
+    providers.set(provider, categories);
+  }
+
+  return Array.from(providers.entries())
+    .map(([provider, categories]) => ({
+      provider,
+      occurrences: Array.from(categories.values()).reduce((sum, item) => sum + item.occurrences, 0),
+      categories: Array.from(categories.entries())
+        .map(([category, value]) => ({ category, ...value }))
+        .sort((a, b) => b.occurrences - a.occurrences || a.category.localeCompare(b.category))
+    }))
+    .sort((a, b) => b.occurrences - a.occurrences || a.provider.localeCompare(b.provider));
 }
 
 export function selectCoverageScenarios(options: CoverageBenchmarkOptions = {}): CoverageScenario[] {
@@ -142,7 +190,9 @@ export function summarizeCoverageScenario(
     }))
     .filter(item => item.candidateCount < 3)
     .sort((a, b) => a.candidateCount - b.candidateCount || a.slot.localeCompare(b.slot));
-  const providerErrorCount = recommendation.recommendations.reduce((sum, item) => sum + item.providerErrors.length, 0);
+  const rawProviderErrors = recommendation.recommendations.flatMap(item => item.providerErrors);
+  const providerErrors = aggregateProviderErrors(rawProviderErrors);
+  const providerErrorCount = rawProviderErrors.length;
 
   return {
     id: scenario.id,
@@ -158,7 +208,8 @@ export function summarizeCoverageScenario(
     complete: recommendation.complete,
     gaps,
     weakSlots,
-    providerErrorCount
+    providerErrorCount,
+    providerErrors
   };
 }
 
@@ -242,7 +293,9 @@ export function aggregateCoverageResults(
   const coveredRequiredSlots = scenarios.reduce((sum, item) => sum + item.coveredRequiredSlots, 0);
   const depth3RequiredSlots = scenarios.reduce((sum, item) => sum + item.depth3RequiredSlots, 0);
   const completeScenarios = scenarios.filter(item => item.complete).length;
-  const providerErrorCount = scenarios.reduce((sum, item) => sum + item.providerErrorCount, 0);
+  const rawProviderErrors = scenarioPairs.flatMap(pair => pair.recommendation.recommendations.flatMap(item => item.providerErrors));
+  const providerErrors = aggregateProviderErrors(rawProviderErrors);
+  const providerErrorCount = rawProviderErrors.length;
   const unsupportedRequiredSlots = scenarioPairs.reduce((sum, pair) => sum + pair.recommendation.recommendations.filter(item => item.slot.required && item.slot.providers.length === 0).length, 0);
   const slotMetrics = aggregateSlotMetrics(normalizedPairs);
   const weakSlots = [...slotMetrics]
@@ -263,6 +316,7 @@ export function aggregateCoverageResults(
     completeScenarioPercent: roundPercent(completeScenarios, scenarios.length),
     unsupportedRequiredSlots,
     providerErrorCount,
+    providerErrors,
     groupMetrics: aggregateGroups(scenarios),
     slotMetrics,
     weakSlots,
@@ -271,7 +325,7 @@ export function aggregateCoverageResults(
       "Required-slot coverage means at least one candidate passed the current search and license filters.",
       "Depth-3 coverage means at least three candidates were returned for a required slot; it is a stronger proxy for healthy resource choice.",
       "Unsupported required slots remain in the denominator so missing engine/provider coverage is visible instead of hidden.",
-      "Live-provider failures are reported separately because temporary API/network errors can depress a run without representing a permanent catalog gap.",
+      "Live-provider failures are reported by provider/category because temporary API/network errors can depress a run without representing a permanent catalog gap.",
       "Benchmark scores are retrieval/coverage metrics, not legal clearance or asset-quality guarantees."
     ]
   };
