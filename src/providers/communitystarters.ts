@@ -120,6 +120,35 @@ export const communityStartersProvider = createVerifiedCatalogProvider(
         { action: "keep", targetType: "system", target: "MIT-covered Blueprint/project scaffolding", reason: "The root repository license is MIT." },
         { action: "review", targetType: "asset-category", target: "Creative Commons and Unreal built-in example assets", reason: "Exact bundled-media licenses are not flattened into the root MIT license.", required: true }
       ]
+    },
+    {
+      id: "cobracode-ue5-2d-sidescroller",
+      name: "Cobra Code UE5 2D Side Scroller Template",
+      sourceUrl: "https://github.com/CobraCodeDev/TP_2DSideScrollerBP",
+      licenseProfile: {
+        license: "CC0-1.0",
+        licenseSource: "https://github.com/CobraCodeDev/TP_2DSideScrollerBP/blob/main/LICENSE",
+        commercialUse: true,
+        modification: true,
+        redistribution: true,
+        attribution: false,
+        shareAlike: false
+      },
+      description: "Unreal Engine 5 Blueprint 2D side-scroller template with a real .uproject plus Config/Content structure. The repository license is CC0 and upstream describes the art assets as public domain; engine/runtime and any future imported content still require separate review.",
+      categories: ["Code", "Starter", "Template", "Unreal"],
+      tags: ["unreal", "ue5", "unreal engine", "starter", "template", "blueprint", "2d", "side scroller", "platformer", "paper2d"],
+      engine: ["unreal"],
+      dimension: "code",
+      formats: ["blueprint", "unreal"],
+      assetTypes: ["starter", "template", "code", "platformer-system"],
+      gameGenres: ["platformer"],
+      reuseScope: "code-only",
+      bundledAssetStatus: "needs-review",
+      bundledAssetNotes: "Repository content is CC0 and upstream marks its art assets public domain, but Unreal Engine/runtime components and any downstream additions remain separate licensing concerns. Keep the conservative project-adoption boundary.",
+      adoptionHints: [
+        { action: "keep", targetType: "system", target: "CC0-covered Unreal project/template structure", reason: "The maintained repository license is CC0-1.0." },
+        { action: "review", targetType: "dependency", target: "Unreal Engine/runtime and downstream imported packages", reason: "Engine/runtime and later dependencies are outside the repository's CC0 grant.", required: true }
+      ]
     }
   ],
   { verificationStatus: "verified", verifiedAt: VERIFIED_AT }
