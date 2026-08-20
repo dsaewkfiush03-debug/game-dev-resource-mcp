@@ -14,6 +14,12 @@ must not require one asset record to literally contain every word. Game-asset ca
 
 V1.15 therefore separates explicit structured filters from soft search concepts.
 
+## MCP entry points
+
+Use `find_game_assets` for normal cross-provider discovery. It uses capability pruning, semantic fallback, unified relevance ranking and diagnostics.
+
+`search_live_assets` intentionally remains a lower-level single-provider operation. It forwards one query to one provider and does not promise the same cross-provider semantic fallback behavior. This distinction keeps provider debugging/raw lookup possible while giving agents a higher-quality default discovery path.
+
 ## Hard constraints
 
 The semantic fallback path never silently relaxes explicit structured constraints such as:
