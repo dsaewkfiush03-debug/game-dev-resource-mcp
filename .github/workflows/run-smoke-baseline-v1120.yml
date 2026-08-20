@@ -1,0 +1,39 @@
+name: Live coverage smoke baseline v1.12
+
+on:
+  push:
+    branches: [agent/benchmark-driven-expansion-v1120]
+
+permissions:
+  contents: write
+
+jobs:
+  benchmark:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/benchmark-driven-expansion-v1120
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Run live smoke benchmark
+        shell: bash
+        run: |
+          npx tsx -e 'import { runCoverageBenchmark } from "./src/coverage.ts"; const r = await runCoverageBenchmark({ suite: "smoke", perSlotLimit: 3, concurrency: 1 }); console.log("COVERAGE_SUMMARY=" + JSON.stringify({generatedAt:r.generatedAt,scenarioCount:r.scenarioCount,requiredSlots:r.requiredSlots,coveredRequiredSlots:r.coveredRequiredSlots,requiredSlotCoveragePercent:r.requiredSlotCoveragePercent,depth3RequiredSlots:r.depth3RequiredSlots,depth3CoveragePercent:r.depth3CoveragePercent,completeScenarios:r.completeScenarios,completeScenarioPercent:r.completeScenarioPercent,unsupportedRequiredSlots:r.unsupportedRequiredSlots,providerErrorCount:r.providerErrorCount,weakSlots:r.weakSlots,groupMetrics:r.groupMetrics,scenarios:r.scenarios.map(s=>({id:s.id,group:s.group,coveragePercent:s.coveragePercent,depth3Percent:s.depth3Percent,gaps:s.gaps,weakSlots:s.weakSlots,providerErrorCount:s.providerErrorCount}))}));'
+      - name: Remove temporary workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/run-smoke-baseline-v1120.yml
+          git commit -m "Remove temporary live coverage workflow"
+          git push origin HEAD:agent/benchmark-driven-expansion-v1120
