@@ -1,0 +1,70 @@
+name: Apply v1.15 search quality integration
+
+on:
+  push:
+    branches: [agent/search-quality-v1150]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/search-quality-v1150
+      - name: Apply integration edits
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/search.ts')
+          text = p.read_text()
+          old = '    let best = { score: 0, reason: undefined as string | undefined };'
+          new = '    let best: { score: number; reason?: string } = { score: 0 };'
+          assert old in text
+          p.write_text(text.replace(old, new, 1))
+
+          p = Path('src/recommend.ts')
+          text = p.read_text()
+          old = '''  if (includesAny(text, ["unreal", "ue5", "虚幻"])) return "unreal";\n  if (includesAny(text, ["web game", "browser game", "网页游戏", "html5"])) return "web";'''
+          new = '''  if (includesAny(text, ["unreal", "ue5", "虚幻"])) return "unreal";\n  if (includesAny(text, ["urhox", "urho3d", "urho", "tapmaker"])) return "urhox";\n  if (includesAny(text, ["love2d", "löve2d", "löve", "love game engine"])) return "love2d";\n  if (includesAny(text, ["defold"])) return "defold";\n  if (includesAny(text, ["web game", "browser game", "网页游戏", "html5"])) return "web";'''
+          assert old in text
+          p.write_text(text.replace(old, new, 1))
+
+          p = Path('src/index.ts')
+          text = p.read_text()
+          old = 'import { installAssetFile, planAssetInstall } from "./install.js";\n'
+          new = old + 'import { listProviderCapabilities } from "./provider-capabilities.js";\n'
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = 'const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters"] as const;'
+          new = 'const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters", "githubcode"] as const;'
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = 'server.registerTool("list_asset_providers", { description: "List supported providers and whether each is a live API or verified catalog.", inputSchema: z.object({}) }, async () => text({ providers: listProviders() }));'
+          new = 'server.registerTool("list_asset_providers", { description: "List supported providers, modes and capability metadata (dimensions, engines and strengths) used to plan searches.", inputSchema: z.object({}) }, async () => text({ providers: listProviders(), capabilities: listProviderCapabilities() }));'
+          assert old in text
+          text = text.replace(old, new, 1)
+
+          old = '''      "asset-only": "Reuse is scoped to asset/media content rather than project code."\n    }'''
+          new = '''      "asset-only": "Reuse is scoped to asset/media content rather than project code."\n    },\n    discoveryNote: "verified-catalog results are maintained entries; githubcode results are live repository-level discoveries screened by detected SPDX license and remain code-only / bundled-assets-needs-review until independently inspected."'''
+          assert old in text
+          text = text.replace(old, new, 1)
+          p.write_text(text)
+          PY
+      - name: Commit integration and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/search.ts src/recommend.ts src/index.ts
+          git rm .github/workflows/patch-search-quality-v1150.yml
+          git commit -m "Integrate semantic search into niche-engine workflows"
+          git push origin HEAD:agent/search-quality-v1150
