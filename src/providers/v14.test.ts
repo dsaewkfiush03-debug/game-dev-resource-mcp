@@ -40,8 +40,8 @@ test("GitHub code provider canonicalizes fallback query noise", () => {
 test("GitHub Search rate-limit delay waits for reset or Retry-After without inventing a delay", () => {
   const now = 1_000_000;
   assert.equal(githubRateLimitDelayMs({ remaining: 12, resetEpochSeconds: 2000 }, now), 0);
-  assert.equal(githubRateLimitDelayMs({ remaining: 0, resetEpochSeconds: 1002 }, now), 2350);
-  assert.equal(githubRateLimitDelayMs({ remaining: 0, retryAfterSeconds: 3 }, now), 3350);
+  assert.equal(githubRateLimitDelayMs({ remaining: 0, resetEpochSeconds: 1002 }, now), 3500);
+  assert.equal(githubRateLimitDelayMs({ remaining: 0, retryAfterSeconds: 3 }, now), 4500);
 });
 
 test("GitHub code provider maps a detected MIT repository conservatively", () => {
