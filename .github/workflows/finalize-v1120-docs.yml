@@ -1,0 +1,69 @@
+name: Finalize v1.12 documentation
+
+on:
+  push:
+    branches: [agent/benchmark-driven-expansion-v1120]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/benchmark-driven-expansion-v1120
+      - name: Update release documentation
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          text = text.replace(
+              '- Search concrete verified Godot, Phaser and Raylib starter/project references.\n',
+              '- Search concrete verified Godot, Phaser and Raylib starter/project references.\n- Search a conservative verified community starter catalog for Unity and Unreal; current entries are `code-only` / `needs-review`, not blanket whole-project clearance.\n'
+          )
+          text = text.replace(
+              'See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).',
+              'See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/community-starters.md`](docs/community-starters.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).'
+          )
+          text = text.replace(
+              'Benchmark scores never override or relax license rules. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).',
+              'Benchmark scores never override or relax license rules. In the V1.12 live 12-scenario smoke snapshot (2026-08-20), required-slot coverage reached 100%, depth-3 coverage 85.7%, all 12 scenarios were complete, unsupported required slots were 0 and provider errors were 0. This is a smoke snapshot, not a claim that the 39-scenario full suite is perfect. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).'
+          )
+          provider_row = '| Raylib projects | Verified catalog | Official game template + complete-game source references | Template `whole-project`; game references `code-only` under source-specific zlib statement | No |\n'
+          if '| Verified Community Starters |' not in text:
+              text = text.replace(
+                  provider_row,
+                  provider_row + '| Verified Community Starters | Verified catalog | Unity and Unreal community project templates | Root MIT verified; conservatively `code-only` / `needs-review` for bundled media/dependencies | No |\n'
+              )
+          readme.write_text(text)
+
+          coverage = Path('docs/coverage-benchmark.md')
+          c = coverage.read_text()
+          section = '''\n## V1.12 benchmark-driven improvement snapshot\n\nV1.12 used the smoke benchmark as an engineering input rather than a marketing score.\n\nThe first raw run reported 74.8% required-slot coverage, 55.5% depth-3 coverage and 172 provider errors. Error diagnostics showed that 150 errors came from the GitHub Code provider and 22 from KayKit, all caused by GitHub API/routing limits rather than proven resource absence.\n\nAfter eliminating that measurement noise, the clean pre-expansion baseline was:\n\n```text\nrequired-slot coverage   93.3%\ndepth-3 coverage         69.7%\ncomplete scenarios       58.3%\nunsupported slots        4\nprovider errors          0\n```\n\nThat clean baseline exposed the real gaps: AI retrieval, Unity/Unreal starters and shallow candidate depth in several gameplay-code/resource slots. V1.12 then improved GitHub query reuse/caching, broadened ecosystem code queries, corrected KayKit indexing, and added a conservative verified Unity/Unreal community starter catalog.\n\nThe final live 12-scenario smoke snapshot on 2026-08-20 was:\n\n```text\nrequired-slot coverage   100%\ndepth-3 coverage         85.7%\ncomplete scenarios       100% (12/12)\nunsupported slots        0\nprovider errors          0\n```\n\nGroup depth-3 coverage in that snapshot was 88.0% Godot, 94.4% Phaser, 70.6% Raylib, 95.2% Unity, 80.0% Unreal and 83.3% generic.\n\nThese numbers are a timestamped **smoke-suite live measurement**. They do not imply that the 39-scenario full suite has 100% coverage, that every result is aesthetically ideal, or that live provider results cannot change.\n'''
+          if '## V1.12 benchmark-driven improvement snapshot' not in c:
+              c = c.rstrip() + '\n' + section
+          coverage.write_text(c)
+
+          notes = Path('RELEASE_NOTES.md')
+          n = notes.read_text()
+          section = '''## v1.12.0\n\nV1.12 is the first benchmark-driven expansion release: it separates retrieval failures from real resource gaps, removes avoidable GitHub API pressure, improves gameplay-code search depth and adds conservatively verified Unity/Unreal starter coverage.\n\n### Provider reliability\n\n- Adds provider/category error diagnostics to `benchmark_resource_coverage`.\n- GitHub Code canonicalizes noisy fallback queries, coalesces/caches equivalent repository searches and serializes search requests to reduce GitHub Search API pressure.\n- GitHub error messages preserve useful rate-limit response metadata.\n- KayKit no longer uses the GitHub Search bucket; its official owner repositories are listed through the normal user-repository endpoint and cached in-process.\n- The clean post-fix smoke run reached zero provider errors.\n\n### Gameplay-code retrieval\n\n- AI queries lead with ecosystem terminology such as `behavior tree` / `ai` instead of the over-constrained `enemy npc ai` phrase.\n- Inventory, combat, vehicle, multiplayer, save, procedural-generation and dialogue slots similarly begin with broader ecosystem terms before narrower fallbacks.\n- This raises candidate depth without relaxing repository-license filtering.\n\n### Verified Unity / Unreal community starters\n\nAdds `communitystarters`, a small verified catalog whose maintained entries have explicit root MIT licenses.\n\nUnity entries:\n- Team-on Unity Game Template;\n- JCMG Unity Starter Template;\n- MaiKuraki UnityStarter.\n\nUnreal entries:\n- StpGabriel Unreal Engine 5 Template;\n- Motion Forge UE5 Game Starter Template.\n\nThese records are intentionally `code-only` / `needs-review`: root code/project structure may be reused under MIT, while imported packages, plugins, engine content and bundled media remain separate review/replacement targets. Unity/Unreal are now supported by the starter slot instead of producing an empty-provider gap.\n\n### Live smoke benchmark\n\nAfter reliability cleanup, the clean pre-expansion 12-scenario baseline was 93.3% required-slot coverage, 69.7% depth-3 coverage, 58.3% complete scenarios, 4 unsupported required slots and 0 provider errors.\n\nThe final V1.12 live smoke snapshot on 2026-08-20 reached:\n- 100% required-slot coverage;\n- 85.7% depth-3 coverage;\n- 100% complete scenarios (12/12);\n- 0 unsupported required slots;\n- 0 provider errors.\n\nThis is a live smoke-suite snapshot, not a claim that the 39-scenario full suite is perfect.\n\n### Release engineering\n\n- package/runtime/lockfile version: `1.12.0`;\n- deterministic tests cover GitHub query canonicalization, KayKit non-search indexing, provider-error diagnostics, broader code queries and verified Unity/Unreal starter boundaries;\n- temporary live benchmark artifacts/workflows are removed before merge;\n- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required.\n\n### Compatibility\n\nV1.12 is additive. Existing license defaults, install allowlists and project-adoption safety boundaries are unchanged.\n\n---\n\n\n'''
+          if not n.startswith('# Release notes\n\n## v1.12.0'):
+              n = n.replace('# Release notes\n\n', '# Release notes\n\n' + section, 1)
+          notes.write_text(n)
+          PY
+      - name: Commit docs and remove temporary workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md RELEASE_NOTES.md docs/coverage-benchmark.md
+          git rm .github/workflows/finalize-v1120-docs.yml
+          git commit -m "Document v1.12 benchmark-driven expansion"
+          git push origin HEAD:agent/benchmark-driven-expansion-v1120
