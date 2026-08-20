@@ -185,7 +185,7 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
   }
 
   for (const concept of detectSearchConcepts(query)) {
-    let best = { score: 0, reason: undefined as string | undefined };
+    let best: { score: number; reason?: string } = { score: 0 };
     for (const term of concept.expansions) {
       const match = semanticMatch(asset, term);
       if (match.score > best.score) best = match;

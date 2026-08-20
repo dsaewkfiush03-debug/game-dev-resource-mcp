@@ -6,6 +6,7 @@ import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
 import { runCoverageBenchmark } from "./coverage.js";
 import { installAssetFile, planAssetInstall } from "./install.js";
+import { listProviderCapabilities } from "./provider-capabilities.js";
 import { checkLicense } from "./licenses.js";
 import { recommendStack } from "./recommend.js";
 import { searchRegistry } from "./registry.js";
@@ -55,7 +56,7 @@ server.registerTool("find_reusable_projects", {
     limit: z.number().int().min(1).max(50).default(20)
   })
 }, async options => {
-  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters"] as const;
+  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters", "githubcode"] as const;
   const result = await searchAllAssets({
     query: options.query,
     providers: [...projectProviders],
@@ -77,7 +78,8 @@ server.registerTool("find_reusable_projects", {
       "code-only": "Reuse source structure/code only; bundled images, audio and other media require independent review or replacement.",
       "reference-only": "Use for implementation study until component licensing is reviewed.",
       "asset-only": "Reuse is scoped to asset/media content rather than project code."
-    }
+    },
+    discoveryNote: "verified-catalog results are maintained entries; githubcode results are live repository-level discoveries screened by detected SPDX license and remain code-only / bundled-assets-needs-review until independently inspected."
   });
 });
 
@@ -146,7 +148,7 @@ server.registerTool("install_asset_file", {
   inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), filePath: z.string().min(1), projectRoot: z.string().min(1), destinationDir: z.string().optional(), overwrite: z.boolean().default(false), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
 }, async request => text(await installAssetFile(request)));
 
-server.registerTool("list_asset_providers", { description: "List supported providers and whether each is a live API or verified catalog.", inputSchema: z.object({}) }, async () => text({ providers: listProviders() }));
+server.registerTool("list_asset_providers", { description: "List supported providers, modes and capability metadata (dimensions, engines and strengths) used to plan searches.", inputSchema: z.object({}) }, async () => text({ providers: listProviders(), capabilities: listProviderCapabilities() }));
 
 server.registerTool("audit_resource_verification", {
   description: "Audit verification freshness for maintained verified catalogs. Reports current, stale, needs-review and untracked entries without changing license rights.",
