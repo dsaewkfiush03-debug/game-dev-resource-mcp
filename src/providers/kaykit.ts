@@ -2,7 +2,7 @@ import { VERSION } from "../version.js";
 import type { AssetProvider, ProviderAsset, ProviderSearchOptions } from "./types.js";
 
 const API_BASE = "https://api.github.com";
-const ORG = "KayKit-Game-Assets";
+const OWNER = "KayKit-Game-Assets";
 const CREATOR = "Kay Lousberg";
 const CREATOR_URL = "https://kaylousberg.com/";
 const USER_AGENT = `game-dev-resource-mcp/${VERSION}`;
@@ -61,7 +61,7 @@ function inferGenres(repo: GithubRepoRaw): string[] {
 export function mapKayKitRepository(repo: GithubRepoRaw, retrievedAt = new Date().toISOString()): ProviderAsset | undefined {
   const fullName = repo.full_name?.trim();
   const sourceUrl = repo.html_url?.trim();
-  if (!fullName || !sourceUrl || repo.archived || repo.fork || !fullName.startsWith(`${ORG}/`)) return undefined;
+  if (!fullName || !sourceUrl || repo.archived || repo.fork || !fullName.startsWith(`${OWNER}/`)) return undefined;
   const branch = repo.default_branch?.trim() || "main";
   const tags = tokensFromRepo(repo);
   const types = inferTypes(repo);
@@ -117,14 +117,14 @@ async function githubJson(pathValue: string): Promise<unknown> {
 }
 
 export function kayKitRepositoryListPath(): string {
-  return `/orgs/${ORG}/repos?type=public&sort=updated&direction=desc&per_page=100`;
+  return `/users/${OWNER}/repos?type=owner&sort=updated&direction=desc&per_page=100`;
 }
 
 async function loadRepositories(): Promise<GithubRepoRaw[]> {
   if (!repositoryPromise) {
     repositoryPromise = (async () => {
       const response = await githubJson(kayKitRepositoryListPath()) as GithubRepoRaw[];
-      return response.filter(repo => !repo.archived && !repo.fork && repo.full_name?.startsWith(`${ORG}/`));
+      return response.filter(repo => !repo.archived && !repo.fork && repo.full_name?.startsWith(`${OWNER}/`));
     })();
   }
   try {
