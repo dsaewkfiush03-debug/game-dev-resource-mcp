@@ -22,11 +22,13 @@ Build a conservative, license-aware game-development resource layer for AI codin
 14. Project adoption planning must remain non-mutating: never clone, execute, extract, install dependencies, delete user files or copy a whole project as part of planning.
 15. Coverage benchmarks must reuse the same conservative license/search filters as normal recommendations. Never improve benchmark scores by accepting unknown/non-commercial licenses or changing default share-alike posture.
 16. Do not hide weak coverage by removing difficult benchmark scenarios, excluding required slots with no providers, lowering the depth target below three, or counting discovery-only registry entries as successful provider candidates.
-17. Treat live-provider errors as a separate reliability signal; do not silently convert an API/network failure into either a successful result or a permanent catalog gap.
-18. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
-19. Never automatically execute, extract or install downloaded third-party content.
-20. Never guess a download URL merely to make a workflow automatic.
-21. Local installation must remain contained inside an explicit absolute project root.
+17. Recommendation fallback depth may broaden a query only after preserving the first/specific matches and must deduplicate candidates; depth filling must not reorder a broader fallback ahead of a more specific valid result.
+18. Never add or relabel a resource solely to improve benchmark depth. If a candidate's license differs from a provider-wide license profile, extend the data model first or leave the benchmark shallow rather than misclassifying the candidate.
+19. Treat live-provider errors as a separate reliability signal; do not silently convert an API/network failure into either a successful result or a permanent catalog gap.
+20. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
+21. Never automatically execute, extract or install downloaded third-party content.
+22. Never guess a download URL merely to make a workflow automatic.
+23. Local installation must remain contained inside an explicit absolute project root.
 
 ## Engineering priorities
 
