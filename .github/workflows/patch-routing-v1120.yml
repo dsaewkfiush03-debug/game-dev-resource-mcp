@@ -1,0 +1,74 @@
+name: Patch v1.12 provider routing
+
+on:
+  push:
+    branches: [agent/benchmark-driven-expansion-v1120]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/benchmark-driven-expansion-v1120
+      - name: Patch routing
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('src/recommend.ts')
+          s = p.read_text()
+          old = '''function codeProviders(engine: string | undefined): AssetProviderId[] {
+            if (engine === "godot") return ["godotassetlib", "godotdemos", "githubcode"];
+            if (engine === "raylib") return ["raylib", "githubcode"];
+            return ["githubcode"];
+          }
+
+          function starterProviders(engine: string): AssetProviderId[] {
+            if (engine === "godot") return ["godotdemos", "godotassetlib"];
+            if (engine === "phaser" || engine === "web") return ["phaser"];
+            if (engine === "raylib") return ["raylib"];
+            return [];
+          }'''.replace('          ', '')
+          new = '''function codeProviders(engine: string | undefined): AssetProviderId[] {
+            if (engine === "godot") return ["godotassetlib", "godotdemos", "githubcode"];
+            if (engine === "raylib") return ["raylib", "githubcode"];
+            if (engine === "unity" || engine === "unreal") return ["communitystarters", "githubcode"];
+            return ["githubcode"];
+          }
+
+          function starterProviders(engine: string): AssetProviderId[] {
+            if (engine === "godot") return ["godotdemos", "godotassetlib"];
+            if (engine === "phaser" || engine === "web") return ["phaser"];
+            if (engine === "raylib") return ["raylib"];
+            if (engine === "unity" || engine === "unreal") return ["communitystarters"];
+            return [];
+          }'''.replace('          ', '')
+          if old not in s:
+              raise SystemExit('recommend routing block not found')
+          s = s.replace(old, new, 1)
+          s = s.replace('if (inferred.engine && !["godot", "phaser", "web", "raylib"].includes(inferred.engine)) {', 'if (inferred.engine && !["godot", "phaser", "web", "raylib", "unity", "unreal"].includes(inferred.engine)) {')
+          p.write_text(s)
+
+          p = Path('src/index.ts')
+          s = p.read_text()
+          s = s.replace('"phaser", "raylib", "googlefonts"', '"phaser", "raylib", "communitystarters", "googlefonts"')
+          s = s.replace('const projectProviderId = z.enum(["godotdemos", "phaser", "raylib"]);', 'const projectProviderId = z.enum(["godotdemos", "phaser", "raylib", "communitystarters"]);')
+          s = s.replace('const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib"] as const;', 'const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters"] as const;')
+          p.write_text(s)
+          PY
+      - name: Commit and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/recommend.ts src/index.ts
+          git rm .github/workflows/patch-routing-v1120.yml
+          git commit -m "Route Unity and Unreal through verified community starters"
+          git push origin HEAD:agent/benchmark-driven-expansion-v1120
