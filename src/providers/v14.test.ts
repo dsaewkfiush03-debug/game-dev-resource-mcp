@@ -61,7 +61,27 @@ test("GitHub code provider maps a detected MIT repository conservatively", () =>
   assert.equal(asset.license, "MIT");
   assert.equal(asset.commercialUse, true);
   assert.equal(asset.attribution, true);
+  assert.equal(asset.reuseScope, "code-only");
+  assert.equal(asset.bundledAssetStatus, "needs-review");
   assert.ok(asset.engine?.includes("godot"));
+});
+
+test("GitHub code provider recognizes UrhoX/Urho3D niche-engine repositories", () => {
+  const asset = mapGithubCodeRepo({
+    id: 3,
+    full_name: "example/urho3d-lua-starter",
+    html_url: "https://github.com/example/urho3d-lua-starter",
+    description: "Lua starter and tower defense experiments for Urho3D",
+    stargazers_count: 8,
+    language: "Lua",
+    topics: ["urho3d", "lua", "tower-defense"],
+    license: { spdx_id: "MIT" }
+  });
+  assert.ok(asset);
+  assert.ok(asset.engine?.includes("urhox"));
+  assert.ok(asset.formats?.includes("lua"));
+  assert.equal(asset.reuseScope, "code-only");
+  assert.equal(asset.bundledAssetStatus, "needs-review");
 });
 
 test("GitHub code provider fails closed when no license is detected", () => {
