@@ -31,7 +31,7 @@ export function providerSupportsDimensions(provider: AssetProviderId, dimensions
   return dimensions.some(dimension => PROVIDER_CAPABILITIES[provider].dimensions.includes(dimension));
 }
 
-function canonicalEngine(engine: string): string {
+export function canonicalEngine(engine: string): string {
   const normalized = engine.toLowerCase().trim();
   if (["urho", "urho3d", "urhox", "tapmaker"].includes(normalized)) return "urhox";
   if (["love", "love2d", "löve"].includes(normalized)) return "love2d";
