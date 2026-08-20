@@ -6,6 +6,7 @@ import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
 import { runCoverageBenchmark } from "./coverage.js";
 import { installAssetFile, planAssetInstall } from "./install.js";
+import { listProviderCapabilities } from "./provider-capabilities.js";
 import { checkLicense } from "./licenses.js";
 import { recommendStack } from "./recommend.js";
 import { searchRegistry } from "./registry.js";
@@ -55,7 +56,7 @@ server.registerTool("find_reusable_projects", {
     limit: z.number().int().min(1).max(50).default(20)
   })
 }, async options => {
-  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters"] as const;
+  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters", "githubcode"] as const;
   const result = await searchAllAssets({
     query: options.query,
     providers: [...projectProviders],
@@ -77,7 +78,8 @@ server.registerTool("find_reusable_projects", {
       "code-only": "Reuse source structure/code only; bundled images, audio and other media require independent review or replacement.",
       "reference-only": "Use for implementation study until component licensing is reviewed.",
       "asset-only": "Reuse is scoped to asset/media content rather than project code."
-    }
+    },
+    discoveryNote: "verified-catalog results are maintained entries; githubcode results are live repository-level discoveries screened by detected SPDX license and remain code-only / bundled-assets-needs-review until independently inspected."
   });
 });
 
@@ -106,9 +108,42 @@ server.registerTool("recommend_stack", {
     commercialOnly: z.boolean().default(true),
     allowAttribution: z.boolean().default(true),
     allowShareAlike: z.boolean().default(false),
-    perSlotLimit: z.number().int().min(1).max(10).default(3)
+    perSlotLimit: z.number().int().min(1).max(10).default(3),
+    responseMode: z.enum(["summary", "full"]).default("summary")
   })
-}, async options => text(await recommendStack(options)));
+}, async options => {
+  const { responseMode, ...recommendOptions } = options;
+  const result = await recommendStack(recommendOptions);
+  if (responseMode === "full") return text(result);
+  const compactAsset = (asset: any) => asset ? ({
+    id: asset.id, name: asset.name, provider: asset.provider, sourceUrl: asset.sourceUrl,
+    license: asset.license, licenseRisk: asset.licenseRisk, score: asset.score,
+    dimension: asset.dimension, style: asset.style, formats: asset.formats,
+    reuseScope: asset.reuseScope, bundledAssetStatus: asset.bundledAssetStatus
+  }) : undefined;
+  return text({
+    responseMode: "summary",
+    inferred: result.inferred,
+    complete: result.complete,
+    requiredGaps: result.requiredGaps,
+    slots: result.recommendations.map(item => ({
+      slot: item.slot.id,
+      label: item.slot.label,
+      required: item.slot.required,
+      status: item.primary ? "matched" : "gap",
+      queryUsed: item.queryUsed,
+      primary: compactAsset(item.primary),
+      alternatives: item.alternatives.map(compactAsset),
+      gap: item.gap,
+      providerErrorCount: item.providerErrors.length
+    })),
+    licenseSummary: result.licenseSummary,
+    notes: [
+      "Summary mode omits verbose per-asset metadata. Request responseMode=full only when detailed provenance/ranking data is needed.",
+      ...result.notes.slice(0, 3)
+    ]
+  });
+});
 
 server.registerTool("benchmark_resource_coverage", {
   description: "Run a live resource-coverage benchmark across representative game concepts. Reports required-slot coverage, depth-3 candidate coverage, unsupported provider gaps, provider errors and the weakest resource slots. Smoke uses 12 balanced scenarios; full uses all 39 scenarios.",
@@ -146,7 +181,7 @@ server.registerTool("install_asset_file", {
   inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), filePath: z.string().min(1), projectRoot: z.string().min(1), destinationDir: z.string().optional(), overwrite: z.boolean().default(false), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
 }, async request => text(await installAssetFile(request)));
 
-server.registerTool("list_asset_providers", { description: "List supported providers and whether each is a live API or verified catalog.", inputSchema: z.object({}) }, async () => text({ providers: listProviders() }));
+server.registerTool("list_asset_providers", { description: "List supported providers, modes and capability metadata (dimensions, engines and strengths) used to plan searches.", inputSchema: z.object({}) }, async () => text({ providers: listProviders(), capabilities: listProviderCapabilities() }));
 
 server.registerTool("audit_resource_verification", {
   description: "Audit verification freshness for maintained verified catalogs. Reports current, stale, needs-review and untracked entries without changing license rights.",

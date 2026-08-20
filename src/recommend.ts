@@ -142,6 +142,9 @@ function inferEngine(text: string, explicit?: string): string | undefined {
   if (includesAny(text, ["raylib"])) return "raylib";
   if (includesAny(text, ["unity"])) return "unity";
   if (includesAny(text, ["unreal", "ue5", "虚幻"])) return "unreal";
+  if (includesAny(text, ["urhox", "urho3d", "urho", "tapmaker"])) return "urhox";
+  if (includesAny(text, ["love2d", "löve2d", "löve", "love game engine"])) return "love2d";
+  if (includesAny(text, ["defold"])) return "defold";
   if (includesAny(text, ["web game", "browser game", "网页游戏", "html5"])) return "web";
   return undefined;
 }

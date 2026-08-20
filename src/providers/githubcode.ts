@@ -1,4 +1,5 @@
 import { checkLicense } from "../licenses.js";
+import { canonicalEngine } from "../provider-capabilities.js";
 import { VERSION } from "../version.js";
 import type { AssetProvider, ProviderAsset, ProviderSearchOptions } from "./types.js";
 
@@ -49,8 +50,31 @@ function boolOrUnknown(value: boolean | "depends"): boolean | "unknown" {
 
 function inferredEngines(repo: GithubRepoRaw): string[] {
   const text = [repo.full_name ?? "", repo.description ?? "", ...(repo.topics ?? [])].join(" ").toLowerCase();
-  return ["godot", "unity", "unreal", "phaser", "bevy", "libgdx", "raylib", "babylon", "threejs", "pixi"]
-    .filter(engine => text.includes(engine));
+  const engines: string[] = [];
+  const add = (engine: string, terms: string[]) => {
+    if (terms.some(term => text.includes(term))) engines.push(engine);
+  };
+  add("godot", ["godot"]);
+  add("unity", ["unity"]);
+  add("unreal", ["unreal", "ue5", "ue4"]);
+  add("phaser", ["phaser"]);
+  add("bevy", ["bevy"]);
+  add("libgdx", ["libgdx"]);
+  add("raylib", ["raylib"]);
+  add("babylon", ["babylon"]);
+  add("threejs", ["three.js", "threejs"]);
+  add("pixi", ["pixijs", "pixi.js"]);
+  add("urhox", ["urhox", "urho3d", "urho"]);
+  add("love2d", ["love2d", "löve2d", "löve"]);
+  add("defold", ["defold"]);
+  return Array.from(new Set(engines));
+}
+
+function engineSearchTerm(engine: string): string {
+  const canonical = canonicalEngine(engine);
+  if (canonical === "urhox") return "urho3d";
+  if (canonical === "love2d") return "love2d";
+  return canonical;
 }
 
 export function normalizeGithubCodeQuery(query: string): string {
@@ -82,11 +106,12 @@ export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().
   const spdx = repo.license?.spdx_id?.trim() || "NO-LICENSE";
   const rule = checkLicense(spdx);
   const licenseSource = `${API_BASE}/repos/${fullName}/license`;
+  const engines = inferredEngines(repo);
   const tags = Array.from(new Set([
     "code", "open-source", "github",
     ...(repo.topics ?? []).map(topic => topic.toLowerCase()),
     ...(repo.language ? [repo.language.toLowerCase()] : []),
-    ...inferredEngines(repo)
+    ...engines
   ]));
 
   return {
@@ -99,10 +124,13 @@ export function mapGithubCodeRepo(repo: GithubRepoRaw, retrievedAt = new Date().
     updatedAt: repo.updated_at,
     categories: ["Code", "GitHub"],
     tags,
-    engine: inferredEngines(repo),
+    engine: engines,
     dimension: "code",
     formats: repo.language ? [repo.language.toLowerCase()] : undefined,
     assetTypes: ["code", "library", "plugin", "starter"],
+    reuseScope: "code-only",
+    bundledAssetStatus: "needs-review",
+    bundledAssetNotes: "The detected repository license is evidence for repository code only. Bundled media, dependencies, generated content and imported assets require independent review before shipping.",
     license: rule?.id ?? spdx,
     licenseSource,
     commercialUse: rule ? boolOrUnknown(rule.commercialUse) : "unknown",
@@ -225,13 +253,13 @@ export const githubCodeProvider: AssetProvider = {
     const normalizedQuery = normalizeGithubCodeQuery(options.query);
     const terms = [
       normalizedQuery,
-      ...(options.engines ?? []).map(value => value.trim().toLowerCase()),
+      ...(options.engines ?? []).map(engineSearchTerm),
       ...(options.assetTypes ?? [])
         .map(value => value.trim().toLowerCase())
         .filter(value => !["code", "library", "plugin", "starter", "system", "addon"].includes(value))
     ].filter(Boolean);
     const canonicalTerms = Array.from(new Set(terms.join(" ").split(/\s+/).filter(Boolean))).join(" ");
-    const qualifiers = [canonicalTerms, "archived:false", "fork:false", "stars:>=3"];
+    const qualifiers = [canonicalTerms, "archived:false", "fork:false", "stars:>=1"];
     const path = `/search/repositories?q=${encodeURIComponent(qualifiers.join(" "))}&sort=stars&order=desc&per_page=${limit}`;
     const data = await cachedRepositorySearch(path);
     const retrievedAt = new Date().toISOString();
