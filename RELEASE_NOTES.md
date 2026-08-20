@@ -1,5 +1,52 @@
 # Release notes
 
+## v1.10.0
+
+V1.10 adds a deterministic project-adoption planner between reusable-project discovery and actual game implementation.
+
+### `plan_project_adoption`
+
+- Adds a dedicated MCP tool that takes a verified project provider/project ID plus a target game description.
+- Produces an explicit adoption decision: project-base, project-base with component obligations, code-only reuse, reference-only, asset-only/not-a-base, or manual review.
+- Returns allowed reuse boundaries, forbidden assumptions, keep/replace/review/remove actions, license obligations, resource gaps and suggested next MCP calls.
+- Planning is non-mutating: it never clones, executes, extracts, installs dependencies, deletes files or copies a repository into the user's project.
+
+### Adoption hints
+
+- Verified project records can carry `adoptionHints` with target types `path`, `system`, `asset-category`, `dependency` and `notice`.
+- Exact path guidance is emitted only when maintained metadata explicitly records that path.
+- The Raylib game template now has maintained guidance for `src/`, `CMakeLists.txt`, `projects/`, `screenshots/` and the license notice.
+- Godot/Phaser defaults stay system/category-level where project-specific paths have not been independently recorded.
+
+### Resource-gap planning
+
+- Reuses the existing deterministic stack planner after a starter has been selected.
+- Removes the starter slot and reports remaining requirements as `declared-in-candidate` or `verify-or-source`.
+- `verify-or-source` intentionally means catalog metadata does not prove coverage; it does not claim the project definitely lacks the feature.
+- Required unresolved slots include suggested `find_game_assets` calls using the existing conservative commercial/license defaults.
+- The plan also suggests `generate_project_attribution` so source/license provenance survives adoption.
+
+### License boundaries
+
+- Project/source license obligations are derived from the existing license rules.
+- Explicit component licenses remain separate obligations.
+- `code-only` continues to force bundled-media replacement or independent verification.
+- `whole-project + separately-licensed` becomes a distinct adoption decision rather than being flattened into a generic safe flag.
+
+### Release engineering
+
+- package/runtime version: `1.10.0`;
+- npm lockfile refreshed by npm itself;
+- deterministic adoption tests cover whole-project, code-only, component-license and fail-closed behavior;
+- Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.10 is additive. Existing MCP tools, provider IDs, project-reuse metadata, safe-install allowlists and attribution workflows remain available.
+
+---
+
+
 ## v1.9.0
 
 V1.9 adds a project-reuse safety layer so agents can start from verified open-source starters and complete-game references without treating a repository code license as blanket permission for every bundled asset.
