@@ -1,7 +1,7 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "1.13.0",
-  "description": "License-aware game development resource discovery, full-suite coverage benchmarking, reusable project adoption planning, stack recommendation and safe asset installation for AI coding agents via MCP.",
+  "version": "1.14.0",
+  "description": "License-aware game development resource discovery with mixed-license verified catalogs, full-suite coverage benchmarking, project adoption planning and safe asset installation via MCP.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -22,6 +22,7 @@
     "coverage-benchmark",
     "resource-coverage",
     "full-suite-benchmark",
+    "mixed-license-catalog",
     "unity-starter",
     "unreal-starter",
     "quaternius",
