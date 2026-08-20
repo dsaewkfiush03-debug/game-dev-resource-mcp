@@ -108,9 +108,42 @@ server.registerTool("recommend_stack", {
     commercialOnly: z.boolean().default(true),
     allowAttribution: z.boolean().default(true),
     allowShareAlike: z.boolean().default(false),
-    perSlotLimit: z.number().int().min(1).max(10).default(3)
+    perSlotLimit: z.number().int().min(1).max(10).default(3),
+    responseMode: z.enum(["summary", "full"]).default("summary")
   })
-}, async options => text(await recommendStack(options)));
+}, async options => {
+  const { responseMode, ...recommendOptions } = options;
+  const result = await recommendStack(recommendOptions);
+  if (responseMode === "full") return text(result);
+  const compactAsset = (asset: any) => asset ? ({
+    id: asset.id, name: asset.name, provider: asset.provider, sourceUrl: asset.sourceUrl,
+    license: asset.license, licenseRisk: asset.licenseRisk, score: asset.score,
+    dimension: asset.dimension, style: asset.style, formats: asset.formats,
+    reuseScope: asset.reuseScope, bundledAssetStatus: asset.bundledAssetStatus
+  }) : undefined;
+  return text({
+    responseMode: "summary",
+    inferred: result.inferred,
+    complete: result.complete,
+    requiredGaps: result.requiredGaps,
+    slots: result.recommendations.map(item => ({
+      slot: item.slot.id,
+      label: item.slot.label,
+      required: item.slot.required,
+      status: item.primary ? "matched" : "gap",
+      queryUsed: item.queryUsed,
+      primary: compactAsset(item.primary),
+      alternatives: item.alternatives.map(compactAsset),
+      gap: item.gap,
+      providerErrorCount: item.providerErrors.length
+    })),
+    licenseSummary: result.licenseSummary,
+    notes: [
+      "Summary mode omits verbose per-asset metadata. Request responseMode=full only when detailed provenance/ranking data is needed.",
+      ...result.notes.slice(0, 3)
+    ]
+  });
+});
 
 server.registerTool("benchmark_resource_coverage", {
   description: "Run a live resource-coverage benchmark across representative game concepts. Reports required-slot coverage, depth-3 candidate coverage, unsupported provider gaps, provider errors and the weakest resource slots. Smoke uses 12 balanced scenarios; full uses all 39 scenarios.",
