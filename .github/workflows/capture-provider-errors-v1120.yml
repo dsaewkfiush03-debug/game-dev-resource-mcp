@@ -1,0 +1,39 @@
+name: Capture provider error diagnostics v1.12
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/benchmark-driven-expansion-v1120
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+      - run: npm ci
+      - name: Run live smoke diagnostics
+        shell: bash
+        run: |
+          npx tsx -e 'import { writeFileSync } from "node:fs"; import { runCoverageBenchmark } from "./src/coverage.ts"; (async () => { const r = await runCoverageBenchmark({ suite: "smoke", perSlotLimit: 3, concurrency: 1 }); const out={generatedAt:r.generatedAt,requiredSlotCoveragePercent:r.requiredSlotCoveragePercent,depth3CoveragePercent:r.depth3CoveragePercent,completeScenarioPercent:r.completeScenarioPercent,unsupportedRequiredSlots:r.unsupportedRequiredSlots,providerErrorCount:r.providerErrorCount,providerErrors:r.providerErrors,weakSlots:r.weakSlots,groupMetrics:r.groupMetrics}; writeFileSync("coverage-provider-errors-v1120.json",JSON.stringify(out,null,2)); console.log("PROVIDER_DIAGNOSTICS="+JSON.stringify(out)); })().catch(error=>{console.error(error);process.exit(1);});'
+      - name: Commit diagnostics and remove workflow
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f coverage-provider-errors-v1120.json ]; then git add -- coverage-provider-errors-v1120.json; fi
+          git rm .github/workflows/capture-provider-errors-v1120.yml
+          git commit -m "Capture temporary v1.12 provider diagnostics"
+          git push origin HEAD:agent/benchmark-driven-expansion-v1120
