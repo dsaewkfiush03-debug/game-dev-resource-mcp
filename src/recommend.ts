@@ -195,13 +195,31 @@ function buildQueries(base: string, styles: string[], genres: string[], theme?: 
   ]);
 }
 
-function buildCodeQueries(feature: string, engine?: string): string[] {
+export function buildCodeQueries(feature: string, engine?: string): string[] {
+  const key = feature.toLowerCase();
+  const broadTerms = key.includes("enemy npc ai")
+    ? ["behavior tree", "ai"]
+    : key.includes("inventory")
+      ? ["inventory", "inventory loot"]
+      : key.includes("combat")
+        ? ["combat", "weapon combat"]
+        : key.includes("vehicle")
+          ? ["vehicle controller", "driving"]
+          : key.includes("multiplayer")
+            ? ["multiplayer", "networking"]
+            : key.includes("save")
+              ? ["save", "persistence"]
+              : key.includes("procedural")
+                ? ["procedural generation", "procgen"]
+                : key.includes("dialogue")
+                  ? ["dialogue", "conversation"]
+                  : [feature];
+
   return unique([
-    [engine, feature, "system"].filter(Boolean).join(" "),
-    [engine, feature, "plugin"].filter(Boolean).join(" "),
-    [engine, feature, "addon"].filter(Boolean).join(" "),
-    [feature, "game system"].join(" "),
-    [feature, "library"].join(" "),
+    [engine, broadTerms[0]].filter(Boolean).join(" "),
+    [engine, broadTerms[1]].filter(Boolean).join(" "),
+    broadTerms[0],
+    broadTerms[1],
     feature
   ]);
 }
