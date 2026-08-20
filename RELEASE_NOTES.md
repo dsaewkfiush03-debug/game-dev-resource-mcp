@@ -1,5 +1,38 @@
 # Release notes
 
+## v1.11.0
+
+V1.11 adds a live resource-coverage benchmark so future provider/catalog expansion can be prioritized by measured game-development gaps instead of raw source counts.
+
+### `benchmark_resource_coverage`
+
+- Adds a dedicated MCP tool backed by the real `recommend_stack` pipeline.
+- Adds 39 maintained scenarios across Godot, Phaser, Raylib, Unity, Unreal and engine-agnostic concepts.
+- Adds a balanced 12-scenario smoke suite plus full-suite, group and explicit-scenario selection.
+- Measures required-slot coverage separately from depth-3 candidate coverage.
+- Keeps unsupported required slots in the denominator so missing providers remain visible.
+- Reports live-provider/API errors separately from catalog/retrieval gaps.
+- Aggregates group metrics, per-slot metrics, average candidate depth and a weakest-slot ranking.
+
+### Measurement integrity
+
+Benchmark scores reuse normal conservative commercial/license filters. Coverage must not be improved by accepting unknown/non-commercial rights, enabling share-alike by default, removing difficult scenarios, excluding no-provider required slots or lowering the depth target.
+
+### Release engineering
+
+- package/runtime version: `1.11.0`;
+- npm lockfile refreshed by npm itself;
+- deterministic offline tests cover suite selection, aggregation, one-result vs depth-3 health, unsupported providers, provider errors and injected benchmark execution;
+- live third-party APIs are intentionally not required by CI;
+- Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.11 is additive. Existing provider IDs, recommendation/adoption tools, installation allowlists and attribution workflows remain unchanged.
+
+---
+
+
 ## v1.10.0
 
 V1.10 adds a deterministic project-adoption planner between reusable-project discovery and actual game implementation.

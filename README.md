@@ -1,6 +1,6 @@
 # GameDev Resource MCP
 
-License-aware game-development resource discovery, **reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
+License-aware game-development resource discovery, **coverage benchmarking, reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
 
 ## Why this exists
 
@@ -15,6 +15,7 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Turn a game description into a practical **starter + art + audio + font + reusable code** stack with `recommend_stack`.
 - Find verified reusable starters and complete-game references with `find_reusable_projects`.
 - Turn one selected project into an actionable, non-mutating adoption manifest with `plan_project_adoption`.
+- Measure real required-slot and depth-3 resource coverage with `benchmark_resource_coverage`.
 - Distinguish `whole-project`, `code-only`, `reference-only` and `asset-only` reuse instead of treating a repository license as blanket clearance.
 - Track bundled-media status separately as `none`, `same-license`, `separately-licensed` or `needs-review`.
 - Emit keep/replace/review/remove actions, project/component license obligations and unresolved resource needs.
@@ -85,7 +86,7 @@ generate_project_attribution
 
 For a single known asset/code need, call `find_game_assets` directly.
 
-See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
+See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
 
 ## Reusable project safety
 
@@ -148,6 +149,19 @@ Typical slots include starter/reusable project, environment, vehicles, character
 
 The planner does **not** invent license rights. Every slot is resolved through provider metadata and the same conservative license filters used by direct search. If a requested engine has no verified starter provider, the starter slot remains unresolved instead of silently substituting another engine.
 
+## `benchmark_resource_coverage`
+
+V1.11 adds a maintained coverage benchmark so provider expansion can be driven by measured gaps instead of intuition.
+
+- `smoke` runs 12 balanced scenarios across Godot, Phaser, Raylib, Unity, Unreal and generic game concepts.
+- `full` runs all 39 maintained scenarios.
+- required-slot coverage measures whether at least one candidate passed the current search/license filters.
+- depth-3 coverage measures whether a required slot has at least three candidates and is therefore healthier than a one-result edge case.
+- required slots with no configured providers stay in the denominator.
+- live-provider errors are reported separately from persistent catalog gaps.
+
+Benchmark scores never override or relax license rules. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
+
 ## MCP tools
 
 | Tool | Purpose |
@@ -155,6 +169,7 @@ The planner does **not** invent license rights. Every slot is resolved through p
 | `recommend_stack` | Turn a game description into a multi-category starter + media + code stack with license summary and gaps. |
 | `find_reusable_projects` | Find verified starters/complete-game references and expose project reuse scope plus bundled-asset status. |
 | `plan_project_adoption` | Turn one selected project into a non-mutating adoption manifest with actions, obligations and resource gaps. |
+| `benchmark_resource_coverage` | Benchmark required-slot/depth-3 coverage and rank weak resource categories. |
 | `find_game_assets` | Preferred targeted cross-provider search with ranking, license and reuse filters. |
 | `search_game_assets` | Search the broad source registry. |
 | `search_live_assets` | Search one provider directly. |
