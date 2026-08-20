@@ -31,14 +31,15 @@ test("KayKit official repository maps to CC0 3D pack metadata", () => {
   assert.ok(asset.licenseSource.endsWith("/LICENSE.txt"));
 });
 
-test("KayKit indexing uses the organization repository-list endpoint instead of GitHub search", () => {
+test("KayKit indexing uses the owner repository-list endpoint instead of GitHub search", () => {
   const path = kayKitRepositoryListPath();
-  assert.ok(path.startsWith("/orgs/KayKit-Game-Assets/repos?"));
+  assert.ok(path.startsWith("/users/KayKit-Game-Assets/repos?"));
+  assert.ok(path.includes("type=owner"));
   assert.ok(path.includes("per_page=100"));
   assert.ok(!path.includes("/search/"));
 });
 
-test("KayKit mapper rejects repositories outside the official organization", () => {
+test("KayKit mapper rejects repositories outside the official owner account", () => {
   const asset = mapKayKitRepository({
     name: "KayKit-Fork",
     full_name: "random-user/KayKit-Fork",
