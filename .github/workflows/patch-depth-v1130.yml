@@ -3,6 +3,7 @@ name: Patch depth optimization v1.13
 on:
   push:
     branches: [agent/full-benchmark-v1130]
+  pull_request:
 
 permissions:
   contents: write
