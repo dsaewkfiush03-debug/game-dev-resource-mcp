@@ -33,7 +33,7 @@ test("verified community starters expose Unity code-only candidates", async () =
   assert.ok(results.some(asset => asset.id === "maikuraki-unity-starter"));
 });
 
-test("verified community starters expose Unreal code-only candidates", async () => {
+test("verified community starters expose three Unreal candidates without flattening mixed licenses", async () => {
   const results = await communityStartersProvider.search({
     query: "unreal starter",
     engines: ["unreal"],
@@ -41,12 +41,17 @@ test("verified community starters expose Unreal code-only candidates", async () 
     reuseScopes: ["code-only"],
     limit: 20
   });
-  assert.ok(results.length >= 2);
-  assert.ok(results.every(asset => asset.license === "MIT"));
+  assert.ok(results.length >= 3);
+  assert.ok(results.every(asset => asset.commercialUse === true));
   assert.ok(results.every(asset => asset.reuseScope === "code-only"));
   assert.ok(results.every(asset => asset.bundledAssetStatus === "needs-review"));
-  assert.ok(results.some(asset => asset.id === "stpgabriel-ue5-template"));
-  assert.ok(results.some(asset => asset.id === "motionforge-ue5-game-starter"));
+  assert.ok(results.some(asset => asset.id === "stpgabriel-ue5-template" && asset.license === "MIT"));
+  assert.ok(results.some(asset => asset.id === "motionforge-ue5-game-starter" && asset.license === "MIT"));
+  const cobra = results.find(asset => asset.id === "cobracode-ue5-2d-sidescroller");
+  assert.ok(cobra);
+  assert.equal(cobra.license, "CC0-1.0");
+  assert.equal(cobra.attribution, false);
+  assert.ok(cobra.licenseSource.includes("CobraCodeDev/TP_2DSideScrollerBP"));
 });
 
 test("Unity and Unreal stack plans no longer have an empty starter-provider gap", () => {
