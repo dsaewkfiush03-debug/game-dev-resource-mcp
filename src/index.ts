@@ -29,8 +29,8 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "raylib", "googlefonts", "openverse", "godotassetlib"]);
-const projectProviderId = z.enum(["godotdemos", "phaser", "raylib"]);
+const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "raylib", "communitystarters", "googlefonts", "openverse", "godotassetlib"]);
+const projectProviderId = z.enum(["godotdemos", "phaser", "raylib", "communitystarters"]);
 const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
 const reuseScope = z.enum(["whole-project", "code-only", "reference-only", "asset-only"]);
 const bundledAssetStatus = z.enum(["none", "same-license", "separately-licensed", "needs-review"]);
@@ -55,7 +55,7 @@ server.registerTool("find_reusable_projects", {
     limit: z.number().int().min(1).max(50).default(20)
   })
 }, async options => {
-  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib"] as const;
+  const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters"] as const;
   const result = await searchAllAssets({
     query: options.query,
     providers: [...projectProviders],
