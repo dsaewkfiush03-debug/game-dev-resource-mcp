@@ -1,0 +1,407 @@
+{
+  "generatedAt": "2026-08-20T05:33:36.431Z",
+  "requiredSlotCoveragePercent": 100,
+  "depth3CoveragePercent": 85.7,
+  "completeScenarioPercent": 100,
+  "unsupportedRequiredSlots": 0,
+  "providerErrorCount": 0,
+  "providerErrors": [],
+  "weakSlots": [
+    {
+      "slot": "character",
+      "requiredOccurrences": 10,
+      "coveredOccurrences": 10,
+      "depth3Occurrences": 6,
+      "totalCandidates": 22,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 60,
+      "averageCandidates": 2.2
+    },
+    {
+      "slot": "starter",
+      "requiredOccurrences": 10,
+      "coveredOccurrences": 10,
+      "depth3Occurrences": 6,
+      "totalCandidates": 24,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 60,
+      "averageCandidates": 2.4
+    },
+    {
+      "slot": "vehicle",
+      "requiredOccurrences": 3,
+      "coveredOccurrences": 3,
+      "depth3Occurrences": 2,
+      "totalCandidates": 7,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "averageCandidates": 2.33
+    },
+    {
+      "slot": "save-system",
+      "requiredOccurrences": 7,
+      "coveredOccurrences": 7,
+      "depth3Occurrences": 5,
+      "totalCandidates": 17,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 71.4,
+      "averageCandidates": 2.43
+    },
+    {
+      "slot": "font",
+      "requiredOccurrences": 12,
+      "coveredOccurrences": 12,
+      "depth3Occurrences": 9,
+      "totalCandidates": 30,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 75,
+      "averageCandidates": 2.5
+    },
+    {
+      "slot": "ui",
+      "requiredOccurrences": 12,
+      "coveredOccurrences": 12,
+      "depth3Occurrences": 10,
+      "totalCandidates": 32,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 83.3,
+      "averageCandidates": 2.67
+    },
+    {
+      "slot": "combat-system",
+      "requiredOccurrences": 11,
+      "coveredOccurrences": 11,
+      "depth3Occurrences": 10,
+      "totalCandidates": 31,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 90.9,
+      "averageCandidates": 2.82
+    }
+  ],
+  "groupMetrics": [
+    {
+      "group": "generic",
+      "scenarioCount": 2,
+      "requiredSlots": 18,
+      "coveredRequiredSlots": 18,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 15,
+      "depth3Percent": 83.3,
+      "completeScenarios": 2
+    },
+    {
+      "group": "godot",
+      "scenarioCount": 2,
+      "requiredSlots": 25,
+      "coveredRequiredSlots": 25,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 22,
+      "depth3Percent": 88,
+      "completeScenarios": 2
+    },
+    {
+      "group": "phaser",
+      "scenarioCount": 2,
+      "requiredSlots": 18,
+      "coveredRequiredSlots": 18,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 17,
+      "depth3Percent": 94.4,
+      "completeScenarios": 2
+    },
+    {
+      "group": "raylib",
+      "scenarioCount": 2,
+      "requiredSlots": 17,
+      "coveredRequiredSlots": 17,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 12,
+      "depth3Percent": 70.6,
+      "completeScenarios": 2
+    },
+    {
+      "group": "unity",
+      "scenarioCount": 2,
+      "requiredSlots": 21,
+      "coveredRequiredSlots": 21,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 20,
+      "depth3Percent": 95.2,
+      "completeScenarios": 2
+    },
+    {
+      "group": "unreal",
+      "scenarioCount": 2,
+      "requiredSlots": 20,
+      "coveredRequiredSlots": 20,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 16,
+      "depth3Percent": 80,
+      "completeScenarios": 2
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "godot-pixel-road-survival",
+      "coveragePercent": 100,
+      "depth3Percent": 85.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "vehicle",
+          "label": "Vehicles",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-fantasy-rpg",
+      "coveragePercent": 100,
+      "depth3Percent": 90.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-pixel-platformer",
+      "coveragePercent": 100,
+      "depth3Percent": 88.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-multiplayer-arena",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-platformer",
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-racing",
+      "coveragePercent": 100,
+      "depth3Percent": 75,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "unity-lowpoly-survival",
+      "coveragePercent": 100,
+      "depth3Percent": 91.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "unity-fps",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "unreal-scifi-fps",
+      "coveragePercent": 100,
+      "depth3Percent": 77.8,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "unreal-survival",
+      "coveragePercent": 100,
+      "depth3Percent": 81.8,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "generic-anime-rpg",
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "generic-cyberpunk-city",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    }
+  ]
+}
