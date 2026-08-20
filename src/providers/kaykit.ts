@@ -19,7 +19,6 @@ interface GithubRepoRaw {
   fork?: boolean;
   topics?: string[];
 }
-interface GithubSearchResponse { items?: GithubRepoRaw[] }
 
 let repositoryPromise: Promise<GithubRepoRaw[]> | undefined;
 
@@ -107,17 +106,33 @@ async function githubJson(pathValue: string): Promise<unknown> {
   };
   if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const response = await fetch(`${API_BASE}${pathValue}`, { headers });
-  if (!response.ok) throw new Error(`GitHub KayKit API ${response.status}: ${await response.text()}`);
+  if (!response.ok) {
+    const remaining = response.headers.get("x-ratelimit-remaining");
+    const reset = response.headers.get("x-ratelimit-reset");
+    const resource = response.headers.get("x-ratelimit-resource");
+    const metadata = [resource ? `resource=${resource}` : "", remaining ? `remaining=${remaining}` : "", reset ? `reset=${reset}` : ""].filter(Boolean).join(" ");
+    throw new Error(`GitHub KayKit API ${response.status}${metadata ? ` (${metadata})` : ""}: ${await response.text()}`);
+  }
   return response.json();
 }
 
+export function kayKitRepositoryListPath(): string {
+  return `/orgs/${ORG}/repos?type=public&sort=updated&direction=desc&per_page=100`;
+}
+
 async function loadRepositories(): Promise<GithubRepoRaw[]> {
-  repositoryPromise ??= (async () => {
-    const query = encodeURIComponent(`org:${ORG} archived:false fork:false KayKit`);
-    const response = await githubJson(`/search/repositories?q=${query}&sort=updated&order=desc&per_page=100`) as GithubSearchResponse;
-    return (response.items ?? []).filter(repo => !repo.archived && !repo.fork && repo.full_name?.startsWith(`${ORG}/`));
-  })();
-  return repositoryPromise;
+  if (!repositoryPromise) {
+    repositoryPromise = (async () => {
+      const response = await githubJson(kayKitRepositoryListPath()) as GithubRepoRaw[];
+      return response.filter(repo => !repo.archived && !repo.fork && repo.full_name?.startsWith(`${ORG}/`));
+    })();
+  }
+  try {
+    return await repositoryPromise;
+  } catch (error) {
+    repositoryPromise = undefined;
+    throw error;
+  }
 }
 
 function valuesMatch(values: string[] | undefined, wanted: string[] | undefined): boolean {
