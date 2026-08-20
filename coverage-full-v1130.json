@@ -1,0 +1,1905 @@
+{
+  "generatedAt": "2026-08-20T05:45:01.785Z",
+  "scenarioCount": 39,
+  "requiredSlots": 357,
+  "coveredRequiredSlots": 330,
+  "requiredSlotCoveragePercent": 92.4,
+  "depth3RequiredSlots": 264,
+  "depth3CoveragePercent": 73.9,
+  "completeScenarios": 24,
+  "completeScenarioPercent": 61.5,
+  "unsupportedRequiredSlots": 0,
+  "providerErrorCount": 106,
+  "providerErrors": [
+    {
+      "provider": "githubcode",
+      "occurrences": 106,
+      "categories": [
+        {
+          "category": "http-403-rate-limit",
+          "occurrences": 106,
+          "sampleMessage": "GitHub API 403 (resource=search remaining=0 reset=1787204739): {\n\t\"message\": \"API rate limit exceeded for installation. If you reach out to GitHub Support for help, please include the request ID 0400:3856C:565356:7051DC:6A869455 and timestamp 2026-08-20 05:44:53 UTC. For more on scraping GitHub and "
+        }
+      ]
+    }
+  ],
+  "weakSlots": [
+    {
+      "slot": "dialogue-system",
+      "requiredOccurrences": 8,
+      "coveredOccurrences": 3,
+      "depth3Occurrences": 3,
+      "totalCandidates": 9,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 5,
+      "coveragePercent": 37.5,
+      "depth3Percent": 37.5,
+      "averageCandidates": 1.13
+    },
+    {
+      "slot": "procedural-generation",
+      "requiredOccurrences": 5,
+      "coveredOccurrences": 2,
+      "depth3Occurrences": 1,
+      "totalCandidates": 4,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 3,
+      "coveragePercent": 40,
+      "depth3Percent": 20,
+      "averageCandidates": 0.8
+    },
+    {
+      "slot": "save-system",
+      "requiredOccurrences": 26,
+      "coveredOccurrences": 17,
+      "depth3Occurrences": 13,
+      "totalCandidates": 43,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 9,
+      "coveragePercent": 65.4,
+      "depth3Percent": 50,
+      "averageCandidates": 1.65
+    },
+    {
+      "slot": "networking",
+      "requiredOccurrences": 9,
+      "coveredOccurrences": 7,
+      "depth3Occurrences": 7,
+      "totalCandidates": 21,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 2,
+      "coveragePercent": 77.8,
+      "depth3Percent": 77.8,
+      "averageCandidates": 2.33
+    },
+    {
+      "slot": "combat-system",
+      "requiredOccurrences": 25,
+      "coveredOccurrences": 20,
+      "depth3Occurrences": 14,
+      "totalCandidates": 48,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 7,
+      "coveragePercent": 80,
+      "depth3Percent": 56,
+      "averageCandidates": 1.92
+    },
+    {
+      "slot": "ai-system",
+      "requiredOccurrences": 16,
+      "coveredOccurrences": 13,
+      "depth3Occurrences": 9,
+      "totalCandidates": 33,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 7,
+      "coveragePercent": 81.3,
+      "depth3Percent": 56.3,
+      "averageCandidates": 2.06
+    },
+    {
+      "slot": "starter",
+      "requiredOccurrences": 28,
+      "coveredOccurrences": 28,
+      "depth3Occurrences": 18,
+      "totalCandidates": 68,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 64.3,
+      "averageCandidates": 2.43
+    },
+    {
+      "slot": "character",
+      "requiredOccurrences": 27,
+      "coveredOccurrences": 27,
+      "depth3Occurrences": 18,
+      "totalCandidates": 64,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "averageCandidates": 2.37
+    },
+    {
+      "slot": "ui",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 26,
+      "totalCandidates": 96,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "averageCandidates": 2.46
+    },
+    {
+      "slot": "font",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 27,
+      "totalCandidates": 97,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 69.2,
+      "averageCandidates": 2.49
+    },
+    {
+      "slot": "vehicle",
+      "requiredOccurrences": 10,
+      "coveredOccurrences": 10,
+      "depth3Occurrences": 8,
+      "totalCandidates": 27,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 80,
+      "averageCandidates": 2.7
+    },
+    {
+      "slot": "inventory-system",
+      "requiredOccurrences": 12,
+      "coveredOccurrences": 12,
+      "depth3Occurrences": 11,
+      "totalCandidates": 35,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 1,
+      "coveragePercent": 100,
+      "depth3Percent": 91.7,
+      "averageCandidates": 2.92
+    }
+  ],
+  "groupMetrics": [
+    {
+      "group": "generic",
+      "scenarioCount": 11,
+      "requiredSlots": 87,
+      "coveredRequiredSlots": 66,
+      "coveragePercent": 75.9,
+      "depth3RequiredSlots": 56,
+      "depth3Percent": 64.4,
+      "completeScenarios": 1
+    },
+    {
+      "group": "godot",
+      "scenarioCount": 8,
+      "requiredSlots": 86,
+      "coveredRequiredSlots": 86,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 74,
+      "depth3Percent": 86,
+      "completeScenarios": 8
+    },
+    {
+      "group": "phaser",
+      "scenarioCount": 6,
+      "requiredSlots": 53,
+      "coveredRequiredSlots": 53,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 47,
+      "depth3Percent": 88.7,
+      "completeScenarios": 6
+    },
+    {
+      "group": "raylib",
+      "scenarioCount": 6,
+      "requiredSlots": 53,
+      "coveredRequiredSlots": 53,
+      "coveragePercent": 100,
+      "depth3RequiredSlots": 34,
+      "depth3Percent": 64.2,
+      "completeScenarios": 6
+    },
+    {
+      "group": "unity",
+      "scenarioCount": 4,
+      "requiredSlots": 41,
+      "coveredRequiredSlots": 40,
+      "coveragePercent": 97.6,
+      "depth3RequiredSlots": 34,
+      "depth3Percent": 82.9,
+      "completeScenarios": 3
+    },
+    {
+      "group": "unreal",
+      "scenarioCount": 4,
+      "requiredSlots": 37,
+      "coveredRequiredSlots": 32,
+      "coveragePercent": 86.5,
+      "depth3RequiredSlots": 19,
+      "depth3Percent": 51.4,
+      "completeScenarios": 0
+    }
+  ],
+  "slotMetrics": [
+    {
+      "slot": "ai-system",
+      "requiredOccurrences": 16,
+      "coveredOccurrences": 13,
+      "depth3Occurrences": 9,
+      "totalCandidates": 33,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 7,
+      "coveragePercent": 81.3,
+      "depth3Percent": 56.3,
+      "averageCandidates": 2.06
+    },
+    {
+      "slot": "character",
+      "requiredOccurrences": 27,
+      "coveredOccurrences": 27,
+      "depth3Occurrences": 18,
+      "totalCandidates": 64,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "averageCandidates": 2.37
+    },
+    {
+      "slot": "combat-system",
+      "requiredOccurrences": 25,
+      "coveredOccurrences": 20,
+      "depth3Occurrences": 14,
+      "totalCandidates": 48,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 7,
+      "coveragePercent": 80,
+      "depth3Percent": 56,
+      "averageCandidates": 1.92
+    },
+    {
+      "slot": "dialogue-system",
+      "requiredOccurrences": 8,
+      "coveredOccurrences": 3,
+      "depth3Occurrences": 3,
+      "totalCandidates": 9,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 5,
+      "coveragePercent": 37.5,
+      "depth3Percent": 37.5,
+      "averageCandidates": 1.13
+    },
+    {
+      "slot": "environment",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 36,
+      "totalCandidates": 112,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 92.3,
+      "averageCandidates": 2.87
+    },
+    {
+      "slot": "font",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 27,
+      "totalCandidates": 97,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 69.2,
+      "averageCandidates": 2.49
+    },
+    {
+      "slot": "inventory-system",
+      "requiredOccurrences": 12,
+      "coveredOccurrences": 12,
+      "depth3Occurrences": 11,
+      "totalCandidates": 35,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 1,
+      "coveragePercent": 100,
+      "depth3Percent": 91.7,
+      "averageCandidates": 2.92
+    },
+    {
+      "slot": "networking",
+      "requiredOccurrences": 9,
+      "coveredOccurrences": 7,
+      "depth3Occurrences": 7,
+      "totalCandidates": 21,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 2,
+      "coveragePercent": 77.8,
+      "depth3Percent": 77.8,
+      "averageCandidates": 2.33
+    },
+    {
+      "slot": "procedural-generation",
+      "requiredOccurrences": 5,
+      "coveredOccurrences": 2,
+      "depth3Occurrences": 1,
+      "totalCandidates": 4,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 3,
+      "coveragePercent": 40,
+      "depth3Percent": 20,
+      "averageCandidates": 0.8
+    },
+    {
+      "slot": "save-system",
+      "requiredOccurrences": 26,
+      "coveredOccurrences": 17,
+      "depth3Occurrences": 13,
+      "totalCandidates": 43,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 9,
+      "coveragePercent": 65.4,
+      "depth3Percent": 50,
+      "averageCandidates": 1.65
+    },
+    {
+      "slot": "sfx",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 39,
+      "totalCandidates": 117,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "averageCandidates": 3
+    },
+    {
+      "slot": "starter",
+      "requiredOccurrences": 28,
+      "coveredOccurrences": 28,
+      "depth3Occurrences": 18,
+      "totalCandidates": 68,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 64.3,
+      "averageCandidates": 2.43
+    },
+    {
+      "slot": "ui",
+      "requiredOccurrences": 39,
+      "coveredOccurrences": 39,
+      "depth3Occurrences": 26,
+      "totalCandidates": 96,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "averageCandidates": 2.46
+    },
+    {
+      "slot": "vehicle",
+      "requiredOccurrences": 10,
+      "coveredOccurrences": 10,
+      "depth3Occurrences": 8,
+      "totalCandidates": 27,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 80,
+      "averageCandidates": 2.7
+    },
+    {
+      "slot": "vehicle-system",
+      "requiredOccurrences": 10,
+      "coveredOccurrences": 10,
+      "depth3Occurrences": 10,
+      "totalCandidates": 30,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 2,
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "averageCandidates": 3
+    },
+    {
+      "slot": "weapon",
+      "requiredOccurrences": 25,
+      "coveredOccurrences": 25,
+      "depth3Occurrences": 24,
+      "totalCandidates": 73,
+      "emptyProviderOccurrences": 0,
+      "providerErrorOccurrences": 0,
+      "coveragePercent": 100,
+      "depth3Percent": 96,
+      "averageCandidates": 2.92
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "godot-pixel-road-survival",
+      "label": "Godot pixel road survival",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 85.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "vehicle",
+          "label": "Vehicles",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-lowpoly-survival",
+      "label": "Godot low-poly survival",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 92.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-fantasy-rpg",
+      "label": "Godot fantasy RPG",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 90.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-scifi-shooter",
+      "label": "Godot sci-fi shooter",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 90.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-pixel-roguelike",
+      "label": "Godot pixel roguelike",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-racing",
+      "label": "Godot racing",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 71.4,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "environment",
+          "label": "Environment",
+          "candidateCount": 1,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        },
+        {
+          "slot": "vehicle",
+          "label": "Vehicles",
+          "candidateCount": 2,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-tower-defense",
+      "label": "Godot tower defense",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 81.8,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "weapon",
+          "label": "Weapons / combat art",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "godot-horror-adventure",
+      "label": "Godot horror adventure",
+      "group": "godot",
+      "coveragePercent": 100,
+      "depth3Percent": 62.5,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 2,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-pixel-platformer",
+      "label": "Phaser pixel platformer",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 88.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-topdown-shooter",
+      "label": "Phaser top-down shooter",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-tower-defense",
+      "label": "Phaser tower defense",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 75,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 2,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-multiplayer-arena",
+      "label": "Phaser multiplayer arena",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-rpg",
+      "label": "Phaser web RPG",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 72.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 2,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "inventory-system",
+          "label": "Inventory / loot system",
+          "candidateCount": 2,
+          "providers": [
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "phaser-casual-puzzle",
+      "label": "Phaser casual puzzle",
+      "group": "phaser",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-platformer",
+      "label": "Raylib platformer",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 66.7,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-arcade-shooter",
+      "label": "Raylib arcade shooter",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 55.6,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        },
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 2,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 2,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-maze-3d",
+      "label": "Raylib 3D maze",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 50,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        },
+        {
+          "slot": "environment",
+          "label": "Environment",
+          "candidateCount": 2,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 2,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-racing",
+      "label": "Raylib racing",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 75,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-roguelike",
+      "label": "Raylib roguelike",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 63.6,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "raylib-space-game",
+      "label": "Raylib space game",
+      "group": "raylib",
+      "coveragePercent": 100,
+      "depth3Percent": 75,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "raylib",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 1,
+          "providers": [
+            "raylib"
+          ]
+        }
+      ],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "unity-lowpoly-survival",
+      "label": "Unity low-poly survival",
+      "group": "unity",
+      "coveragePercent": 100,
+      "depth3Percent": 83.3,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 2
+    },
+    {
+      "id": "unity-fps",
+      "label": "Unity FPS",
+      "group": "unity",
+      "coveragePercent": 100,
+      "depth3Percent": 88.9,
+      "gaps": [],
+      "weakSlots": [
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 2
+    },
+    {
+      "id": "unity-mobile-rpg",
+      "label": "Unity mobile RPG",
+      "group": "unity",
+      "coveragePercent": 90.9,
+      "depth3Percent": 63.6,
+      "gaps": [
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 2,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 5
+    },
+    {
+      "id": "unity-multiplayer-racing",
+      "label": "Unity multiplayer racing",
+      "group": "unity",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 2
+    },
+    {
+      "id": "unreal-scifi-fps",
+      "label": "Unreal sci-fi FPS",
+      "group": "unreal",
+      "coveragePercent": 88.9,
+      "depth3Percent": 55.6,
+      "gaps": [
+        {
+          "slot": "networking",
+          "label": "Networking / multiplayer",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "networking",
+          "label": "Networking / multiplayer",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        }
+      ],
+      "providerErrorCount": 6
+    },
+    {
+      "id": "unreal-survival",
+      "label": "Unreal survival",
+      "group": "unreal",
+      "coveragePercent": 90.9,
+      "depth3Percent": 54.5,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 1,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 1,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        }
+      ],
+      "providerErrorCount": 10
+    },
+    {
+      "id": "unreal-driving",
+      "label": "Unreal driving",
+      "group": "unreal",
+      "coveragePercent": 87.5,
+      "depth3Percent": 75,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        }
+      ],
+      "providerErrorCount": 7
+    },
+    {
+      "id": "unreal-horror",
+      "label": "Unreal horror",
+      "group": "unreal",
+      "coveragePercent": 77.8,
+      "depth3Percent": 22.2,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 1,
+          "providers": [
+            "communitystarters",
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "starter",
+          "label": "Starter / reusable project",
+          "candidateCount": 2,
+          "providers": [
+            "communitystarters"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 2,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 12
+    },
+    {
+      "id": "generic-anime-rpg",
+      "label": "Anime RPG",
+      "group": "generic",
+      "coveragePercent": 77.8,
+      "depth3Percent": 44.4,
+      "gaps": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 6
+    },
+    {
+      "id": "generic-cyberpunk-city",
+      "label": "Cyberpunk city action",
+      "group": "generic",
+      "coveragePercent": 88.9,
+      "depth3Percent": 88.9,
+      "gaps": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 3
+    },
+    {
+      "id": "generic-medieval-strategy",
+      "label": "Medieval strategy",
+      "group": "generic",
+      "coveragePercent": 71.4,
+      "depth3Percent": 71.4,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 6
+    },
+    {
+      "id": "generic-horror-2d",
+      "label": "2D horror",
+      "group": "generic",
+      "coveragePercent": 71.4,
+      "depth3Percent": 42.9,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 2,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        }
+      ],
+      "providerErrorCount": 6
+    },
+    {
+      "id": "generic-space-exploration",
+      "label": "Space exploration",
+      "group": "generic",
+      "coveragePercent": 66.7,
+      "depth3Percent": 66.7,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 5
+    },
+    {
+      "id": "generic-cjk-casual",
+      "label": "CJK casual game",
+      "group": "generic",
+      "coveragePercent": 100,
+      "depth3Percent": 100,
+      "gaps": [],
+      "weakSlots": [],
+      "providerErrorCount": 0
+    },
+    {
+      "id": "generic-voxel-procgen",
+      "label": "Voxel procgen",
+      "group": "generic",
+      "coveragePercent": 63.6,
+      "depth3Percent": 63.6,
+      "gaps": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        }
+      ],
+      "providerErrorCount": 11
+    },
+    {
+      "id": "generic-city-builder",
+      "label": "City builder",
+      "group": "generic",
+      "coveragePercent": 66.7,
+      "depth3Percent": 50,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "procedural-generation",
+          "label": "Procedural generation",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "environment",
+          "label": "Environment",
+          "candidateCount": 1,
+          "providers": [
+            "quaternius",
+            "kaykit",
+            "kenney",
+            "polyhaven",
+            "ambientcg"
+          ]
+        }
+      ],
+      "providerErrorCount": 5
+    },
+    {
+      "id": "generic-card-battler",
+      "label": "Card battler",
+      "group": "generic",
+      "coveragePercent": 88.9,
+      "depth3Percent": 66.7,
+      "gaps": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "ui",
+          "label": "UI",
+          "candidateCount": 1,
+          "providers": [
+            "kenney",
+            "gameicons",
+            "tablericons"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 2,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 3
+    },
+    {
+      "id": "generic-farming-sim",
+      "label": "Farming sim",
+      "group": "generic",
+      "coveragePercent": 75,
+      "depth3Percent": 62.5,
+      "gaps": [
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "dialogue-system",
+          "label": "Dialogue / conversation system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "save-system",
+          "label": "Save / persistence system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "character",
+          "label": "Characters",
+          "candidateCount": 1,
+          "providers": [
+            "kenney"
+          ]
+        }
+      ],
+      "providerErrorCount": 6
+    },
+    {
+      "id": "generic-tactical-military",
+      "label": "Tactical military",
+      "group": "generic",
+      "coveragePercent": 66.7,
+      "depth3Percent": 55.6,
+      "gaps": [
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "networking",
+          "label": "Networking / multiplayer",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        },
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "providers": [
+            "githubcode"
+          ],
+          "reason": "No result passed the current provider, metadata and license filters."
+        }
+      ],
+      "weakSlots": [
+        {
+          "slot": "ai-system",
+          "label": "Enemy / NPC AI",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "combat-system",
+          "label": "Combat system",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "networking",
+          "label": "Networking / multiplayer",
+          "candidateCount": 0,
+          "providers": [
+            "githubcode"
+          ]
+        },
+        {
+          "slot": "font",
+          "label": "Font",
+          "candidateCount": 1,
+          "providers": [
+            "googlefonts"
+          ]
+        }
+      ],
+      "providerErrorCount": 9
+    }
+  ]
+}
