@@ -1,5 +1,65 @@
 # Release notes
 
+## v1.12.0
+
+V1.12 is the first benchmark-driven expansion release: it separates retrieval failures from real resource gaps, removes avoidable GitHub API pressure, improves gameplay-code search depth and adds conservatively verified Unity/Unreal starter coverage.
+
+### Provider reliability
+
+- Adds provider/category error diagnostics to `benchmark_resource_coverage`.
+- GitHub Code canonicalizes noisy fallback queries, coalesces/caches equivalent repository searches and serializes search requests to reduce GitHub Search API pressure.
+- GitHub error messages preserve useful rate-limit response metadata.
+- KayKit no longer uses the GitHub Search bucket; its official owner repositories are listed through the normal user-repository endpoint and cached in-process.
+- The clean post-fix smoke run reached zero provider errors.
+
+### Gameplay-code retrieval
+
+- AI queries lead with ecosystem terminology such as `behavior tree` / `ai` instead of the over-constrained `enemy npc ai` phrase.
+- Inventory, combat, vehicle, multiplayer, save, procedural-generation and dialogue slots similarly begin with broader ecosystem terms before narrower fallbacks.
+- This raises candidate depth without relaxing repository-license filtering.
+
+### Verified Unity / Unreal community starters
+
+Adds `communitystarters`, a small verified catalog whose maintained entries have explicit root MIT licenses.
+
+Unity entries:
+- Team-on Unity Game Template;
+- JCMG Unity Starter Template;
+- MaiKuraki UnityStarter.
+
+Unreal entries:
+- StpGabriel Unreal Engine 5 Template;
+- Motion Forge UE5 Game Starter Template.
+
+These records are intentionally `code-only` / `needs-review`: root code/project structure may be reused under MIT, while imported packages, plugins, engine content and bundled media remain separate review/replacement targets. Unity/Unreal are now supported by the starter slot instead of producing an empty-provider gap.
+
+### Live smoke benchmark
+
+After reliability cleanup, the clean pre-expansion 12-scenario baseline was 93.3% required-slot coverage, 69.7% depth-3 coverage, 58.3% complete scenarios, 4 unsupported required slots and 0 provider errors.
+
+The final V1.12 live smoke snapshot on 2026-08-20 reached:
+- 100% required-slot coverage;
+- 85.7% depth-3 coverage;
+- 100% complete scenarios (12/12);
+- 0 unsupported required slots;
+- 0 provider errors.
+
+This is a live smoke-suite snapshot, not a claim that the 39-scenario full suite is perfect.
+
+### Release engineering
+
+- package/runtime/lockfile version: `1.12.0`;
+- deterministic tests cover GitHub query canonicalization, KayKit non-search indexing, provider-error diagnostics, broader code queries and verified Unity/Unreal starter boundaries;
+- temporary live benchmark artifacts/workflows are removed before merge;
+- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required.
+
+### Compatibility
+
+V1.12 is additive. Existing license defaults, install allowlists and project-adoption safety boundaries are unchanged.
+
+---
+
+
 ## v1.11.0
 
 V1.11 adds a live resource-coverage benchmark so future provider/catalog expansion can be prioritized by measured game-development gaps instead of raw source counts.
