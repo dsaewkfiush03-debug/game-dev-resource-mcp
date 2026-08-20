@@ -94,6 +94,24 @@ test("Phaser description selects the verified Phaser starter provider", () => {
   assert.ok(starter?.queries.some(query => query.includes("phaser")));
 });
 
+test("UrhoX/TapMaker is recognized without substituting another engine", () => {
+  const { inferred, slots } = buildStackPlan({ description: "TapMaker UrhoX 3D low poly tower defense game with turret combat and enemy AI" });
+  assert.equal(inferred.engine, "urhox");
+  assert.equal(inferred.dimension, "3D");
+  assert.ok(inferred.styles.includes("low-poly"));
+  assert.ok(inferred.gameGenres.includes("tower-defense"));
+
+  const starter = slots.find(slot => slot.id === "starter");
+  assert.equal(starter?.required, true);
+  assert.deepEqual(starter?.providers, []);
+
+  const combat = slots.find(slot => slot.id === "combat-system");
+  const ai = slots.find(slot => slot.id === "ai-system");
+  assert.deepEqual(combat?.providers, ["githubcode"]);
+  assert.deepEqual(ai?.providers, ["githubcode"]);
+  assert.ok(combat?.queries.some(query => query.includes("urhox")));
+});
+
 test("unsupported engine keeps a required starter gap instead of silently substituting another engine", () => {
   const { inferred, slots } = buildStackPlan({ description: "3D sci-fi survival game", engine: "defold" });
   assert.equal(inferred.engine, "defold");
