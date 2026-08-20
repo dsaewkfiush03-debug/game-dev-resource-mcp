@@ -1,6 +1,6 @@
 # GameDev Resource MCP
 
-License-aware game-development resource discovery, **coverage benchmarking, reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
+License-aware game-development resource discovery with **semantic query fallback, coverage benchmarking, reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
 
 ## Why this exists
 
@@ -20,6 +20,9 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Track bundled-media status separately as `none`, `same-license`, `separately-licensed` or `needs-review`.
 - Emit keep/replace/review/remove actions, project/component license obligations and unresolved resource needs.
 - Search multiple game-resource providers with one query.
+- Expand game-development concepts such as turret/cannon/artillery/tank through bounded semantic fallback while preserving explicit hard filters.
+- Return search diagnostics (attempted queries, fallback level, provider pruning and suggested alternative queries) instead of an opaque zero-result response.
+- Expose provider capability metadata so agents can see which sources cover 2D/3D/audio/font/code and engine-specific ecosystems.
 - Search live CC0 materials/HDRIs/3D assets from Poly Haven and ambientCG.
 - Search openly licensed images/audio through Openverse with per-item creator/license metadata.
 - Search the Godot Asset Library live for addons/projects with per-item licenses.
@@ -87,7 +90,7 @@ generate_project_attribution
 
 For a single known asset/code need, call `find_game_assets` directly.
 
-See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/community-starters.md`](docs/community-starters.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
+See [`docs/search-quality.md`](docs/search-quality.md), [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/community-starters.md`](docs/community-starters.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).
 
 ## Reusable project safety
 
@@ -150,6 +153,10 @@ Typical slots include starter/reusable project, environment, vehicles, character
 
 The planner does **not** invent license rights. Every slot is resolved through provider metadata and the same conservative license filters used by direct search. If a requested engine has no verified starter provider, the starter slot remains unresolved instead of silently substituting another engine.
 
+V1.15 recognizes UrhoX/Urho3D/TapMaker, LÖVE/Love2D and Defold as explicit engine intents for code discovery. These engines do not automatically gain a verified starter catalog; GitHub discoveries remain `code-only / needs-review`.
+
+The MCP-facing tool defaults to `responseMode = summary` so a normal recommendation does not dump tens of kilobytes of raw metadata into an agent context. Use `responseMode = full` when detailed per-asset provenance/ranking fields are required.
+
 ## `benchmark_resource_coverage`
 
 V1.11 adds a maintained coverage benchmark so provider expansion can be driven by measured gaps instead of intuition.
@@ -161,7 +168,7 @@ V1.11 adds a maintained coverage benchmark so provider expansion can be driven b
 - required slots with no configured providers stay in the denominator.
 - live-provider errors are reported separately from persistent catalog gaps.
 
-Benchmark scores never override or relax license rules. In the V1.13 timestamped 39-scenario full run (2026-08-20), required-slot coverage was 100%, depth-3 coverage 98.9%, all 39 scenarios were complete, unsupported required slots were 0 and provider errors were 0. V1.14 adds per-entry verified-catalog license profiles and accurately adds a CC0 Unreal starter, closing the previously shallow Unreal starter depth without relabeling it as MIT. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
+Benchmark scores never override or relax license rules, and depth alone does not prove semantic relevance or engine compatibility. In the V1.13 timestamped 39-scenario full run (2026-08-20), required-slot coverage was 100%, depth-3 coverage 98.9%, all 39 scenarios were complete, unsupported required slots were 0 and provider errors were 0. V1.14 adds per-entry verified-catalog license profiles and accurately adds a CC0 Unreal starter, closing the previously shallow Unreal starter depth without relabeling it as MIT. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).
 
 ## MCP tools
 

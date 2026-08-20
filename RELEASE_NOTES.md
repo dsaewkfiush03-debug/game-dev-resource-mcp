@@ -1,5 +1,53 @@
 # Release notes
 
+## v1.15.0
+
+V1.15 is driven by a completed real-game acceptance test that exposed a gap between catalog size and practical retrieval quality. A 3D low-poly tower-defense project using UrhoX/TapMaker received zero exact asset results and irrelevant stack suggestions despite broad provider coverage. This release addresses the retrieval layer rather than adding more providers.
+
+### Semantic query planning
+
+- Adds a bounded game-development concept planner for turret/cannon/artillery/tank, tower-defense/fortification, weapons, enemies, vehicles, characters, low-poly, UI/audio and gameplay systems.
+- `find_game_assets` tries the original query first, then semantic/broader variants only when the relevant result set is shallow.
+- Explicit dimensions, engine constraints, commercial-use, attribution/share-alike policy and reuse-scope filters are preserved through fallback.
+- Results must have lexical or semantic query relevance; license/popularity metadata alone cannot make an unrelated asset pass.
+
+### Zero-result diagnostics and provider capabilities
+
+- Unified search reports attempted queries, fallback level/reason, cumulative relevant results and suggested alternatives.
+- Adds a provider capability matrix for dimensions, engine scope and strengths.
+- Search prunes providers that cannot satisfy explicit dimension/engine constraints before making live calls.
+- `list_asset_providers` exposes the same capability metadata to MCP clients.
+
+### Niche engine discovery
+
+- Adds explicit UrhoX/Urho3D/TapMaker, LÖVE/Love2D and Defold engine recognition.
+- GitHub Code detects these ecosystems and uses normalized search aliases (for example UrhoX -> Urho3D search terminology).
+- `find_reusable_projects` now includes license-screened GitHub Code discovery in addition to maintained starter catalogs.
+- Live GitHub discoveries are conservatively `code-only / needs-review`; they are not represented as maintained verified starters.
+
+### Compact recommendation UX
+
+- `recommend_stack` now defaults to `responseMode = summary`.
+- Summary mode keeps the primary/alternatives, source, provider, license/risk, score and reuse status but omits verbose raw metadata.
+- `responseMode = full` preserves the detailed response for audits and advanced agents.
+
+### Real regression coverage
+
+The test suite includes the real failure query `tower defense turret gun enemy 3D low poly` with an explicit 3D constraint. The search must use semantic fallback to recover relevant 3D candidates when available and must never use the 2D Tower Defense/Pixel Platformer packs to satisfy that 3D request.
+
+### Release engineering
+
+- package/runtime/lockfile version: `1.15.0`;
+- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required;
+- search quality rules are documented in `docs/search-quality.md`.
+
+### Compatibility
+
+V1.15 is additive at the provider/license layer. `recommend_stack` changes its MCP default presentation to compact summary; callers that require the prior verbose shape can request `responseMode = full`.
+
+---
+
+
 ## v1.14.0
 
 V1.14 removes the last known maintained-suite starter-depth limitation by making verified catalogs support accurate per-entry license profiles instead of forcing every entry to inherit one provider-wide license.
