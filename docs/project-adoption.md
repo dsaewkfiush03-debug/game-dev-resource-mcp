@@ -29,6 +29,16 @@ The planner resolves the maintained catalog entry and returns:
 - recommended next MCP calls;
 - safety warnings.
 
+## Current verified project providers
+
+| Provider | Typical adoption posture | Path-level guidance |
+|---|---|---|
+| Godot demos | `whole-project` / `same-license` for maintained official demos | System-level by default unless a specific path is recorded later |
+| Phaser starters | `code-only` / `needs-review` for bundled presentation media | System/resource-category guidance by default |
+| Raylib projects | Official game template can be `whole-project`; game collection references are `code-only` | The maintained game-template record includes explicit paths such as `src/`, `CMakeLists.txt`, `projects/` and `screenshots/` |
+
+A provider being supported by this planner does not imply that every project from that ecosystem has the same reuse posture. The selected maintained record remains the source of truth.
+
 ## Adoption decisions
 
 | Decision | Meaning |
