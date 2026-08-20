@@ -1,0 +1,64 @@
+name: Finalize docs v1.11.0
+
+on:
+  push:
+    branches: [agent/coverage-benchmark-v1110]
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/coverage-benchmark-v1110
+      - name: Update README and release notes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          readme = Path('README.md')
+          text = readme.read_text()
+          text = text.replace(
+              'License-aware game-development resource discovery, **reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).',
+              'License-aware game-development resource discovery, **coverage benchmarking, reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).'
+          )
+          text = text.replace(
+              '- Turn one selected project into an actionable, non-mutating adoption manifest with `plan_project_adoption`.\n',
+              '- Turn one selected project into an actionable, non-mutating adoption manifest with `plan_project_adoption`.\n- Measure real required-slot and depth-3 resource coverage with `benchmark_resource_coverage`.\n'
+          )
+          text = text.replace(
+              'See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).',
+              'See [`docs/project-reuse.md`](docs/project-reuse.md), [`docs/project-adoption.md`](docs/project-adoption.md), [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md) and [`docs/end-to-end-example.md`](docs/end-to-end-example.md).'
+          )
+          marker = '## MCP tools\n'
+          section = '''## `benchmark_resource_coverage`\n\nV1.11 adds a maintained coverage benchmark so provider expansion can be driven by measured gaps instead of intuition.\n\n- `smoke` runs 12 balanced scenarios across Godot, Phaser, Raylib, Unity, Unreal and generic game concepts.\n- `full` runs all 39 maintained scenarios.\n- required-slot coverage measures whether at least one candidate passed the current search/license filters.\n- depth-3 coverage measures whether a required slot has at least three candidates and is therefore healthier than a one-result edge case.\n- required slots with no configured providers stay in the denominator.\n- live-provider errors are reported separately from persistent catalog gaps.\n\nBenchmark scores never override or relax license rules. See [`docs/coverage-benchmark.md`](docs/coverage-benchmark.md).\n\n'''
+          if section not in text:
+              text = text.replace(marker, section + marker)
+          text = text.replace(
+              '| `plan_project_adoption` | Turn one selected project into a non-mutating adoption manifest with actions, obligations and resource gaps. |\n',
+              '| `plan_project_adoption` | Turn one selected project into a non-mutating adoption manifest with actions, obligations and resource gaps. |\n| `benchmark_resource_coverage` | Benchmark required-slot/depth-3 coverage and rank weak resource categories. |\n'
+          )
+          readme.write_text(text)
+
+          notes = Path('RELEASE_NOTES.md')
+          current = notes.read_text()
+          section = '''## v1.11.0\n\nV1.11 adds a live resource-coverage benchmark so future provider/catalog expansion can be prioritized by measured game-development gaps instead of raw source counts.\n\n### `benchmark_resource_coverage`\n\n- Adds a dedicated MCP tool backed by the real `recommend_stack` pipeline.\n- Adds 39 maintained scenarios across Godot, Phaser, Raylib, Unity, Unreal and engine-agnostic concepts.\n- Adds a balanced 12-scenario smoke suite plus full-suite, group and explicit-scenario selection.\n- Measures required-slot coverage separately from depth-3 candidate coverage.\n- Keeps unsupported required slots in the denominator so missing providers remain visible.\n- Reports live-provider/API errors separately from catalog/retrieval gaps.\n- Aggregates group metrics, per-slot metrics, average candidate depth and a weakest-slot ranking.\n\n### Measurement integrity\n\nBenchmark scores reuse normal conservative commercial/license filters. Coverage must not be improved by accepting unknown/non-commercial rights, enabling share-alike by default, removing difficult scenarios, excluding no-provider required slots or lowering the depth target.\n\n### Release engineering\n\n- package/runtime version: `1.11.0`;\n- npm lockfile refreshed by npm itself;\n- deterministic offline tests cover suite selection, aggregation, one-result vs depth-3 health, unsupported providers, provider errors and injected benchmark execution;\n- live third-party APIs are intentionally not required by CI;\n- Node 20/22 validation, tarball clean-install and MCP binary smoke start remain required.\n\n### Compatibility\n\nV1.11 is additive. Existing provider IDs, recommendation/adoption tools, installation allowlists and attribution workflows remain unchanged.\n\n---\n\n\n'''
+          if not current.startswith('# Release notes\n\n## v1.11.0'):
+              current = current.replace('# Release notes\n\n', '# Release notes\n\n' + section, 1)
+          notes.write_text(current)
+          PY
+      - name: Commit docs and remove workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- README.md RELEASE_NOTES.md
+          git rm .github/workflows/finalize-docs-v1110.yml
+          git commit -m "Document v1.11 coverage benchmarking"
+          git push origin HEAD:agent/coverage-benchmark-v1110
