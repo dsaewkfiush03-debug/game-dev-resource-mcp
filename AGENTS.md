@@ -25,24 +25,27 @@ Build a conservative, license-aware game-development resource layer for AI codin
 17. Recommendation fallback depth may broaden a query only after preserving the first/specific matches and must deduplicate candidates; depth filling must not reorder a broader fallback ahead of a more specific valid result.
 18. Never add or relabel a resource solely to improve benchmark depth. If a candidate's license differs from a provider-wide license profile, extend the data model first or leave the benchmark shallow rather than misclassifying the candidate.
 19. Treat live-provider errors as a separate reliability signal; do not silently convert an API/network failure into either a successful result or a permanent catalog gap.
-20. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
-21. Never automatically execute, extract or install downloaded third-party content.
-22. Never guess a download URL merely to make a workflow automatic.
-23. Local installation must remain contained inside an explicit absolute project root.
+20. Semantic fallback may expand soft concepts such as `turret -> cannon/artillery/tank`, but it must preserve explicit hard filters such as dimension, engine, commercial-use policy, attribution policy, share-alike policy and reuse scope.
+21. Zero-result or shallow searches must expose attempted fallback queries and suggested alternatives. Never silently relax a hard filter to manufacture a match.
+22. Use provider capability metadata to avoid querying providers that cannot satisfy an explicit dimension/engine constraint. Provider pruning is an efficiency mechanism, not license evidence.
+23. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
+24. Never automatically execute, extract or install downloaded third-party content.
+25. Never guess a download URL merely to make a workflow automatic.
+26. Local installation must remain contained inside an explicit absolute project root.
 
 ## Engineering priorities
 
-Correctness > coverage. Maintainability > cleverness. Safe degradation > aggressive automation. Tests should cover license classification, provider mapping, reuse-scope/bundled-asset boundaries, adoption decisions/actions, benchmark aggregation/integrity, search filtering, installation containment and version consistency.
+Correctness > coverage. Maintainability > cleverness. Safe degradation > aggressive automation. Tests should cover license classification, provider mapping, reuse-scope/bundled-asset boundaries, adoption decisions/actions, benchmark aggregation/integrity, search relevance/fallback diagnostics, installation containment and version consistency.
 
-Resource expansion should increasingly be driven by benchmark evidence. Prefer fixing the weakest required slots and shallow candidate pools before adding redundant providers to already healthy categories.
+Resource expansion should increasingly be driven by benchmark evidence and real-project adoption evidence. Prefer fixing weak relevant-match quality and engine compatibility before adding redundant providers to already healthy categories.
 
 ## V1 supported scope
 
 - STDIO MCP server
 - curated source registry
 - live and verified-catalog asset providers
-- cross-provider structured search
-- verified reusable-project/starter discovery with explicit reuse scope
+- cross-provider structured/semantic search with explicit diagnostics
+- verified reusable-project/starter discovery plus conservative live GitHub code discovery
 - deterministic project adoption manifests with license/resource-gap guidance
 - live resource-coverage benchmarking across maintained game scenarios
 - GitHub project discovery and repository license inspection
