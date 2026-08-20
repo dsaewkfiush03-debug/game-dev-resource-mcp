@@ -48,6 +48,7 @@ const MODE_BY_PROVIDER: Record<AssetProviderId, ProviderMode> = {
   tablericons: "live-api",
   phaser: "verified-catalog",
   raylib: "verified-catalog",
+  communitystarters: "verified-catalog",
   googlefonts: "verified-catalog",
   openverse: "live-api",
   godotassetlib: "live-api"
@@ -92,123 +93,110 @@ function freshnessBonus(updatedAt?: string, retrievedAt?: string): { bonus: numb
   return { bonus: 0, ageDays };
 }
 
-function reuseBonus(asset: ProviderAsset): number {
-  if (asset.reuseScope === "whole-project") {
-    if (asset.bundledAssetStatus === "same-license" || asset.bundledAssetStatus === "none") return 4;
-    return 2;
-  }
-  if (asset.reuseScope === "code-only") return 1;
-  return 0;
-}
-
-export function scoreAsset(asset: ProviderAsset, query: string): { score: number; matchReasons: string[] } {
-  const queryTokens = tokens(query);
-  let score = 0;
+function score(asset: ProviderAsset, options: UnifiedSearchOptions): RankedAsset | undefined {
   const reasons: string[] = [];
-  const metadata = [
-    ...(asset.engine ?? []),
-    asset.dimension ?? "",
-    ...(asset.style ?? []),
-    ...(asset.formats ?? []),
-    ...(asset.assetTypes ?? []),
-    ...(asset.gameGenres ?? []),
-    asset.resolution ?? "",
-    asset.reuseScope ?? "",
-    asset.bundledAssetStatus ?? ""
-  ];
+  let value = 0;
+  const queryTokens = tokens(options.query);
+  const haystack = [asset.name, asset.description ?? "", ...asset.categories, ...asset.tags, ...(asset.engine ?? []), ...(asset.style ?? []), ...(asset.formats ?? []), ...(asset.assetTypes ?? []), ...(asset.gameGenres ?? [])].join(" ").toLowerCase();
 
   for (const token of queryTokens) {
-    if (contains(asset.name, token)) { score += 8; reasons.push(`name:${token}`); }
-    if (asset.tags.some(tag => contains(tag, token))) { score += 5; reasons.push(`tag:${token}`); }
-    if (asset.categories.some(category => contains(category, token))) { score += 4; reasons.push(`category:${token}`); }
-    if (metadata.some(value => contains(value, token))) { score += 4; reasons.push(`metadata:${token}`); }
-    if (contains(asset.description, token)) { score += 2; reasons.push(`description:${token}`); }
+    if (contains(asset.name, token)) { value += 8; reasons.push(`name:${token}`); }
+    else if (asset.tags.some(tag => contains(tag, token))) { value += 5; reasons.push(`tag:${token}`); }
+    else if (haystack.includes(token)) { value += 2; reasons.push(`metadata:${token}`); }
   }
 
-  if (asset.commercialUse === true) { score += 5; reasons.push("commercial-use-confirmed"); }
-  if (asset.attribution === false) { score += 2; reasons.push("no-asset-attribution-required"); }
-  if (asset.shareAlike === false) { score += 1; reasons.push("no-share-alike"); }
-  if (asset.licenseSource) { score += 1; reasons.push("license-source-present"); }
-  if (asset.creator) { score += 1; reasons.push("creator-provenance-present"); }
+  const filters: Array<[string, string[] | undefined, string[] | undefined]> = [
+    ["category", asset.categories, options.categories],
+    ["engine", asset.engine, options.engines],
+    ["style", asset.style, options.styles],
+    ["format", asset.formats, options.formats],
+    ["type", asset.assetTypes, options.assetTypes],
+    ["genre", asset.gameGenres, options.gameGenres]
+  ];
+  for (const [label, actual, wanted] of filters) {
+    if (wanted?.length) {
+      if (!valuesContain(actual, wanted)) return undefined;
+      value += 10;
+      reasons.push(`${label}:match`);
+    }
+  }
 
-  const reuse = reuseBonus(asset);
-  if (reuse > 0) {
-    score += reuse;
-    reasons.push(`reuse-scope:${asset.reuseScope}`);
-    if (asset.bundledAssetStatus) reasons.push(`bundled-assets:${asset.bundledAssetStatus}`);
+  if (!dimensionMatches(asset, options.dimensions)) return undefined;
+  if (options.dimensions?.length) { value += 10; reasons.push("dimension:match"); }
+  if (!enumMatches(asset.reuseScope, options.reuseScopes)) return undefined;
+  if (options.reuseScopes?.length) { value += 10; reasons.push("reuse:match"); }
+  if (!enumMatches(asset.bundledAssetStatus, options.bundledAssetStatuses)) return undefined;
+  if (options.bundledAssetStatuses?.length) { value += 10; reasons.push("bundled-assets:match"); }
+  if (options.animated !== undefined && asset.animated !== options.animated) return undefined;
+  if (options.animated !== undefined) { value += 5; reasons.push("animated:match"); }
+
+  const license = checkLicense(asset.license);
+  const risk = license?.risk ?? "unknown";
+  if ((options.commercialOnly ?? true) && asset.commercialUse !== true) return undefined;
+  if (!(options.allowAttribution ?? true) && asset.attribution === true) return undefined;
+  if (!(options.allowShareAlike ?? false) && asset.shareAlike === true) return undefined;
+  if (risk === "reject") return undefined;
+  if (risk === "safe") value += 18;
+  else if (risk === "attribution") value += 12;
+  else if (risk === "conditional") value += 4;
+
+  if (asset.reuseScope === "whole-project") {
+    value += 4;
+    reasons.push("reuse:whole-project");
+    if (asset.bundledAssetStatus === "none" || asset.bundledAssetStatus === "same-license") {
+      value += 3;
+      reasons.push("bundled-assets:verified-project-wide");
+    }
+  } else if (asset.reuseScope === "code-only") {
+    value += 1;
+    reasons.push("reuse:code-only");
   }
 
   const popularity = popularityBonus(asset.popularity);
-  if (popularity > 0) { score += popularity; reasons.push(`popularity:${asset.popularity}`); }
-
+  if (popularity > 0) { value += popularity; reasons.push(`popularity:+${popularity}`); }
   const freshness = freshnessBonus(asset.updatedAt, asset.retrievedAt);
-  if (freshness.bonus > 0) { score += freshness.bonus; reasons.push(`freshness:${freshness.ageDays}d`); }
+  if (freshness.bonus > 0) { value += freshness.bonus; reasons.push(`freshness:+${freshness.bonus}`); }
 
-  return { score, matchReasons: Array.from(new Set(reasons)) };
+  return {
+    ...asset,
+    score: value,
+    matchReasons: reasons,
+    licenseRisk: risk,
+    providerMode: MODE_BY_PROVIDER[asset.provider]
+  };
 }
 
-export function rankAssets(assets: ProviderAsset[], query: string, options: UnifiedSearchOptions = { query }): RankedAsset[] {
-  const commercialOnly = options.commercialOnly ?? true;
-  const allowAttribution = options.allowAttribution ?? true;
-  const allowShareAlike = options.allowShareAlike ?? false;
-
-  return assets
-    .filter(asset => !commercialOnly || asset.commercialUse === true)
-    .filter(asset => allowAttribution || asset.attribution === false)
-    .filter(asset => allowShareAlike || asset.shareAlike === false)
-    .filter(asset => valuesContain(asset.engine, options.engines))
-    .filter(asset => dimensionMatches(asset, options.dimensions))
-    .filter(asset => valuesContain(asset.style, options.styles))
-    .filter(asset => valuesContain(asset.formats, options.formats))
-    .filter(asset => valuesContain(asset.assetTypes, options.assetTypes))
-    .filter(asset => valuesContain(asset.gameGenres, options.gameGenres))
-    .filter(asset => enumMatches(asset.reuseScope, options.reuseScopes))
-    .filter(asset => enumMatches(asset.bundledAssetStatus, options.bundledAssetStatuses))
-    .filter(asset => options.animated === undefined || asset.animated === options.animated)
-    .map(asset => {
-      const licenseRule = checkLicense(asset.license);
-      const ranked = scoreAsset(asset, query);
-      return { ...asset, ...ranked, licenseRisk: licenseRule?.risk ?? "unknown", providerMode: MODE_BY_PROVIDER[asset.provider] };
-    })
-    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
-}
-
-export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{
-  results: RankedAsset[];
-  errors: ProviderSearchError[];
-  searchedProviders: AssetProviderId[];
-}> {
-  const available = listProviders().map(provider => provider.id);
-  const searchedProviders = options.providers?.length ? options.providers : available;
-  const perProviderLimit = Math.max(1, Math.min(options.perProviderLimit ?? 50, 100));
-
-  const settled = await Promise.allSettled(searchedProviders.map(async providerId => {
-    const provider = getProvider(providerId);
-    const results = await provider.search({
-      query: options.query,
-      categories: options.categories ?? [],
-      engines: options.engines ?? [],
-      dimensions: options.dimensions ?? [],
-      styles: options.styles ?? [],
-      formats: options.formats ?? [],
-      assetTypes: options.assetTypes ?? [],
-      gameGenres: options.gameGenres ?? [],
-      reuseScopes: options.reuseScopes ?? [],
-      bundledAssetStatuses: options.bundledAssetStatuses ?? [],
-      animated: options.animated,
-      limit: perProviderLimit
-    });
-    return { providerId, results };
+export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{ results: RankedAsset[]; errors: ProviderSearchError[] }> {
+  const requested = options.providers?.length ? options.providers : listProviders().map(item => item.id);
+  const perProviderLimit = Math.max(1, Math.min(options.perProviderLimit ?? Math.max((options.limit ?? 20) * 2, 20), 100));
+  const errors: ProviderSearchError[] = [];
+  const groups = await Promise.all(requested.map(async providerId => {
+    try {
+      const provider = getProvider(providerId);
+      return await provider.search({
+        query: options.query,
+        categories: options.categories,
+        engines: options.engines,
+        dimensions: options.dimensions,
+        styles: options.styles,
+        formats: options.formats,
+        assetTypes: options.assetTypes,
+        gameGenres: options.gameGenres,
+        reuseScopes: options.reuseScopes,
+        bundledAssetStatuses: options.bundledAssetStatuses,
+        animated: options.animated,
+        limit: perProviderLimit
+      });
+    } catch (error) {
+      errors.push({ provider: providerId, message: error instanceof Error ? error.message : String(error) });
+      return [];
+    }
   }));
 
-  const assets: ProviderAsset[] = [];
-  const errors: ProviderSearchError[] = [];
-  settled.forEach((result, index) => {
-    const provider = searchedProviders[index];
-    if (result.status === "fulfilled") assets.push(...result.value.results);
-    else errors.push({ provider, message: result.reason instanceof Error ? result.reason.message : String(result.reason) });
-  });
+  const ranked = groups.flat()
+    .map(asset => score(asset, options))
+    .filter((asset): asset is RankedAsset => Boolean(asset))
+    .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name));
 
-  const ranked = rankAssets(assets, options.query, options).slice(0, Math.max(1, Math.min(options.limit ?? 20, 100)));
-  return { results: ranked, errors, searchedProviders };
+  return { results: ranked.slice(0, Math.max(1, Math.min(options.limit ?? 20, 100))), errors };
 }
