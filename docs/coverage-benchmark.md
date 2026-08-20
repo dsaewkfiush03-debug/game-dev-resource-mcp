@@ -140,6 +140,20 @@ The MCP benchmark uses the real `recommend_stack` pipeline and therefore may cal
 
 This separation keeps release validation stable while preserving a real live benchmark for resource-health work.
 
+## Baseline snapshots
+
+If a benchmark run is saved as a comparison baseline, record at least:
+
+- package/runtime version;
+- `generatedAt` timestamp;
+- suite or explicit scenario IDs;
+- required-slot coverage;
+- depth-3 coverage;
+- unsupported required-slot count;
+- provider-error count.
+
+Do not treat a run with material live-provider failures as a clean permanent baseline without noting those failures. Baselines are measurements of a particular run, not immutable claims about the resource catalog.
+
 ## Goal
 
 The long-term target is not merely 100% one-result coverage. A healthier target is:
