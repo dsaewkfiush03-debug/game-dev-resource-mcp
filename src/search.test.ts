@@ -88,10 +88,11 @@ test("semantic scoring recognizes a tank or cannon as related to a turret reques
   assert.ok(ranked[0].matchReasons.some(reason => reason.startsWith("semantic:turret:")));
 });
 
-test("real 3D tower-defense-style query broadens within verified 3D catalogs without returning 2D packs", async () => {
+test("real UrhoX 3D tower-defense query can use generic verified 3D art without returning 2D packs", async () => {
   const result = await searchAllAssets({
     query: "tower defense turret gun enemy 3D low poly",
     providers: ["kenney", "quaternius"],
+    engines: ["urhox"],
     dimensions: ["3D"],
     commercialOnly: true,
     limit: 3,
