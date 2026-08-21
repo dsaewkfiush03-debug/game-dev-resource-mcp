@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
-import * as z from "zod/v4";
 import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
 import { runCoverageBenchmark } from "./coverage.js";
@@ -12,10 +11,69 @@ import { recommendStack } from "./recommend.js";
 import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
+import {
+  auditResourceVerificationInputSchema,
+  benchmarkResourceCoverageInputSchema,
+  checkLicenseInputSchema,
+  findGameAssetsInputSchema,
+  findReusableProjectsInputSchema,
+  generateAttributionInputSchema,
+  generateProjectAttributionInputSchema,
+  getAssetFilesInputSchema,
+  inspectRepositoryInputSchema,
+  installAssetFileInputSchema,
+  listAssetProvidersInputSchema,
+  planAssetInstallInputSchema,
+  planProjectAdoptionInputSchema,
+  recommendStackInputSchema,
+  searchGameAssetsInputSchema,
+  searchLiveAssetsInputSchema,
+  searchOpenSourceProjectsInputSchema
+} from "./tool-schemas.js";
 import { VERSION } from "./version.js";
 import { assessVerification, summarizeVerification } from "./verification.js";
 
-const server = new McpServer({ name: "game-dev-resource-mcp", version: VERSION });
+const server = new McpServer({
+  name: "game-dev-resource-mcp",
+  title: "GameDev Resource MCP",
+  version: VERSION,
+  description: "License-aware game-development resource discovery for AI coding agents: game assets, reusable projects and game code with provenance and conservative reuse boundaries.",
+  websiteUrl: "https://github.com/dsaewkfiush03-debug/game-dev-resource-mcp"
+}, {
+  instructions: [
+    "Use recommend_stack for broad game/resource planning and find_game_assets for concrete individual assets or reusable code.",
+    "Use find_reusable_projects followed by plan_project_adoption when selecting a project base.",
+    "search_game_assets discovers resource sources, not individual assets; search_live_assets queries one explicitly selected provider.",
+    "Treat repository-level licenses separately from bundled art, audio, fonts, dependencies and other component rights.",
+    "Keep explicit engine, dimension and license-policy constraints hard; never infer broader rights from model judgment.",
+    "plan_asset_install is read-only. install_asset_file is the only MCP tool here that writes an asset file into a local project."
+  ].join(" ")
+});
+
+function readOnlyTool(title: string, openWorldHint: boolean) {
+  return {
+    title,
+    annotations: {
+      title,
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint
+    }
+  };
+}
+
+const installTool = {
+  title: "Install Asset File",
+  annotations: {
+    title: "Install Asset File",
+    readOnlyHint: false,
+    destructiveHint: true,
+    idempotentHint: false,
+    openWorldHint: true
+  }
+};
+
 function text(data: unknown) { return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] }; }
 
 async function githubJson(path: string) {
@@ -30,31 +88,16 @@ async function githubJson(path: string) {
   return response.json();
 }
 
-const providerId = z.enum(["polyhaven", "ambientcg", "githubcode", "kaykit", "kenney", "quaternius", "godotdemos", "gameicons", "tablericons", "phaser", "raylib", "communitystarters", "googlefonts", "openverse", "godotassetlib"]);
-const projectProviderId = z.enum(["godotdemos", "phaser", "raylib", "communitystarters"]);
-const dimension = z.enum(["2D", "3D", "audio", "font", "code", "mixed"]);
-const reuseScope = z.enum(["whole-project", "code-only", "reference-only", "asset-only"]);
-const bundledAssetStatus = z.enum(["none", "same-license", "separately-licensed", "needs-review"]);
-const coverageGroup = z.enum(["godot", "phaser", "raylib", "unity", "unreal", "generic"]);
-
 server.registerTool("find_game_assets", {
-  description: "Search all supported providers, filter by license, project-reuse safety and game-development metadata, and return ranked results with explainable reasons.",
-  inputSchema: z.object({ query: z.string().min(1), categories: z.array(z.string()).default([]), providers: z.array(providerId).optional(), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), reuseScopes: z.array(reuseScope).default([]), bundledAssetStatuses: z.array(bundledAssetStatus).default([]), animated: z.boolean().optional(), commercialOnly: z.boolean().default(true), allowAttribution: z.boolean().default(true), allowShareAlike: z.boolean().default(false), limit: z.number().int().min(1).max(100).default(20), perProviderLimit: z.number().int().min(1).max(100).default(50) })
+  ...readOnlyTool("Find Game Assets", true),
+  description: "Preferred tool for finding concrete game assets or reusable code across supported providers. Use it for ranked cross-provider search with semantic fallback, hard engine/dimension filters, and conservative license/reuse filtering. Do not use search_game_assets when you need individual asset results.",
+  inputSchema: findGameAssetsInputSchema
 }, async options => text({ query: options.query, ...(await searchAllAssets(options)), filters: { commercialOnly: options.commercialOnly, allowAttribution: options.allowAttribution, allowShareAlike: options.allowShareAlike, engines: options.engines, dimensions: options.dimensions, styles: options.styles, formats: options.formats, assetTypes: options.assetTypes, gameGenres: options.gameGenres, reuseScopes: options.reuseScopes, bundledAssetStatuses: options.bundledAssetStatuses, animated: options.animated } }));
 
 server.registerTool("find_reusable_projects", {
-  description: "Find verified reusable game starters, complete-game references and project skeletons. Results explicitly distinguish whole-project reuse from code-only reuse and expose bundled-asset review status.",
-  inputSchema: z.object({
-    query: z.string().min(1),
-    engines: z.array(z.string()).default([]),
-    providers: z.array(providerId).optional(),
-    reuseScopes: z.array(reuseScope).default(["whole-project", "code-only"]),
-    bundledAssetStatuses: z.array(bundledAssetStatus).default([]),
-    commercialOnly: z.boolean().default(true),
-    allowAttribution: z.boolean().default(true),
-    allowShareAlike: z.boolean().default(false),
-    limit: z.number().int().min(1).max(50).default(20)
-  })
+  ...readOnlyTool("Find Reusable Projects", true),
+  description: "Find reusable starters, project skeletons and complete-game references when the agent needs a project base rather than individual assets. Results keep whole-project, code-only and bundled-asset review boundaries explicit. For one-off art/audio/code needs, use find_game_assets instead.",
+  inputSchema: findReusableProjectsInputSchema
 }, async options => {
   const projectProviders = options.providers?.length ? options.providers : ["godotdemos", "phaser", "raylib", "communitystarters", "githubcode"] as const;
   const result = await searchAllAssets({
@@ -84,33 +127,15 @@ server.registerTool("find_reusable_projects", {
 });
 
 server.registerTool("plan_project_adoption", {
-  description: "Turn one verified reusable project into a conservative adoption manifest: decide project-base vs code-only use, carry path/system hints, list license obligations, identify target resource gaps and emit recommended next MCP calls. This tool never clones or executes the project.",
-  inputSchema: z.object({
-    provider: projectProviderId,
-    projectId: z.string().min(1),
-    targetDescription: z.string().min(3),
-    engine: z.string().optional(),
-    dimension: z.enum(["2D", "3D"]).optional(),
-    styles: z.array(z.string()).default([]),
-    gameGenres: z.array(z.string()).default([])
-  })
+  ...readOnlyTool("Plan Project Adoption", false),
+  description: "Use after selecting a verified reusable-project candidate. Produces a read-only adoption manifest with project-base vs code-only guidance, keep/replace/review actions, license obligations and unresolved resource gaps. It never clones, executes, installs dependencies or mutates the target project.",
+  inputSchema: planProjectAdoptionInputSchema
 }, async options => text(await planProjectAdoption(options)));
 
 server.registerTool("recommend_stack", {
-  description: "Turn a game description into a deterministic resource stack: infer practical asset/code slots, prefer verified reusable starters where available, return primary recommendations, alternatives, license summary and unresolved gaps.",
-  inputSchema: z.object({
-    description: z.string().min(3),
-    engine: z.string().optional(),
-    dimension: z.enum(["2D", "3D"]).optional(),
-    styles: z.array(z.string()).default([]),
-    gameGenres: z.array(z.string()).default([]),
-    providers: z.array(providerId).optional(),
-    commercialOnly: z.boolean().default(true),
-    allowAttribution: z.boolean().default(true),
-    allowShareAlike: z.boolean().default(false),
-    perSlotLimit: z.number().int().min(1).max(10).default(3),
-    responseMode: z.enum(["summary", "full"]).default("summary")
-  })
+  ...readOnlyTool("Recommend Resource Stack", true),
+  description: "Best starting point for a broad game idea or feature plan. Infers practical starter, art, audio, font and code slots; prefers verified reusable bases where available; and returns primary recommendations, alternatives, license summary and gaps. For one precise resource need, prefer find_game_assets.",
+  inputSchema: recommendStackInputSchema
 }, async options => {
   const { responseMode, ...recommendOptions } = options;
   const result = await recommendStack(recommendOptions);
@@ -146,49 +171,51 @@ server.registerTool("recommend_stack", {
 });
 
 server.registerTool("benchmark_resource_coverage", {
-  description: "Run a live resource-coverage benchmark across representative game concepts. Reports required-slot coverage, depth-3 candidate coverage, unsupported provider gaps, provider errors and the weakest resource slots. Smoke uses 12 balanced scenarios; full uses all 39 scenarios.",
-  inputSchema: z.object({
-    suite: z.enum(["smoke", "full"]).default("smoke"),
-    scenarioIds: z.array(z.string().min(1)).optional(),
-    groups: z.array(coverageGroup).optional(),
-    perSlotLimit: z.number().int().min(3).max(10).default(3),
-    concurrency: z.number().int().min(1).max(4).default(2)
-  })
+  ...readOnlyTool("Benchmark Resource Coverage", true),
+  description: "Maintainer/evaluation tool for measuring required-slot and candidate-depth coverage across maintained game scenarios. Use it to find provider/search gaps and regressions, not to answer a normal user's asset request. It can make many live-provider requests; smoke is the cheaper default.",
+  inputSchema: benchmarkResourceCoverageInputSchema
 }, async options => text(await runCoverageBenchmark(options)));
 
 server.registerTool("search_game_assets", {
-  description: "Search the local registry of game-development resource sources.",
-  inputSchema: z.object({ query: z.string().default(""), tags: z.array(z.string()).default([]), commercialOnly: z.boolean().default(false) })
+  ...readOnlyTool("Search Resource Sources", false),
+  description: "Search the local registry of game-development resource sources such as websites, catalogs, marketplaces and ecosystems. This returns source-level discovery records, not individual assets and not per-asset license clearance. Use find_game_assets for concrete ranked resources.",
+  inputSchema: searchGameAssetsInputSchema
 }, async ({ query, tags, commercialOnly }) => { let results = searchRegistry(query, tags); if (commercialOnly) results = results.filter(item => item.commercialUse === true); return text({ count: results.length, results }); });
 
 server.registerTool("search_live_assets", {
-  description: "Search one supported provider. Providers may be live APIs or maintained verified catalogs.",
-  inputSchema: z.object({ provider: providerId.default("polyhaven"), query: z.string().default(""), categories: z.array(z.string()).default([]), engines: z.array(z.string()).default([]), dimensions: z.array(dimension).default([]), styles: z.array(z.string()).default([]), formats: z.array(z.string()).default([]), assetTypes: z.array(z.string()).default([]), gameGenres: z.array(z.string()).default([]), reuseScopes: z.array(reuseScope).default([]), bundledAssetStatuses: z.array(bundledAssetStatus).default([]), animated: z.boolean().optional(), limit: z.number().int().min(1).max(100).default(20) })
+  ...readOnlyTool("Search One Provider", true),
+  description: "Directly query one known provider, bypassing cross-provider routing and global ranking. Use this for provider-specific inspection/debugging or when the caller explicitly chose a source. For normal resource discovery across providers, prefer find_game_assets.",
+  inputSchema: searchLiveAssetsInputSchema
 }, async options => { const adapter = getProvider(options.provider); return text({ provider: adapter.name, providerMode: ["polyhaven", "ambientcg", "githubcode", "kaykit", "openverse", "godotassetlib", "gameicons", "tablericons"].includes(options.provider) ? "live-api" : "verified-catalog", results: await adapter.search(options) }); });
 
 server.registerTool("get_asset_files", {
-  description: "Return official provider-hosted download links and file metadata without mirroring the asset.",
-  inputSchema: z.object({ provider: z.enum(["polyhaven", "gameicons", "tablericons"]).default("polyhaven"), assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), limit: z.number().int().min(1).max(200).default(100) })
+  ...readOnlyTool("Get Asset Files", true),
+  description: "Resolve official provider-hosted file metadata for an already-selected Poly Haven, Game Icons or Tabler Icons asset. Use this after search when exact downloadable files are needed. It does not download, install, mirror or execute anything.",
+  inputSchema: getAssetFilesInputSchema
 }, async ({ provider, assetId, format, resolution, limit }) => { const adapter = getProvider(provider); if (!adapter.getFiles) return text({ provider, assetId, error: "file_lookup_not_supported" }); let files = await adapter.getFiles(assetId); if (format) files = files.filter(file => file.format?.toLowerCase() === format.toLowerCase()); if (resolution) files = files.filter(file => file.resolution?.toLowerCase() === resolution.toLowerCase()); return text({ provider: adapter.name, assetId, mirrored: false, files: files.slice(0, limit) }); });
 
 server.registerTool("plan_asset_install", {
-  description: "Resolve provider-hosted files for an asset and mark which exact files are safe for automatic installation. Planning never writes to disk.",
-  inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
+  ...readOnlyTool("Plan Asset Install", true),
+  description: "Read-only safety step before installation. Resolves provider-hosted files for a selected asset and reports which exact files satisfy the maintained automatic-install boundary and size constraints. It never writes to disk; call install_asset_file only after choosing an allowed file.",
+  inputSchema: planAssetInstallInputSchema
 }, async options => text(await planAssetInstall(options)));
 
 server.registerTool("install_asset_file", {
-  description: "Download one explicitly selected provider file into a local project directory. Only trusted HTTPS download hosts are allowed; size/hash checks are enforced and downloaded content is never executed.",
-  inputSchema: z.object({ provider: providerId, assetId: z.string().min(1), filePath: z.string().min(1), projectRoot: z.string().min(1), destinationDir: z.string().optional(), overwrite: z.boolean().default(false), format: z.string().optional(), resolution: z.string().optional(), maxBytes: z.number().int().positive().max(1024 * 1024 * 1024).optional() })
+  ...installTool,
+  description: "Local write tool: download one explicitly selected, allowlisted provider file into a project. Use only after search/file lookup or plan_asset_install identifies the exact provider file. It validates host/path/redirect/filesystem/size constraints, does not execute content, and does not clone repositories or extract archives.",
+  inputSchema: installAssetFileInputSchema
 }, async request => text(await installAssetFile(request)));
 
-server.registerTool("list_asset_providers", { description: "List supported providers, modes and capability metadata (dimensions, engines and strengths) used to plan searches.", inputSchema: z.object({}) }, async () => text({ providers: listProviders(), capabilities: listProviderCapabilities() }));
+server.registerTool("list_asset_providers", {
+  ...readOnlyTool("List Asset Providers", false),
+  description: "List provider IDs, provider modes and capability metadata such as dimensions, engines and strengths. Use it to understand routing or discover which provider can answer a constrained search; it does not search for assets.",
+  inputSchema: listAssetProvidersInputSchema
+}, async () => text({ providers: listProviders(), capabilities: listProviderCapabilities() }));
 
 server.registerTool("audit_resource_verification", {
-  description: "Audit verification freshness for maintained verified catalogs. Reports current, stale, needs-review and untracked entries without changing license rights.",
-  inputSchema: z.object({
-    staleAfterDays: z.number().int().min(1).max(3650).default(365),
-    providers: z.array(providerId).optional()
-  })
+  ...readOnlyTool("Audit Resource Verification", true),
+  description: "Maintainer audit for freshness of maintained verified-catalog evidence. Reports current, stale, needs-review and untracked records so source/license evidence can be rechecked. It never upgrades license rights and is not a substitute for find_game_assets.",
+  inputSchema: auditResourceVerificationInputSchema
 }, async ({ staleAfterDays, providers }) => {
   const catalogs = listProviders().filter(provider => provider.mode === "verified-catalog");
   const selected = providers?.length ? catalogs.filter(provider => providers.includes(provider.id)) : catalogs;
@@ -212,23 +239,33 @@ server.registerTool("audit_resource_verification", {
 });
 
 server.registerTool("search_open_source_projects", {
-  description: "Search GitHub repositories for reusable game-development code. Inspect the explicit repository license before reuse.",
-  inputSchema: z.object({ query: z.string().min(1), language: z.string().optional(), minStars: z.number().int().min(0).default(0), limit: z.number().int().min(1).max(20).default(10) })
+  ...readOnlyTool("Search Open-Source Projects", true),
+  description: "Search live GitHub repositories for reusable game-development source code. Use when broad GitHub code discovery is needed. Results are repository-level and do not clear bundled art/audio/fonts/dependencies; for maintained starter-project reuse guidance, prefer find_reusable_projects.",
+  inputSchema: searchOpenSourceProjectsInputSchema
 }, async ({ query, language, minStars, limit }) => { const qualifiers = [query, "archived:false", `stars:>=${minStars}`]; if (language) qualifiers.push(`language:${language}`); const data = await githubJson(`/search/repositories?q=${encodeURIComponent(qualifiers.join(" "))}&sort=stars&order=desc&per_page=${limit}`) as any; return text({ results: (data.items ?? []).map((repo: any) => ({ fullName: repo.full_name, url: repo.html_url, description: repo.description, stars: repo.stargazers_count, language: repo.language, license: repo.license?.spdx_id ?? null, updatedAt: repo.updated_at })) }); });
 
-server.registerTool("check_license", { description: "Classify a known license using conservative commercial-game rules.", inputSchema: z.object({ license: z.string().min(1) }) }, async ({ license }) => text(checkLicense(license) ?? { license, risk: "unknown", action: "manual_review" }));
+server.registerTool("check_license", {
+  ...readOnlyTool("Check License", false),
+  description: "Classify a known license identifier using the project's conservative commercial-game policy. Use only when the license is already identified. It cannot infer missing rights, does not inspect a repository, and is technical guidance rather than legal advice.",
+  inputSchema: checkLicenseInputSchema
+}, async ({ license }) => text(checkLicense(license) ?? { license, risk: "unknown", action: "manual_review" }));
 
 server.registerTool("inspect_repository", {
-  description: "Inspect a GitHub repository's public metadata and detected license. Accepts owner/name.", inputSchema: z.object({ repository: z.string().regex(/^[^/\s]+\/[^/\s]+$/) })
+  ...readOnlyTool("Inspect Repository", true),
+  description: "Inspect one public GitHub repository's metadata and detected repository-level license. Use owner/name exactly. This does not prove that bundled media, dependencies or separately licensed components share the repository license; use reusable-project metadata and manual review for those boundaries.",
+  inputSchema: inspectRepositoryInputSchema
 }, async ({ repository }) => { const repo = await githubJson(`/repos/${repository}`) as any; let license: any = null; try { license = await githubJson(`/repos/${repository}/license`) as any; } catch {} const spdx = license?.license?.spdx_id ?? repo.license?.spdx_id ?? null; return text({ repository: repo.full_name, url: repo.html_url, detectedLicense: spdx, licenseAssessment: spdx ? checkLicense(spdx) ?? { risk: "unknown" } : { risk: "unknown" } }); });
 
 server.registerTool("generate_attribution", {
-  description: "Generate a conservative CREDITS entry after a resource license has been identified.", inputSchema: z.object({ name: z.string().min(1), author: z.string().optional(), sourceUrl: z.string().url(), license: z.string().min(1), licenseUrl: z.string().url().optional(), modified: z.boolean().default(false) })
+  ...readOnlyTool("Generate Attribution", false),
+  description: "Generate conservative attribution/credits content for one adopted resource after its canonical source and license are known. Do not use it to guess missing provenance or license terms.",
+  inputSchema: generateAttributionInputSchema
 }, async resource => text(generateProjectAttribution([resource])));
 
 server.registerTool("generate_project_attribution", {
-  description: "Generate project-level THIRD_PARTY_ASSETS.md and CREDITS.md content for multiple adopted resources, with warnings for conditional or unknown licenses.",
-  inputSchema: z.object({ resources: z.array(z.object({ name: z.string().min(1), author: z.string().optional(), sourceUrl: z.string().url(), license: z.string().min(1), licenseUrl: z.string().url().optional(), modified: z.boolean().default(false) })).min(1) })
+  ...readOnlyTool("Generate Project Attribution", false),
+  description: "Generate project-level THIRD_PARTY_ASSETS.md and CREDITS.md content for multiple adopted resources, preserving source/license metadata and warning on conditional or unknown licenses. Use after resource selection/adoption, not as a license-discovery tool.",
+  inputSchema: generateProjectAttributionInputSchema
 }, async ({ resources }) => text(generateProjectAttribution(resources)));
 
 const transport = new StdioServerTransport();
