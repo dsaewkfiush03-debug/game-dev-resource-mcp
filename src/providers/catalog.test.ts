@@ -21,6 +21,51 @@ test("Quaternius verified catalog filters sci-fi entries without assuming a fixe
   assert.ok(results.every(item => item.attribution === false));
 });
 
+test("generic media catalog entries remain eligible when a target engine is specified", async () => {
+  const provider = createVerifiedCatalogProvider(
+    "communitystarters",
+    "Engine Boundary Fixture",
+    {
+      license: "MIT",
+      licenseSource: "https://example.test/license",
+      commercialUse: true,
+      modification: true,
+      redistribution: true,
+      attribution: true,
+      shareAlike: false
+    },
+    [
+      {
+        id: "generic-turret",
+        name: "Generic 3D Turret",
+        sourceUrl: "https://example.test/turret",
+        categories: ["3D"],
+        tags: ["turret", "weapon"],
+        dimension: "3D",
+        style: ["low-poly"],
+        formats: ["gltf", "fbx"],
+        assetTypes: ["weapon"]
+      },
+      {
+        id: "godot-plugin",
+        name: "Godot Turret Plugin",
+        sourceUrl: "https://example.test/godot-plugin",
+        categories: ["Code"],
+        tags: ["turret", "plugin"],
+        engine: ["godot"],
+        dimension: "code",
+        assetTypes: ["plugin"]
+      }
+    ]
+  );
+
+  const generic = await provider.search({ query: "turret", engines: ["urhox"], dimensions: ["3D"], limit: 10 });
+  assert.deepEqual(generic.map(item => item.id), ["generic-turret"]);
+
+  const wrongEngineCode = await provider.search({ query: "turret", engines: ["urhox"], dimensions: ["code"], limit: 10 });
+  assert.deepEqual(wrongEngineCode, []);
+});
+
 test("verified catalog entries can override the provider default license with a complete profile", async () => {
   const provider = createVerifiedCatalogProvider(
     "communitystarters",
