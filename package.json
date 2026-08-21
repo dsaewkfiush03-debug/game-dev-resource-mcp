@@ -1,7 +1,7 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "1.15.1",
-  "description": "License-aware semantic game-resource discovery with query fallback diagnostics, engine-aware provider capabilities, project adoption planning and safe installation via MCP.",
+  "version": "1.16.0",
+  "description": "License-aware game-development resource search engine with semantic fallback, relevance ranking, provider routing and MCP integration.",
   "type": "module",
   "license": "MIT",
   "repository": {
@@ -16,10 +16,12 @@
     "mcp",
     "game-development",
     "game-assets",
+    "game-resource-search",
     "semantic-search",
     "query-planner",
+    "relevance-ranking",
     "search-diagnostics",
-    "engine-compatibility",
+    "provider-routing",
     "urhox",
     "urho3d",
     "love2d",
