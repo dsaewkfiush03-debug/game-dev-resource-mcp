@@ -1,6 +1,6 @@
 # GameDev Resource MCP
 
-License-aware game-development resource discovery with **semantic query fallback, coverage benchmarking, reusable project selection and adoption planning**, stack recommendation and safe asset installation for AI coding agents via Model Context Protocol (MCP).
+A license-aware **game-development resource search engine** for AI coding agents, with semantic query planning, relevance ranking, provider routing, reusable-project discovery and safe license-aware acquisition via Model Context Protocol (MCP).
 
 ## Why this exists
 
@@ -20,7 +20,9 @@ It is designed for Codex, Claude Code, Trae and other MCP-capable coding agents.
 - Track bundled-media status separately as `none`, `same-license`, `separately-licensed` or `needs-review`.
 - Emit keep/replace/review/remove actions, project/component license obligations and unresolved resource needs.
 - Search multiple game-resource providers with one query.
-- Expand game-development concepts such as turret/cannon/artillery/tank through bounded semantic fallback while preserving explicit hard filters.
+- Expand game-development concepts through bounded semantic fallback while preserving explicit hard filters.
+- Diversify fallback across subjects/themes/styles instead of spending the whole query budget on one synonym family.
+- Prefer resources that cover several requested concepts (for example turret + enemy + cyberpunk + low-poly) over broad one-concept matches.
 - Return search diagnostics (attempted queries, fallback level, provider pruning and suggested alternative queries) instead of an opaque zero-result response.
 - Expose provider capability metadata so agents can see which sources cover 2D/3D/audio/font/code and engine-specific ecosystems.
 - Search live CC0 materials/HDRIs/3D assets from Poly Haven and ambientCG.

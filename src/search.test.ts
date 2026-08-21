@@ -76,7 +76,17 @@ test("semantic query planning expands turret concepts instead of requiring every
   assert.equal(plan.variants[0].level, "exact");
   assert.ok(plan.concepts.some(concept => concept.id === "turret"));
   assert.ok(plan.concepts.some(concept => concept.id === "tower-defense"));
-  assert.ok(plan.variants.some(variant => ["turret", "cannon", "artillery", "weapon"].includes(variant.query)));
+  assert.ok(plan.variants.some(variant => variant.query === "turret"));
+  assert.ok(plan.variants.some(variant => variant.query === "weapon"));
+  assert.ok(plan.variants.some(variant => variant.query === "enemy"));
+  assert.ok(plan.variants.some(variant => variant.query === "low poly turret"));
+});
+
+test("query planner recognizes common game-art subjects and themes", () => {
+  const plan = planSearchQuery("post-apocalyptic cyberpunk city road building loot spaceship", 10);
+  for (const concept of ["post-apocalyptic", "cyberpunk", "urban", "road", "building", "loot", "spaceship"]) {
+    assert.ok(plan.concepts.some(item => item.id === concept), `missing concept ${concept}`);
+  }
 });
 
 test("semantic scoring recognizes a tank or cannon as related to a turret request", () => {
@@ -88,6 +98,32 @@ test("semantic scoring recognizes a tank or cannon as related to a turret reques
   assert.ok(ranked[0].matchReasons.some(reason => reason.startsWith("semantic:turret:")));
 });
 
+test("multi-concept relevance outranks a broad one-concept match", () => {
+  const focused = base({
+    id: "focused",
+    name: "Cyber Turret Kit",
+    provider: "quaternius",
+    dimension: "3D",
+    tags: ["turret", "enemy", "cyberpunk"],
+    style: ["low-poly", "cyberpunk"],
+    assetTypes: ["weapon", "enemy"]
+  });
+  const broad = base({
+    id: "broad",
+    name: "Ultimate Weapon Pack",
+    provider: "quaternius",
+    dimension: "3D",
+    tags: ["weapon", "gun"],
+    style: ["low-poly"],
+    assetTypes: ["weapon"]
+  });
+  const query = "cyberpunk turret enemy 3D low poly";
+  const ranked = rankAssets([broad, focused], query, { query, dimensions: ["3D"], commercialOnly: true });
+  assert.equal(ranked[0].id, "focused");
+  assert.ok(ranked[0].matchReasons.some(reason => reason.startsWith("semantic-coverage:")));
+  assert.ok(ranked[0].score > ranked[1].score);
+});
+
 test("real UrhoX 3D tower-defense query can use generic verified 3D art without returning 2D packs", async () => {
   const result = await searchAllAssets({
     query: "tower defense turret gun enemy 3D low poly",
@@ -97,13 +133,42 @@ test("real UrhoX 3D tower-defense query can use generic verified 3D art without 
     commercialOnly: true,
     limit: 3,
     perProviderLimit: 20,
-    maxQueryVariants: 6
+    maxQueryVariants: 8
   });
   assert.ok(result.results.length >= 1);
   assert.ok(result.results.every(asset => asset.dimension === "3D"));
   assert.ok(result.results.every(asset => asset.id !== "tower-defense-top-down" && asset.id !== "pixel-platformer"));
   assert.equal(result.diagnostics.fallbackUsed, true);
   assert.ok(result.diagnostics.attemptedQueries.length >= 2);
+  assert.ok(result.diagnostics.attemptedQueries.some(attempt => attempt.qualityTargetMet));
+});
+
+test("cyberpunk turret query ranks the direct multi-concept game kit first", async () => {
+  const result = await searchAllAssets({
+    query: "cyberpunk turret enemy 3D low poly",
+    providers: ["quaternius"],
+    engines: ["urhox"],
+    dimensions: ["3D"],
+    commercialOnly: true,
+    limit: 3,
+    perProviderLimit: 30,
+    maxQueryVariants: 8
+  });
+  assert.equal(result.results[0]?.id, "cyberpunk-game-kit");
+  assert.ok(result.results[0]?.matchReasons.some(reason => reason.startsWith("semantic-coverage:")));
+});
+
+test("medieval village building query ranks the dedicated environment kit first", async () => {
+  const result = await searchAllAssets({
+    query: "medieval village building 3D low poly",
+    providers: ["quaternius"],
+    dimensions: ["3D"],
+    commercialOnly: true,
+    limit: 3,
+    perProviderLimit: 30,
+    maxQueryVariants: 8
+  });
+  assert.equal(result.results[0]?.id, "medieval-village-megakit");
 });
 
 test("provider capability matrix prunes irrelevant dimensions", () => {

@@ -1,5 +1,57 @@
 # Release notes
 
+## v1.16.0
+
+V1.16 keeps GameDev Resource MCP focused as a game-development resource search engine. It improves the quality of the first few results instead of adding an engine adaptation layer or more providers.
+
+### Broader game-development vocabulary
+
+- Adds maintained concepts for buildings, roads, loot/pickups, spaceships, cyberpunk, sci-fi, fantasy, medieval, post-apocalyptic, urban, nature and dungeon searches.
+- Concepts are classified as subjects, modifiers or systems so query planning can use their roles instead of treating every word equally.
+- The vocabulary remains bounded and deterministic; new mappings should be driven by real search failures or clear game-development usage.
+
+### Diverse semantic fallback
+
+- A high-priority concept can no longer consume nearly the entire fallback budget with its own synonyms.
+- Detected concepts receive a focused query before deeper round-robin synonym expansion.
+- Subject + modifier combinations such as `low poly turret`, `cyberpunk environment` and `medieval building` are generated before drifting to overly broad terms.
+- Explicit dimension, engine-specific-code, commercial-use, attribution/share-alike, provider and reuse-scope constraints remain hard filters.
+
+### Multi-concept relevance ranking
+
+- Semantic matches now receive a small priority-aware boost.
+- Direct matches to the user's triggering concept receive more weight than loose synonym-only matches.
+- Results covering several detected concepts receive a bounded concept-coverage bonus.
+- License/provenance/popularity/freshness signals remain secondary; an unrelated but permissively licensed pack cannot outrank a substantially more relevant result merely because its metadata is cleaner.
+
+### Quality-aware fallback stopping
+
+- Multi-concept searches no longer stop just because a few weak one-concept results accumulated.
+- The top result must meet a small semantic-coverage target before bounded fallback stops early.
+- Search diagnostics now expose `topSemanticCoverage` and `qualityTargetMet` for each attempted query.
+
+### Real search regressions
+
+The deterministic suite now protects practical ranking behavior:
+
+- UrhoX + 3D + `tower defense turret gun enemy low poly` must recover generic 3D art without 2D substitution.
+- `cyberpunk turret enemy 3D low poly` must rank Quaternius Cyberpunk Game Kit first.
+- `medieval village building 3D low poly` must rank Medieval Village MegaKit first.
+- query planning must distribute fallback across turret/weapon/enemy/style/theme concepts and generate focused modifier+subject variants.
+
+### Product boundary
+
+V1.16 deliberately does not add model conversion, engine import automation or an engine compatibility platform. The coding agent remains responsible for integrating selected resources into the user's project.
+
+### Release engineering
+
+- package/runtime/lockfile version: `1.16.0`;
+- package description now explicitly positions the project as a game-development resource search engine;
+- Node 20/22 validation, npm tarball clean-install and MCP binary smoke start remain required.
+
+---
+
+
 ## v1.15.0
 
 V1.15 is driven by a completed real-game acceptance test that exposed a gap between catalog size and practical retrieval quality. A 3D low-poly tower-defense project using UrhoX/TapMaker received zero exact asset results and irrelevant stack suggestions despite broad provider coverage. This release addresses the retrieval layer rather than adding more providers.

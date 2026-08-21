@@ -47,6 +47,8 @@ export interface SearchAttempt {
   reason: string;
   returnedAssets: number;
   cumulativeRelevantResults: number;
+  topSemanticCoverage: number;
+  qualityTargetMet: boolean;
 }
 
 export interface SearchDiagnostics {
@@ -160,8 +162,19 @@ function hasQueryRelevance(reasons: string[]): boolean {
   );
 }
 
+function semanticCoverage(reasons: string[]): number {
+  const concepts = new Set<string>();
+  for (const reason of reasons) {
+    if (!reason.startsWith("semantic:")) continue;
+    const [, concept] = reason.split(":", 3);
+    if (concept && concept !== "coverage" && concept !== "direct") concepts.add(concept);
+  }
+  return concepts.size;
+}
+
 export function scoreAsset(asset: ProviderAsset, query: string): { score: number; matchReasons: string[] } {
   const queryTokens = tokens(query);
+  const concepts = detectSearchConcepts(query);
   let score = 0;
   const reasons: string[] = [];
   const metadata = [
@@ -184,16 +197,32 @@ export function scoreAsset(asset: ProviderAsset, query: string): { score: number
     if (contains(asset.description, token)) { score += 2; reasons.push(`description:${token}`); }
   }
 
-  for (const concept of detectSearchConcepts(query)) {
+  let matchedConcepts = 0;
+  for (const concept of concepts) {
     let best: { score: number; reason?: string } = { score: 0 };
     for (const term of concept.expansions) {
       const match = semanticMatch(asset, term);
       if (match.score > best.score) best = match;
     }
     if (best.score > 0 && best.reason) {
-      score += best.score;
+      matchedConcepts += 1;
+      const priorityBonus = Math.max(1, Math.round(concept.priority / 25));
+      score += best.score + priorityBonus;
       reasons.push(`semantic:${concept.id}:${best.reason}`);
+
+      const directMatch = concept.matched.some(term => semanticMatch(asset, term).score > 0);
+      if (directMatch) {
+        const directBonus = Math.max(1, Math.round(concept.priority / 30));
+        score += directBonus;
+        reasons.push(`semantic-direct:${concept.id}`);
+      }
     }
+  }
+
+  if (concepts.length > 1 && matchedConcepts > 1) {
+    const coverageBonus = Math.min(12, (matchedConcepts - 1) * 3);
+    score += coverageBonus;
+    reasons.push(`semantic-coverage:${matchedConcepts}/${concepts.length}`);
   }
 
   if (asset.commercialUse === true) { score += 5; reasons.push("commercial-use-confirmed"); }
@@ -275,6 +304,7 @@ export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{
   const semanticSearch = options.semanticSearch ?? true;
   const plan = planSearchQuery(options.query, semanticSearch ? Math.max(1, Math.min(options.maxQueryVariants ?? 6, 10)) : 1);
   const variants = semanticSearch ? plan.variants : plan.variants.slice(0, 1);
+  const minimumTopCoverage = plan.concepts.length >= 3 ? 2 : plan.concepts.length >= 1 ? 1 : 0;
 
   const assets = new Map<string, ProviderAsset>();
   const errors: ProviderSearchError[] = [];
@@ -313,14 +343,19 @@ export async function searchAllAssets(options: UnifiedSearchOptions): Promise<{
     });
 
     ranked = rankAssets(Array.from(assets.values()), options.query, options).slice(0, resultLimit);
+    const topSemanticCoverage = ranked[0] ? semanticCoverage(ranked[0].matchReasons) : 0;
+    const enoughResults = ranked.length >= targetBeforeStop;
+    const qualityTargetMet = enoughResults && topSemanticCoverage >= minimumTopCoverage;
     attempts.push({
       query: variant.query,
       level: variant.level,
       reason: variant.reason,
       returnedAssets,
-      cumulativeRelevantResults: ranked.length
+      cumulativeRelevantResults: ranked.length,
+      topSemanticCoverage,
+      qualityTargetMet
     });
-    if (ranked.length >= targetBeforeStop) break;
+    if (qualityTargetMet) break;
   }
 
   return {
