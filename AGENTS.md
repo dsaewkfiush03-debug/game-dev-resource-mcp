@@ -28,6 +28,9 @@ Build a conservative, license-aware game-development resource layer for AI codin
 20. Semantic fallback may expand soft concepts such as `turret -> cannon/artillery/tank`, but it must preserve explicit hard filters such as dimension, engine, commercial-use policy, attribution policy, share-alike policy and reuse scope.
 21. Zero-result or shallow searches must expose attempted fallback queries and suggested alternatives. Never silently relax a hard filter to manufacture a match.
 22. Use provider capability metadata to avoid querying providers that cannot satisfy an explicit dimension/engine constraint. Provider pruning is an efficiency mechanism, not license evidence.
+23. After license eligibility is enforced, semantic/query relevance must outrank popularity, freshness or other metadata bonuses. Do not use permissive licensing as a relevance substitute.
+24. Bounded semantic fallback should distribute query budget across detected game-development concepts before deeply expanding one synonym family; preserve the original query and hard filters.
+25. Candidate-count/depth benchmarks are not evidence of search relevance. Protect real query/ranking regressions separately.
 23. Engine filters constrain engine-specific code and resources that explicitly declare an engine. Generic media assets with no engine tag (for example FBX/glTF/PNG/WAV resources) must not be rejected merely because the current project has an engine context.
 24. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
 25. Never automatically execute, extract or install downloaded third-party content.
