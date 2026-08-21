@@ -60,3 +60,31 @@ jobs:
             echo "MCP binary failed smoke start with exit code $CODE"
             exit "$CODE"
           fi
+
+  git-source-smoke:
+    runs-on: ubuntu-latest
+    needs: validate
+    env:
+      SOURCE_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+      SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install directly from GitHub source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/game-dev-resource-mcp-git-source
+          cd /tmp/game-dev-resource-mcp-git-source
+          npm init -y >/dev/null
+          npm install "github:${SOURCE_REPOSITORY}#${SOURCE_SHA}"
+          test -x ./node_modules/.bin/game-dev-resource-mcp
+          set +e
+          timeout 2s ./node_modules/.bin/game-dev-resource-mcp </dev/null
+          CODE=$?
+          set -e
+          if [ "$CODE" -ne 0 ] && [ "$CODE" -ne 124 ]; then
+            echo "GitHub-source MCP binary failed smoke start with exit code $CODE"
+            exit "$CODE"
+          fi
