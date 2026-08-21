@@ -1,6 +1,6 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "1.15.0",
+  "version": "1.15.1",
   "description": "License-aware semantic game-resource discovery with query fallback diagnostics, engine-aware provider capabilities, project adoption planning and safe installation via MCP.",
   "type": "module",
   "license": "MIT",
