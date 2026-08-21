@@ -87,6 +87,14 @@ function valuesMatch(entryValues: string[] | undefined, wanted: string[]): boole
   return wanted.every(filter => values.some(value => value.includes(filter.toLowerCase())));
 }
 
+function engineValuesMatch(entry: VerifiedCatalogEntry, wanted: string[]): boolean {
+  if (wanted.length === 0) return true;
+  // Generic media assets are not engine-specific merely because their catalog entry has no engine tag.
+  // Engine filtering is strict for code and for entries that explicitly declare an engine.
+  if (entry.dimension !== "code" && (!entry.engine || entry.engine.length === 0)) return true;
+  return valuesMatch(entry.engine, wanted);
+}
+
 function exactOptionalMatch<T>(actual: T | undefined, expected: T | undefined): boolean {
   return expected === undefined || actual === expected;
 }
@@ -144,7 +152,7 @@ export function createVerifiedCatalogProvider(
           const queryMatches = !q || q.split(/\s+/).every(token => haystack.includes(token));
           return queryMatches
             && valuesMatch(entry.categories, categories)
-            && valuesMatch(entry.engine, engines)
+            && engineValuesMatch(entry, engines)
             && (dimensions.length === 0 || (entry.dimension ? dimensions.includes(entry.dimension) : false))
             && valuesMatch(entry.style, styles)
             && valuesMatch(entry.formats, formats)
