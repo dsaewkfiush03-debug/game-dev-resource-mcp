@@ -2,7 +2,9 @@
 
 ## Project purpose
 
-Build a conservative, license-aware game-development resource layer for AI coding agents using MCP. V1 covers discovery, reusable-project selection, project adoption planning, resource-coverage benchmarking, license analysis, attribution manifests and narrowly scoped safe file installation.
+Build a conservative, license-aware game-development resource search engine for AI coding agents using MCP. The core product is high-quality discovery: understand game-development search intent, route to suitable providers, preserve provenance/license boundaries, rank relevant candidates well, and degrade safely when exact matches are unavailable.
+
+The project may expose reusable-project planning, attribution, coverage auditing and narrowly scoped safe installation, but it should not expand into an engine import/conversion platform or a general game-development framework.
 
 ## Non-negotiable rules
 
@@ -25,23 +27,26 @@ Build a conservative, license-aware game-development resource layer for AI codin
 17. Recommendation fallback depth may broaden a query only after preserving the first/specific matches and must deduplicate candidates; depth filling must not reorder a broader fallback ahead of a more specific valid result.
 18. Never add or relabel a resource solely to improve benchmark depth. If a candidate's license differs from a provider-wide license profile, extend the data model first or leave the benchmark shallow rather than misclassifying the candidate.
 19. Treat live-provider errors as a separate reliability signal; do not silently convert an API/network failure into either a successful result or a permanent catalog gap.
-20. Semantic fallback may expand soft concepts such as `turret -> cannon/artillery/tank`, but it must preserve explicit hard filters such as dimension, engine, commercial-use policy, attribution policy, share-alike policy and reuse scope.
+20. Semantic fallback may expand soft concepts such as `turret -> cannon/artillery/tank`, but it must preserve explicit hard filters such as dimension, engine-specific-code constraints, commercial-use policy, attribution policy, share-alike policy and reuse scope.
 21. Zero-result or shallow searches must expose attempted fallback queries and suggested alternatives. Never silently relax a hard filter to manufacture a match.
 22. Use provider capability metadata to avoid querying providers that cannot satisfy an explicit dimension/engine constraint. Provider pruning is an efficiency mechanism, not license evidence.
 23. After license eligibility is enforced, semantic/query relevance must outrank popularity, freshness or other metadata bonuses. Do not use permissive licensing as a relevance substitute.
 24. Bounded semantic fallback should distribute query budget across detected game-development concepts before deeply expanding one synonym family; preserve the original query and hard filters.
 25. Candidate-count/depth benchmarks are not evidence of search relevance. Protect real query/ranking regressions separately.
-23. Engine filters constrain engine-specific code and resources that explicitly declare an engine. Generic media assets with no engine tag (for example FBX/glTF/PNG/WAV resources) must not be rejected merely because the current project has an engine context.
-24. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
-25. Never automatically execute, extract or install downloaded third-party content.
-26. Never guess a download URL merely to make a workflow automatic.
-27. Local installation must remain contained inside an explicit absolute project root.
+26. Engine filters constrain engine-specific code and resources that explicitly declare an engine. Generic media assets with no engine tag (for example FBX/glTF/PNG/WAV resources) must not be rejected merely because the current project has an engine context.
+27. Do not build engine-specific model conversion, import automation or compatibility orchestration unless explicitly approved. The search engine may carry engine context for routing/filtering, but the coding agent owns integration into the target project.
+28. Automatic downloads require an explicit trusted HTTPS host allowlist and provider-backed file metadata.
+29. Never automatically execute, extract or install downloaded third-party content.
+30. Never guess a download URL merely to make a workflow automatic.
+31. Local installation must remain contained inside an explicit absolute project root.
 
 ## Engineering priorities
 
-Correctness > coverage. Maintainability > cleverness. Safe degradation > aggressive automation. Tests should cover license classification, provider mapping, reuse-scope/bundled-asset boundaries, adoption decisions/actions, benchmark aggregation/integrity, search relevance/fallback diagnostics, installation containment and version consistency.
+Search relevance > raw result count. Correctness > coverage. Maintainability > cleverness. Safe degradation > aggressive automation.
 
-Resource expansion should increasingly be driven by benchmark evidence and real-project adoption evidence. Prefer fixing weak relevant-match quality and engine compatibility before adding redundant providers to already healthy categories.
+Tests should cover license classification, provider mapping, reuse-scope/bundled-asset boundaries, adoption decisions/actions, benchmark aggregation/integrity, search relevance/fallback diagnostics, real query ordering, installation containment and version consistency.
+
+Resource expansion should be driven by real search/adoption evidence. Prefer fixing weak relevant-match quality, query understanding and provider routing before adding redundant providers to already healthy categories.
 
 ## V1 supported scope
 
@@ -49,9 +54,11 @@ Resource expansion should increasingly be driven by benchmark evidence and real-
 - curated source registry
 - live and verified-catalog asset providers
 - cross-provider structured/semantic search with explicit diagnostics
+- provider capability routing/pruning
 - verified reusable-project/starter discovery plus conservative live GitHub code discovery
 - deterministic project adoption manifests with license/resource-gap guidance
 - live resource-coverage benchmarking across maintained game scenarios
+- real search/ranking regression tests
 - GitHub project discovery and repository license inspection
 - conservative license classification
 - project-level attribution/credits generation
@@ -66,6 +73,7 @@ Catalog-only project/starter providers remain discovery/reference/planning sourc
 
 ## Out of scope unless explicitly approved
 
+- engine-specific asset conversion/import pipelines
 - hosting/mirroring third-party asset libraries
 - arbitrary third-party code execution
 - automatic dependency/package installation
