@@ -1,0 +1,96 @@
+name: Agent search-quality feedback
+description: Report a real coding-agent query that returned missing, irrelevant, unsafe or poorly ranked game-development resources
+title: "[Agent feedback] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Real coding-agent failures are especially useful because they can become deterministic regression tests.
+        Do not include API keys, tokens, credentials, signed private URLs, proprietary assets or private repository content.
+  - type: dropdown
+    id: client
+    attributes:
+      label: Coding agent / MCP client
+      options:
+        - Codex
+        - Claude Code
+        - Trae
+        - Other MCP client
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      placeholder: "v1.16.0 or commit SHA"
+    validations:
+      required: true
+  - type: input
+    id: engine
+    attributes:
+      label: Game engine / framework
+      description: Leave blank if the query is engine-agnostic.
+      placeholder: "Godot, Unity, Unreal, Raylib, UrhoX, Phaser, ..."
+  - type: dropdown
+    id: tool
+    attributes:
+      label: MCP tool
+      options:
+        - recommend_stack
+        - find_game_assets
+        - find_reusable_projects
+        - plan_project_adoption
+        - search_live_assets
+        - search_game_assets
+        - Other / unknown
+    validations:
+      required: true
+  - type: textarea
+    id: request
+    attributes:
+      label: Original request / query
+      description: Paste the smallest non-secret prompt or tool input that reproduces the problem.
+      placeholder: "Find commercially usable low-poly 3D turret and enemy assets for UrhoX..."
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Important constraints
+      description: Include dimension, engine, commercial-use, attribution/share-alike, reuse-scope or provider constraints that must remain hard filters.
+      placeholder: "3D; commercial use required; attribution allowed; share-alike not allowed"
+  - type: textarea
+    id: actual
+    attributes:
+      label: What the MCP returned
+      description: Include the relevant top results, gaps or diagnostics. Remove secrets and unrelated large payloads.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have been a better result?
+      description: Name an expected resource if you know one, or explain the category/relevance behavior you expected.
+    validations:
+      required: true
+  - type: dropdown
+    id: failure_type
+    attributes:
+      label: Main failure type
+      options:
+        - Zero / too few relevant results
+        - Irrelevant result ranked too highly
+        - Wrong dimension or engine scope
+        - License / provenance concern
+        - Reusable-project scope concern
+        - Provider routing / availability problem
+        - Diagnostics were not actionable
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: regression
+    attributes:
+      label: Regression-test permission
+      options:
+        - label: This report contains enough non-secret information to turn the scenario into a public regression test.
