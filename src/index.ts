@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
+import * as z from "zod/v4";
 import { planProjectAdoption } from "./adoption.js";
 import { generateProjectAttribution } from "./attribution.js";
 import { runCoverageBenchmark } from "./coverage.js";
@@ -11,6 +12,7 @@ import { recommendStack } from "./recommend.js";
 import { searchRegistry } from "./registry.js";
 import { getProvider, listProviders } from "./providers/index.js";
 import { searchAllAssets } from "./search.js";
+import { searchAssetsPage } from "./search-ux.js";
 import {
   auditResourceVerificationInputSchema,
   benchmarkResourceCoverageInputSchema,
@@ -32,6 +34,12 @@ import {
 } from "./tool-schemas.js";
 import { VERSION } from "./version.js";
 import { assessVerification, summarizeVerification } from "./verification.js";
+
+const findGameAssetsUxInputSchema = findGameAssetsInputSchema.extend({
+  limit: z.number().int().min(1).max(100).default(10).describe("Page size for ranked results. Defaults to 10 to keep agent context compact."),
+  offset: z.number().int().min(0).max(99).default(0).describe("Zero-based result offset. Use pagination.nextOffset to continue."),
+  responseMode: z.enum(["summary", "full"]).default("summary").describe("summary returns compact agent-friendly fields; full returns complete provider metadata.")
+});
 
 const server = new McpServer({
   name: "game-dev-resource-mcp",
@@ -90,9 +98,29 @@ async function githubJson(path: string) {
 
 server.registerTool("find_game_assets", {
   ...readOnlyTool("Find Game Assets", true),
-  description: "Preferred tool for finding concrete game assets or reusable code across supported providers. Use it for ranked cross-provider search with semantic fallback, hard engine/dimension filters, and conservative license/reuse filtering. Do not use search_game_assets when you need individual asset results.",
-  inputSchema: findGameAssetsInputSchema
-}, async options => text({ query: options.query, ...(await searchAllAssets(options)), filters: { commercialOnly: options.commercialOnly, allowAttribution: options.allowAttribution, allowShareAlike: options.allowShareAlike, engines: options.engines, dimensions: options.dimensions, styles: options.styles, formats: options.formats, assetTypes: options.assetTypes, gameGenres: options.gameGenres, reuseScopes: options.reuseScopes, bundledAssetStatuses: options.bundledAssetStatuses, animated: options.animated } }));
+  description: "Preferred tool for concrete game assets or reusable code. Returns compact ranked results by default, supports pagination with offset/limit, caches identical short-lived searches, preserves semantic fallback diagnostics and hard license/engine/dimension filters. Use responseMode=full only when complete provider metadata is needed.",
+  inputSchema: findGameAssetsUxInputSchema
+}, async options => {
+  const page = await searchAssetsPage(options);
+  return text({
+    query: options.query,
+    ...page,
+    filters: {
+      commercialOnly: options.commercialOnly,
+      allowAttribution: options.allowAttribution,
+      allowShareAlike: options.allowShareAlike,
+      engines: options.engines,
+      dimensions: options.dimensions,
+      styles: options.styles,
+      formats: options.formats,
+      assetTypes: options.assetTypes,
+      gameGenres: options.gameGenres,
+      reuseScopes: options.reuseScopes,
+      bundledAssetStatuses: options.bundledAssetStatuses,
+      animated: options.animated
+    }
+  });
+});
 
 server.registerTool("find_reusable_projects", {
   ...readOnlyTool("Find Reusable Projects", true),
