@@ -1,6 +1,6 @@
 {
   "name": "game-dev-resource-mcp",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "description": "License-aware MCP search engine for AI coding agents to discover game assets, reusable projects, and game-development code.",
   "type": "module",
   "license": "MIT",
@@ -74,7 +74,7 @@
     "prepublishOnly": "npm run validate",
     "start": "node dist/index.js",
     "check": "tsc -p tsconfig.json --noEmit",
-    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts src/providers/catalog.test.ts src/providers/metadata.test.ts src/providers/v06.test.ts src/providers/v07.test.ts src/providers/v08.test.ts src/providers/v13.test.ts src/providers/v14.test.ts src/providers/v15.test.ts src/providers/v16.test.ts src/providers/v112.test.ts src/search.test.ts src/install.test.ts src/recommend.test.ts src/adoption.test.ts src/coverage.test.ts src/registry-expanded.test.ts src/providers/v17.test.ts src/providers/v18.test.ts src/providers/v19.test.ts src/verification.test.ts src/version.test.ts src/tool-schemas.test.ts",
+    "test": "tsx --test src/licenses.test.ts src/providers/polyhaven.test.ts src/providers/catalog.test.ts src/providers/metadata.test.ts src/providers/v06.test.ts src/providers/v07.test.ts src/providers/v08.test.ts src/providers/v13.test.ts src/providers/v14.test.ts src/providers/v15.test.ts src/providers/v16.test.ts src/providers/v112.test.ts src/search.test.ts src/search-ux.test.ts src/install.test.ts src/recommend.test.ts src/adoption.test.ts src/coverage.test.ts src/registry-expanded.test.ts src/providers/v17.test.ts src/providers/v18.test.ts src/providers/v19.test.ts src/verification.test.ts src/version.test.ts src/tool-schemas.test.ts",
     "validate": "npm run check && npm test && npm run build"
   },
   "engines": {
