@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { clearAssetSearchCache, compactAsset, searchAssetsPage } from "./search-ux.js";
+import { clearAssetSearchCache, compactAsset, searchAssetsPage, type SearchPageOptions } from "./search-ux.js";
 import type { RankedAsset } from "./search.js";
 
 test("compact asset keeps agent-useful search fields while dropping verbose provenance internals", () => {
@@ -40,14 +40,14 @@ test("compact asset keeps agent-useful search fields while dropping verbose prov
 
 test("repeated identical cross-provider page search is served from the process cache", async () => {
   clearAssetSearchCache();
-  const options = {
+  const options: SearchPageOptions = {
     query: "cyberpunk turret enemy 3D low poly",
-    providers: ["quaternius"] as const,
-    dimensions: ["3D"] as const,
+    providers: ["quaternius"],
+    dimensions: ["3D"],
     commercialOnly: true,
     limit: 2,
     offset: 0,
-    responseMode: "summary" as const,
+    responseMode: "summary",
     cacheTtlMs: 60_000
   };
   const first = await searchAssetsPage(options);
